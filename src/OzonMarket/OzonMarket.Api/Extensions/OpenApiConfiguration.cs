@@ -1,4 +1,3 @@
-using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace OzonMarket.Api.Extensions;
@@ -12,21 +11,6 @@ public static class OpenApiConfiguration
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(swaggerGenOptions =>
             {
-                swaggerGenOptions.AddSecurityDefinition("Bearer",
-                    new OpenApiSecurityScheme
-                    {
-                        Name = "Authorization",
-                        Type = SecuritySchemeType.ApiKey,
-                        Scheme = "Bearer",
-                        BearerFormat = "JWT",
-                        In = ParameterLocation.Header,
-                        Description = "Введите JWT токен в формате: Bearer {your token}"
-                    });
-                swaggerGenOptions.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-                {
-                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-                });
-
                 swaggerGenOptions.DocumentFilter<ExplicitSchemaDocumentFilter>();
                 ConfigureDisplayComments(swaggerGenOptions);
             });
@@ -44,7 +28,7 @@ public static class OpenApiConfiguration
     {
         var baseDirectory = AppContext.BaseDirectory;
                 
-        var projectPrefix = "HunterDiary"; 
+        const string projectPrefix = "OzonMarket"; 
 
         var xmlFiles = Directory.EnumerateFiles(baseDirectory, "*.xml")
             .Where(file => Path.GetFileName(file).StartsWith(projectPrefix));
