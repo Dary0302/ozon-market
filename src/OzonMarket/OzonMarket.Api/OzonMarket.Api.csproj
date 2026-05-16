@@ -1,11 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>OzonMarket</RootNamespace>
-        <OutputType>Exe</OutputType>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Core\Core.Common\Core.Common.csproj" />
+        <ProjectReference Include="..\OzonMarket.Application\OzonMarket.Application.csproj" />
+        <ProjectReference Include="..\OzonMarket.Domain\OzonMarket.Domain.csproj" />
+        <ProjectReference Include="..\OzonMarket.Infrastructure\OzonMarket.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Update="@(Content)">
+            <Visible Condition="'%(NuGetItemType)' == 'Content'">false</Visible>
+        </Content>
+    </ItemGroup>
 
 </Project>
