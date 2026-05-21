@@ -8,7 +8,7 @@ public class CreateProductTableMigration : Migration
 {
     public override void Up()
     {
-        Create.Table("Persons")
+        Create.Table("Products")
             .WithColumn(nameof(Product.Id)).AsGuid().PrimaryKey()
             .WithColumn(nameof(Product.Name)).AsString().NotNullable()
             .WithColumn(nameof(Product.Type)).AsInt32().NotNullable();
@@ -16,9 +16,9 @@ public class CreateProductTableMigration : Migration
 
     public override void Down()
     {
-        if (Schema.Table("Persons").Exists())
+        if (Schema.Table("Products").Exists())
         {
-            Delete.Table("Persons");
+            Delete.Table("Products");
         }
     }
 }
