@@ -11,7 +11,6 @@ public class CreateProductTableMigration : Migration
         Create.Table("Persons")
             .WithColumn(nameof(Product.Id)).AsGuid().PrimaryKey()
             .WithColumn(nameof(Product.Name)).AsString().NotNullable()
-            .WithColumn(nameof(Product.Price)).AsDouble().NotNullable()
             .WithColumn(nameof(Product.Type)).AsInt32().NotNullable();
     }
 
