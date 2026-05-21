@@ -31,11 +31,6 @@ public class Program
         
         var app = builder.Build();
 
-        using (var scope = app.Services.CreateScope())
-        {
-            
-        }
-
         app.UseExceptionHandler();
         
         // if (app.Environment.IsDevelopment())
