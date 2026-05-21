@@ -3,7 +3,7 @@ using ProductService.Domain;
 
 namespace ProductService.Infrastructure.Migrations;
 
-[Migration(20260423132601, "Create Price Table")]
+[Migration(20209723132601, "Create Price Table")]
 public class CreatePriceTableMigration : Migration
 {
     public override void Up()
