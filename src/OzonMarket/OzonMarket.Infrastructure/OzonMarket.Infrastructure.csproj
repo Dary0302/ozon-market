@@ -7,12 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+      <PackageReference Include="FluentMigrator" Version="8.0.1" />
       <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.10" />
-      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OzonMarket.Domain\OzonMarket.Domain.csproj" />
     </ItemGroup>
 
 </Project>

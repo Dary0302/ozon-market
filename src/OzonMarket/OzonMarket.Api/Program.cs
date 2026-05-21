@@ -3,9 +3,6 @@ using System.Text.Json.Serialization;
 using Core.Common;
 using OzonMarket.Api.Extensions;
 using OzonMarket.Application;
-using OzonMarket.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using DbContext = OzonMarket.Infrastructure.DbContext;
 
 namespace OzonMarket.Api;
 
@@ -27,7 +24,6 @@ public class Program
         builder.Services
             .AddCore(builder.Host)
             .AddApplicationServices()
-            .AddInfrastructureServices(builder.Configuration)
             .AddOpenApi();
 
         builder.Services.AddExceptionHandler<ExceptionHandler>();
@@ -37,8 +33,7 @@ public class Program
 
         using (var scope = app.Services.CreateScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<DbContext>();
-            await db.Database.MigrateAsync();
+            
         }
 
         app.UseExceptionHandler();
