@@ -18,7 +18,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Core\Core.Common\Core.Common.csproj" />
         <ProjectReference Include="..\OzonMarketOrder.Application\OzonMarketOrder.Application.csproj" />
-        <ProjectReference Include="..\OzonMarketOrder.Domain\OzonMarketOrder.Domain.csproj" />
         <ProjectReference Include="..\OzonMarketOrder.Infrastructure\OzonMarketOrder.Infrastructure.csproj" />
     </ItemGroup>
 
@@ -26,6 +25,10 @@
         <Content Update="@(Content)">
             <Visible Condition="'%(NuGetItemType)' == 'Content'">false</Visible>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.1.79" />
     </ItemGroup>
 
 </Project>
