@@ -1,0 +1,21 @@
+﻿using OzonMarketOrder.Domain;
+using OzonMarketOrder.Infrastructure.Models;
+
+namespace OzonMarketOrder.Infrastructure.Mappers;
+
+public static class DaoMapper
+{
+    public static Order ToDomain(this OrderDao dao)
+    {
+        return Order.Restore(
+            dao.Id,
+            dao.PvzId,
+            dao.CreatedOn,
+            dao.Status);
+    }
+    
+    public static OrderItem ToDomain(this OrderItemDao dao)
+    {
+        return new OrderItem(dao.OderId, dao.ProductId, dao.Quantity);
+    }
+}

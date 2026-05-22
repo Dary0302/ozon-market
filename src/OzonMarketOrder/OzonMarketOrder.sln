@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{8EBE27A9-3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{011E296C-8C17-48CB-9B46-B8CDBD0B37F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Tests", "OzonMarket.Tests\OzonMarket.Tests.csproj", "{99DE5E8A-E770-41B0-8D45-4CFE85F7C680}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarketOrder.Tests", "OzonMarketOrder.Tests\OzonMarketOrder.Tests.csproj", "{99DE5E8A-E770-41B0-8D45-4CFE85F7C680}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

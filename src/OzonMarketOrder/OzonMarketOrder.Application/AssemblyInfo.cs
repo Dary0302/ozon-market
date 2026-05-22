@@ -1,4 +1,4 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OzonMarket.Tests")]
+[assembly: InternalsVisibleTo("OzonMarketOrder.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

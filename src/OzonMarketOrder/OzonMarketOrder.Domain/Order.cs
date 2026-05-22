@@ -10,13 +10,24 @@ public class Order : BaseEntity
     
     public DateTime CreatedOn { get; init; }
     
-    public Status Status { get; private set; }
+    public Status Status { get; protected set; }
     
     public Order()
     {
         PvzId = Guid.NewGuid();
         CreatedOn = DateTime.UtcNow;
         Status = Status.Created;
+    }
+
+    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, Status status)
+    {
+        return new Order
+        {
+            Id = id,
+            PvzId = pvzId,
+            CreatedOn = createdOn,
+            Status = status
+        };
     }
 
     public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.MustBeCreated);
@@ -36,7 +47,7 @@ public class Order : BaseEntity
             Status = Status.Canceled;
             return Result.Ok();
         }
-        return Result.Fail(OrderErrors.InvalidStateForCancel(Status.ToString().ToLower()));
+        return Result.Fail(OrderErrors.InvalidStateForCancel(Status.ToString()));
     }
     
     private Result Transition(Status expected, Status next, Func<AppError> errorFactory)
