@@ -4,6 +4,7 @@ using OzonMarketOrder.Domain.Exseptions;
 
 namespace OzonMarketOrder.Domain;
 
+//TODO: не забыть про логику подсчета суммы за заказ
 public class Order : BaseEntity
 {
     public Guid PvzId { get; init; }

@@ -52,7 +52,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return Result.Ok(dao.ToDomain());
     }
 
-    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize)
+    public async Task<Result<OrdersPagedResult<Order>>> GetAll(int pageNumber, int pageSize)
     {
         await using var connection = connectionFactory.GetConnection();
         
@@ -69,7 +69,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         var items = daos.Select(dao => dao.ToDomain()).ToList();
         var total = await multiple.ReadFirstAsync<int>();
         
-        return Result.Ok(new PagedResult<Order>(items, total));
+        return Result.Ok(new OrdersPagedResult<Order>(items, total));
     }
 
     public async Task<Result<Guid>> UpdateStatus(Guid id, Status status)

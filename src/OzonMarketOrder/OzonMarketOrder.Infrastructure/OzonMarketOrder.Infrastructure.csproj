@@ -9,6 +9,8 @@
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.79" />
       <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+      <PackageReference Include="FluentMigrator" Version="8.0.1" />
+      <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
       <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.10" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
@@ -19,10 +21,6 @@
     <ItemGroup>
       <ProjectReference Include="..\OzonMarketOrder.Application\OzonMarketOrder.Application.csproj" />
       <ProjectReference Include="..\OzonMarketOrder.Domain\OzonMarketOrder.Domain.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Migrations\" />
     </ItemGroup>
 
 </Project>

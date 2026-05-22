@@ -10,7 +10,7 @@ public interface IOrderRepository
     
     Task<Result<Order>> GetById(Guid id);
     
-    Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize);
+    Task<Result<OrdersPagedResult<Order>>> GetAll(int pageNumber, int pageSize);
     
     Task<Result<Guid>> UpdateStatus(Guid id, Status status);
     
