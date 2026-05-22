@@ -19,37 +19,15 @@ public class Order : BaseEntity
         Status = Status.Created;
     }
 
-    public Result Pay()
-    {
-        if (Status != Status.Created)
-            return Result.Fail(OrderErrors.MustBeCreated());
-        Status = Status.Paid;
-        return Result.Ok();
-    }
+    public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.MustBeCreated);
     
-    public Result Collect()
-    {
-        if (Status != Status.Paid)
-            return Result.Fail(OrderErrors.MustBePaid());
-        Status = Status.InAssembly;
-        return Result.Ok();
-    }
+    public Result Collect() => Transition(Status.Paid, Status.InAssembly,  OrderErrors.MustBePaid);
     
-    public Result TransferForDelivery()
-    {
-        if (Status != Status.InAssembly)
-            return Result.Fail(OrderErrors.MustBeCollected());
-        Status = Status.TransferredForDelivery;
-        return Result.Ok();
-    }
-    
-    public Result Complete()
-    {
-        if (Status != Status.TransferredForDelivery)
-            return Result.Fail(OrderErrors.MustBeTransferredForDelivery());
-        Status = Status.Delivered;
-        return Result.Ok();
-    }
+    public Result TransferForDelivery() => 
+        Transition(Status.InAssembly, Status.TransferredForDelivery, OrderErrors.MustBeCollected);
+
+    public Result Complete() => 
+        Transition(Status.TransferredForDelivery, Status.Delivered, OrderErrors.MustBeTransferredForDelivery);
     
     public Result Cancel()
     {
@@ -59,5 +37,14 @@ public class Order : BaseEntity
             return Result.Ok();
         }
         return Result.Fail(OrderErrors.InvalidStateForCancel(Status.ToString().ToLower()));
+    }
+    
+    private Result Transition(Status expected, Status next, Func<AppError> errorFactory)
+    {
+        if (Status != expected)
+            return Result.Fail(errorFactory());
+
+        Status = next;
+        return Result.Ok();
     }
 }
