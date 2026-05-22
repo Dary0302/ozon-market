@@ -19,15 +19,16 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
 
         try
         {
-            var sql = "INSERT INTO orders (id, pvz_id, status, date) " +
-                      "VALUES (@id, @pvz_id, @status, @date)";
+            var sql = "INSERT INTO orders (id, pvz_id, status, date, amount) " +
+                      "VALUES (@id, @pvz_id, @status, @date, @amount)";
 
             var rows = await connection.ExecuteAsync(sql, new
             {
                 id = order.Id,
                 pvz_id = order.PvzId,
                 status = order.Status,
-                date = order.CreatedOn
+                date = order.CreatedOn,
+                amount = order.Amount
             });
 
             return Result.Ok(order.Id);
@@ -43,7 +44,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "SELECT id, pvz_id, status, date " +
+        var sql = "SELECT id, pvz_id, status, date, amount " +
                   "FROM orders " +
                   "WHERE id = @id";
         var dao = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id });
@@ -56,7 +57,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "SELECT id, pvz_id, status, date " +
+        var sql = "SELECT id, pvz_id, status, date, amount " +
                   "FROM orders " +
                   "OFFSET @skip " +
                   "LIMIT @pageSize; " +

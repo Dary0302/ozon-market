@@ -13,21 +13,30 @@ public class Order : BaseEntity
     
     public Status Status { get; protected set; }
     
+    public double Amount { get; init; }
+    
     public Order()
     {
-        PvzId = Guid.NewGuid();
+        
+    }
+    
+    public Order(double amount, Guid pvzId)
+    {
+        Id = Guid.NewGuid();
+        PvzId = pvzId;
         CreatedOn = DateTime.UtcNow;
         Status = Status.Created;
     }
 
-    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, Status status)
+    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, Status status, double amount)
     {
         return new Order
         {
             Id = id,
             PvzId = pvzId,
             CreatedOn = createdOn,
-            Status = status
+            Status = status,
+            Amount = amount
         };
     }
 

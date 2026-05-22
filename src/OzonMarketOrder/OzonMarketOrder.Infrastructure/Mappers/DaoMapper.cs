@@ -10,8 +10,9 @@ public static class DaoMapper
         return Order.Restore(
             dao.Id,
             dao.PvzId,
-            dao.CreatedOn,
-            dao.Status);
+            dao.Date,
+            dao.Status,
+            dao.Amount);
     }
     
     public static OrderItem ToDomain(this OrderItemDao dao)

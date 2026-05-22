@@ -4,7 +4,7 @@ using FluentMigrator;
 namespace OzonMarketOrder.Infrastructure.Migrations;
 
 [Migration(202605222004, "Create Order Item Table")]
-public class CreateOrderItemTable : Migration
+public class CreateOrderItemTableMigration : Migration
 {
     public override void Up()
     {
