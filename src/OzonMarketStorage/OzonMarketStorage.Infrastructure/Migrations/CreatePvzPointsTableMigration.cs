@@ -9,7 +9,7 @@ public class CreatePvzPointsTableMigration : Migration
     public override void Up()
     {
         Create.Table("PvzPoints")
-            .WithColumn(nameof(PvzPoint.PointId)).AsGuid().PrimaryKey()
+            .WithColumn(nameof(PvzPoint.Id)).AsGuid().PrimaryKey()
             .WithColumn(nameof(PvzPoint.PvzId)).AsGuid().NotNullable().ForeignKey("Pvz", "Id")
             .WithColumn(nameof(PvzPoint.Longitude)).AsDouble().NotNullable()
             .WithColumn(nameof(PvzPoint.Latitude)).AsDouble().NotNullable();

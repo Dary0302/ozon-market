@@ -9,7 +9,7 @@ public class CreateStoredProductsTableMigration : Migration
     public override void Up()
     {
         Create.Table("StoredProducts")
-            .WithColumn(nameof(StoredProduct.ProductId)).AsGuid().NotNullable()
+            .WithColumn(nameof(StoredProduct.Id)).AsGuid().NotNullable()
             .WithColumn(nameof(StoredProduct.StorageId)).AsGuid().NotNullable().ForeignKey("Storages", "Id")
             .WithColumn(nameof(StoredProduct.Quantity)).AsInt32().NotNullable();
     }

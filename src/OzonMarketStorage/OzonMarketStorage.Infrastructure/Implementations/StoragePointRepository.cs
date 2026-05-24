@@ -16,7 +16,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         
         await connection.ExecuteAsync(sql, new
         {
-            pointId = storagePoint.PointId,
+            pointId = storagePoint.Id,
             storageId = storagePoint.StorageId,
             longitude = storagePoint.Longitude,
             latitude = storagePoint.Latitude
@@ -27,7 +27,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 
-                        pointId AS PointId, 
+                        pointId AS Id, 
                         storageId AS StorageId,
                         longitude AS Longitude,
                         latitude AS Latitude
@@ -50,7 +50,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
             storageId =  storagePoint.StorageId,
             longitude = storagePoint.Longitude,
             latitude = storagePoint.Latitude,
-            pointId = storagePoint.PointId
+            pointId = storagePoint.Id
         });
     }
 
