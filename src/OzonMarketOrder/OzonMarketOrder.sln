@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarketOrder.Api", "OzonMarketOrder.Api\OzonMarketOrder.Api.csproj", "{0302ED19-C9B2-411D-A9A0-DE43A077036B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService.Api", "OrderService.Api\OrderService.Api.csproj", "{0302ED19-C9B2-411D-A9A0-DE43A077036B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarketOrder.Application", "OzonMarketOrder.Application\OzonMarketOrder.Application.csproj", "{86346679-F5FF-454F-9F7F-19C717832F9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService.Application", "OrderService.Application\OrderService.Application.csproj", "{86346679-F5FF-454F-9F7F-19C717832F9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarketOrder.Domain", "OzonMarketOrder.Domain\OzonMarketOrder.Domain.csproj", "{910E98A3-FEF0-43CD-86D3-25F13DE57773}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService.Domain", "OrderService.Domain\OrderService.Domain.csproj", "{910E98A3-FEF0-43CD-86D3-25F13DE57773}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarketOrder.Infrastructure", "OzonMarketOrder.Infrastructure\OzonMarketOrder.Infrastructure.csproj", "{3AEC8EE3-2159-4CCE-B7EB-B51FBE17CE0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService.Infrastructure", "OrderService.Infrastructure\OrderService.Infrastructure.csproj", "{3AEC8EE3-2159-4CCE-B7EB-B51FBE17CE0D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Common", "..\Core\Core.Common\Core.Common.csproj", "{5B765DBC-AB36-4C8E-A78A-B52D4CC98D98}"
 EndProject
