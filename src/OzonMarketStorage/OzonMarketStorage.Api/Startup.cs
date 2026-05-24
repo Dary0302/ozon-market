@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
 using OzonMarketStorage.Infrastructure.Helpers;
 using Core.Common;
 using OzonMarketStorage.Api.Extensions;
