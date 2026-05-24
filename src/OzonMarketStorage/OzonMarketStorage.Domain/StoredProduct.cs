@@ -1,3 +1,8 @@
 namespace OzonMarketStorage.Domain;
 
-public record StoredProduct(Guid Id, Guid StorageId, int Quantity) : BaseDomainEntity(Id);
+public record StoredProduct
+{
+    public Guid ProductId { get; set; }
+    public Guid StorageId { get; set; }
+    public int Quantity { get; set; }
+};

@@ -16,7 +16,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         
         await connection.ExecuteAsync(sql, new
         {
-            productId = storedProduct.Id,
+            productId = storedProduct.ProductId,
             storageId = storedProduct.StorageId,
             quantity = storedProduct.Quantity
         });
@@ -47,7 +47,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         {
             storageId =  storedProduct.StorageId,
             quantity = storedProduct.Quantity,
-            productId = storedProduct.Id
+            productId = storedProduct.ProductId
         });
     }
 
