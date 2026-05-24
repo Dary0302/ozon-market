@@ -27,7 +27,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 
-                        pointId AS PointId, 
+                        pointId AS Id, 
                         storageId AS StorageId,
                         longitude AS Longitude,
                         latitude AS Latitude

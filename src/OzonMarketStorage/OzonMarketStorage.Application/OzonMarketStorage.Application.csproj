@@ -11,4 +11,8 @@
       <ProjectReference Include="..\OzonMarketStorage.Domain\OzonMarketStorage.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.4.26230.115" />
+    </ItemGroup>
+
 </Project>

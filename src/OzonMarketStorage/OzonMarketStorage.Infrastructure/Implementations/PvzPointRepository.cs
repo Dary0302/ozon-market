@@ -16,7 +16,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         
         await connection.ExecuteAsync(sql, new
         {
-            pointId = pvzPoint.PointId,
+            pointId = pvzPoint.Id,
             pvzId = pvzPoint.PvzId,
             longitude = pvzPoint.Longitude,
             latitude = pvzPoint.Latitude
@@ -27,7 +27,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 
-                        pointId AS PointId, 
+                        pointId AS Id, 
                         pvzId AS PvzId,
                         longitude AS Longitude,
                         latitude AS Latitude
@@ -50,7 +50,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
             pvzId =  pvzPoint.PvzId,
             longitude = pvzPoint.Longitude,
             latitude = pvzPoint.Latitude,
-            pointId = pvzPoint.PointId
+            pointId = pvzPoint.Id
         });
     }
 

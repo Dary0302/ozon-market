@@ -1,3 +1,7 @@
 namespace OzonMarketStorage.Domain;
 
-public record Storage(Guid Id, string Address, Guid PointId);
+public record Storage : BaseDomainEntity
+{
+    public required string Address { get; set; }
+    public Guid PointId { get; set; }
+};

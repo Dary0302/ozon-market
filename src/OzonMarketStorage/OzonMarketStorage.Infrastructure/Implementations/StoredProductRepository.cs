@@ -26,7 +26,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 
-                        productId AS ProductId, 
+                        productId AS Id, 
                         storageId AS StorageId,
                         quantity AS Quantity
                     FROM storedProducts
