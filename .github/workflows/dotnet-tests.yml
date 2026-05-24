@@ -12,7 +12,7 @@ env:
   DOTNET_VERSION: '10.0.x'
 
 jobs:
-  build-and-test:
+  build-and-test-product-service:
     name: build-and-test-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -42,7 +42,7 @@ jobs:
 #      - name: Test
 #        run: dotnet test --no-restore --verbosity normal
 
-  build-and-test2:
+  build-and-test-ozon-market-storage:
     name: build-and-test2-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
