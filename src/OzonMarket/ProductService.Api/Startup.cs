@@ -19,8 +19,7 @@ public class Startup(IConfiguration configuration)
     {
         app
             .UseRouting()
-            .UseSwagger()
-            .UseSwaggerUI()
+            .UseOpenApi()
             .UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
