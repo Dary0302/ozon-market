@@ -9,7 +9,7 @@ public class CreateStoragePointsTableMigration : Migration
     public override void Up()
     {
         Create.Table("StoragePoints")
-            .WithColumn(nameof(StoragePoint.Id)).AsGuid().PrimaryKey()
+            .WithColumn(nameof(StoragePoint.PointId)).AsGuid().PrimaryKey()
             .WithColumn(nameof(StoragePoint.StorageId)).AsGuid().NotNullable().ForeignKey("Storages", "Id")
             .WithColumn(nameof(StoragePoint.Longitude)).AsDouble().NotNullable()
             .WithColumn(nameof(StoragePoint.Latitude)).AsDouble().NotNullable();
