@@ -8,24 +8,22 @@ public class Startup(IConfiguration configuration)
 {
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddControllers();
-
-        services.AddApplicationServices()
-            .AddOpenApi();
-
-        services.AddInfrastructureServices(configuration);
+        services
+            .AddInfrastructureServices(configuration)
+            .AddApplicationServices()
+            .AddOpenApi()
+            .AddControllers();
     }
 
     public void Configure(IApplicationBuilder app)
     {
-        app.UseRouting();
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
-        app.UseEndpoints(endpoints =>
+        app
+            .UseRouting()
+            .UseSwagger()
+            .UseSwaggerUI()
+            .UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-            }
-        );
+            });
     }
 }
