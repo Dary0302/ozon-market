@@ -1,15 +1,19 @@
+using System.Data;
 using FluentMigrator;
 using ProductService.Domain;
 
 namespace ProductService.Infrastructure.Migrations;
 
-[Migration(20209723132601, "Create Price Table")]
+[Migration(20209723132601, "Create prices Table")]
 public class CreatePriceTableMigration : Migration
 {
     public override void Up()
     {
-        Create.Table("Prices")
-            .WithColumn(nameof(Price.Id)).AsGuid().ForeignKey()
+        Create.Table("prices")
+            .WithColumn(nameof(Price.Id)).AsGuid()
+                .NotNullable()
+                .ForeignKey("products", "Id")
+                .OnDelete(Rule.Cascade)
             .WithColumn(nameof(Price.Data)).AsDateTimeOffset().NotNullable()
             .WithColumn(nameof(Price.Cost)).AsDouble().NotNullable()
             .WithColumn(nameof(Price.Discount)).AsInt32().NotNullable();
@@ -17,9 +21,9 @@ public class CreatePriceTableMigration : Migration
 
     public override void Down()
     {
-        if (Schema.Table("Prices").Exists())
+        if (Schema.Table("prices").Exists())
         {
-            Delete.Table("Prices");
+            Delete.Table("prices");
         }
     }
 }
