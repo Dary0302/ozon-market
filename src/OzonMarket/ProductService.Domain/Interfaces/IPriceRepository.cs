@@ -4,5 +4,5 @@ public interface IPriceRepository
 {
     Task Add(Price price);
     
-    Task<Price> Get(Guid id);
+    Task<Price?> Get(Guid id);
 }

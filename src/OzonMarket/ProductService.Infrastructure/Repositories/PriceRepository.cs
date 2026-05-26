@@ -2,6 +2,8 @@ using Dapper;
 using ProductService.Domain;
 using ProductService.Domain.Interfaces;
 using ProductService.Infrastructure.Helpers;
+using ProductService.Infrastructure.Mappers;
+using ProductService.Infrastructure.Models;
 
 namespace ProductService.Infrastructure.Repositories;
 
@@ -23,14 +25,14 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
         });
     }
 
-    public async Task<Price> Get(Guid id)
+    public async Task<Price?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         await using var command = connection.CreateCommand();
 
         var sql = "select id, data, cost, discount from prices where id = @id";
 
-        var dao = await connection.QueryFirstOrDefaultAsync<Price>(sql, new { id });
-        return dao;
+        var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(sql, new { id });
+        return dao.ToDomain();
     }
 }
