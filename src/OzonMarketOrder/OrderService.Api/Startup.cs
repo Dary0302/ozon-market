@@ -18,11 +18,10 @@ public class Startup(IConfiguration configuration)
 
     public void Configure(IApplicationBuilder app)
     {
-        app.UseRouting();
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
-        app.UseEndpoints(endpoints =>
+        app
+            .UseRouting()
+            .UseOpenApi()
+            .UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             }

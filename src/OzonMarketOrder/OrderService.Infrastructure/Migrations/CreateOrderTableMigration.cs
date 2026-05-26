@@ -1,4 +1,5 @@
 ﻿using FluentMigrator;
+using OrderService.Domain;
 
 namespace OrderService.Infrastructure.Migrations;
 
@@ -8,11 +9,12 @@ public class CreateOrderTableMigration : Migration
     public override void Up()
     {
         Create.Table("orders")
-            .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("pvz_id").AsGuid().NotNullable()
-            .WithColumn("date").AsDateTime().NotNullable()
-            .WithColumn("status").AsInt32().NotNullable()
-            .WithColumn("amount").AsDouble().NotNullable();
+            .WithColumn(nameof(Order.Id)).AsGuid().PrimaryKey()
+            .WithColumn(nameof(Order.PvzId)).AsGuid().NotNullable()
+            .WithColumn(nameof(Order.CreatedOn)).AsDateTime().NotNullable()
+            .WithColumn(nameof(Order.DeliveryDate)).AsDateTime().NotNullable()
+            .WithColumn(nameof(Order.Status)).AsInt32().NotNullable()
+            .WithColumn(nameof(Order.Amount)).AsDouble().NotNullable();
     }
     
     public override void Down()

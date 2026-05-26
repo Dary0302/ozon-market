@@ -4,5 +4,5 @@ namespace OrderService.Domain;
 
 public record BaseEntity
 {
-    public Guid Id { get; init; }
+    public Guid Id { get; init; } = Guid.NewGuid();
 }

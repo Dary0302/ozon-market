@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using FluentMigrator;
+using OrderService.Domain;
 
 namespace OrderService.Infrastructure.Migrations;
 
@@ -9,10 +10,14 @@ public class CreateOrderItemTableMigration : Migration
     public override void Up()
     {
         Create.Table("order_items")
-            .WithColumn("order_id").AsGuid().NotNullable()
+            .WithColumn(nameof(OrderItem.OrderId)).AsGuid().NotNullable()
                 .ForeignKey("orders", "id").OnDelete(Rule.Cascade)
-            .WithColumn("product_id").AsGuid().NotNullable()
-            .WithColumn("quantity").AsInt32().NotNullable();
+            .WithColumn(nameof(OrderItem.ProductId)).AsGuid().NotNullable()
+            .WithColumn(nameof(OrderItem.Quantity)).AsInt32().NotNullable();
+        
+        Create.PrimaryKey("PK_order_items")
+            .OnTable("order_items")
+            .Columns(nameof(OrderItem.OrderId), nameof(OrderItem.ProductId));
     }
 
     public override void Down()

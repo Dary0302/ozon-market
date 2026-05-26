@@ -10,6 +10,8 @@ public record Order : BaseEntity
     
     public DateTime CreatedOn { get; init; }
     
+    public DateTime DeliveryDate { get; init; }
+    
     public Status Status { get; private set; }
     
     public double Amount { get; init; }
@@ -19,21 +21,23 @@ public record Order : BaseEntity
         
     }
     
-    public Order(double amount, Guid pvzId)
+    public Order(double amount, Guid pvzId, DateTime deliveryDate)
     {
-        Id = Guid.NewGuid();
         PvzId = pvzId;
         CreatedOn = DateTime.UtcNow;
         Status = Status.Created;
+        Amount = amount;
+        DeliveryDate = deliveryDate;
     }
 
-    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, Status status, double amount)
+    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, DateTime deliveryDate, Status status, double amount)
     {
         return new Order
         {
             Id = id,
             PvzId = pvzId,
             CreatedOn = createdOn,
+            DeliveryDate = deliveryDate,
             Status = status,
             Amount = amount
         };

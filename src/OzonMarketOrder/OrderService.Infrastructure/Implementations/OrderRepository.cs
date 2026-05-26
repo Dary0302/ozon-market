@@ -13,34 +13,26 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOrderRepository
 {
-    public async Task<Result<Guid>> Create(Order order)
+    public async Task<Guid> Create(Order order)
     {
         await using var connection = connectionFactory.GetConnection();
+        
+        var sql = "INSERT INTO orders (id, pvz_id, status, date, amount) " +
+                  "VALUES (@id, @pvz_id, @status, @date, @amount)";
 
-        try
+        var rows = await connection.ExecuteAsync(sql, new
         {
-            var sql = "INSERT INTO orders (id, pvz_id, status, date, amount) " +
-                      "VALUES (@id, @pvz_id, @status, @date, @amount)";
+            id = order.Id,
+            pvz_id = order.PvzId,
+            status = order.Status,
+            date = order.CreatedOn,
+            amount = order.Amount
+        });
 
-            var rows = await connection.ExecuteAsync(sql, new
-            {
-                id = order.Id,
-                pvz_id = order.PvzId,
-                status = order.Status,
-                date = order.CreatedOn,
-                amount = order.Amount
-            });
-
-            return Result.Ok(order.Id);
-        }
-        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation &&
-                                           ex.ConstraintName == "pk_orders")
-        {
-            return Result.Fail(AppError.Conflict($"Заказ с id {order.Id} уже существует"));
-        }
+        return order.Id;
     }
 
-    public async Task<Result<Order>> GetById(Guid id)
+    public async Task<Order?> GetById(Guid id)
     {
         await using var connection = connectionFactory.GetConnection();
         
@@ -48,12 +40,10 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
                   "FROM orders " +
                   "WHERE id = @id";
         var dao = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id });
-        if (dao == null)
-            return Result.Fail(AppError.NotFound($"Заказ с id {id} не найден"));
-        return Result.Ok(dao.ToDomain());
+        return dao?.ToDomain();
     }
 
-    public async Task<Result<OrdersPagedResult<Order>>> GetAll(int pageNumber, int pageSize)
+    public async Task<OrdersPagedResult<Order>> GetAll(int pageNumber, int pageSize)
     {
         await using var connection = connectionFactory.GetConnection();
         
@@ -70,10 +60,10 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         var items = daos.Select(dao => dao.ToDomain()).ToList();
         var total = await multiple.ReadFirstAsync<int>();
         
-        return Result.Ok(new OrdersPagedResult<Order>(items, total));
+        return new OrdersPagedResult<Order>(items, total);
     }
 
-    public async Task<Result<Guid>> UpdateStatus(Guid id, Status status)
+    public async Task<Guid> UpdateStatus(Guid id, Status status)
     {
         await using var connection =  connectionFactory.GetConnection();
         
@@ -83,20 +73,18 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         
         var rows = await connection.ExecuteAsync(sql, new { status, id });
         if (rows == 0)
-            return Result.Fail(AppError.NotFound($"Заказ с id {id} не найден"));
-        return Result.Ok(id);
+            throw new KeyNotFoundException($"Заказ с id {id} не найден");
+        return id;
     }
 
-    public async Task<Result> Delete(Guid id)
+    public async Task Delete(Guid id)
     {
         await using var connection = connectionFactory.GetConnection();
 
         var sql = "DELETE FROM orders WHERE id = @id";
         var rows = await connection.ExecuteAsync(sql, new { id });
-        
+
         if (rows == 0)
-            return Result.Fail(AppError.NotFound($"Заказ с id {id} не найден"));
-        
-        return Result.Ok();
+            throw new KeyNotFoundException($"Заказ с id {id} не найден");
     }
 }

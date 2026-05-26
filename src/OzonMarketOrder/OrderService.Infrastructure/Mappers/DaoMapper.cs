@@ -10,7 +10,8 @@ public static class DaoMapper
         return Order.Restore(
             dao.Id,
             dao.PvzId,
-            dao.Date,
+            dao.CreatedOn,
+            dao.DeliveryDate,
             dao.Status,
             dao.Amount);
     }

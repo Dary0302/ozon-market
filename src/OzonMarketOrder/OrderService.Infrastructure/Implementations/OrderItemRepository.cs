@@ -12,31 +12,28 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) : IOrderItemRepository
 {
-    public async Task<Result<Guid>> Add(OrderItem orderItem)
+    public async Task<Guid> Add(OrderItem orderItem)
     {
         await using var connection = connectionFactory.GetConnection();
-        try
-        {
-            var sql = "INSERT INTO order_items (order_id, product_id, quantity) " +
-                      "VALUES (@order_id, @product_id, @quantity)";
 
-            var rows = await connection.ExecuteAsync(sql, new
-            {
-                order_id = orderItem.OrderId,
-                product_id = orderItem.ProductId,
-                quantity = orderItem.Quantity
-            });
+        var sql = "INSERT INTO order_items (order_id, product_id, quantity) " +
+                  "VALUES (@order_id, @product_id, @quantity) " +
+                  "ON CONFLICT (order_id, product_id) DO NOTHING";
 
-            return Result.Ok(orderItem.OrderId);
-        }
-        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation &&
-                                           ex.ConstraintName == "uq_order_items_order_product")
+        var rows = await connection.ExecuteAsync(sql, new
         {
-            return Result.Fail(AppError.Conflict($"Продукт {orderItem.ProductId} уже добавлен в заказ {orderItem.OrderId}"));
-        }
+            order_id = orderItem.OrderId,
+            product_id = orderItem.ProductId,
+            quantity = orderItem.Quantity
+        });
+        
+        if (rows == 0)
+            throw new InvalidOperationException($"Продукт {orderItem.ProductId} уже добавлен в заказ {orderItem.OrderId}");
+
+        return orderItem.OrderId;
     }
 
-    public async Task<Result<List<OrderItem>>> GetAllByOrderId(Guid orderId)
+    public async Task<List<OrderItem>> GetAllByOrderId(Guid orderId)
     {
         await using var connection = connectionFactory.GetConnection();
         
@@ -45,6 +42,6 @@ public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) :
                   "WHERE order_id = @orderId";
         var daos = (await connection.QueryAsync<OrderItemDao>(sql, new { orderId })).ToList();
         var items = daos.Select(dao => dao.ToDomain()).ToList();
-        return Result.Ok(items);
+        return items;
     }
 }

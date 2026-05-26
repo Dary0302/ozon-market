@@ -6,7 +6,9 @@ public record OrderDao : BaseDao
 {
     public Guid PvzId { get; init; }
     
-    public DateTime Date { get; init; }
+    public DateTime CreatedOn { get; init; }
+    
+    public DateTime DeliveryDate { get; init; }
     
     public Status Status { get; init; }
     
