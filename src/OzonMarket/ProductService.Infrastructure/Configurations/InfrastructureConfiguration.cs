@@ -1,8 +1,8 @@
+using Core.Common.DbHelpers;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProductService.Domain.Interfaces;
-using ProductService.Infrastructure.Helpers;
 using ProductService.Infrastructure.Repositories;
 
 namespace ProductService.Infrastructure.Configurations;

@@ -1,7 +1,7 @@
+using Core.Common.DbHelpers;
 using Dapper;
 using ProductService.Domain;
 using ProductService.Domain.Interfaces;
-using ProductService.Infrastructure.Helpers;
 using ProductService.Infrastructure.Mappers;
 using ProductService.Infrastructure.Models;
 
