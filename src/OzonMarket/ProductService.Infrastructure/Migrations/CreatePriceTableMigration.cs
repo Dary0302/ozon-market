@@ -14,7 +14,7 @@ public class CreatePriceTableMigration : Migration
                 .NotNullable()
                 .ForeignKey("products", "Id")
                 .OnDelete(Rule.Cascade)
-            .WithColumn(nameof(Price.Data)).AsDateTimeOffset().NotNullable()
+            .WithColumn(nameof(Price.Date)).AsDateTimeOffset().NotNullable()
             .WithColumn(nameof(Price.Cost)).AsDouble().NotNullable()
             .WithColumn(nameof(Price.Discount)).AsInt32().NotNullable();
     }

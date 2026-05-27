@@ -12,14 +12,15 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
     public async Task Add(Price price)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-
-        var sql = "INSERT INTO prices (id, data, cost, discount) " +
-            "VALUES (@id, @data, @cost, @discount)";
-
+        
+        var sql = """
+                   INSERT INTO prices (id, data, cost, discount)
+                   VALUES (@id, @data, @cost, @discount)
+                   """;
         await connection.ExecuteAsync(sql, param: new
         {
             id = price.Id,
-            data = price.Data,
+            data = price.Date,
             cost = price.Cost,
             discount = price.Discount
         });
@@ -28,9 +29,12 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
     public async Task<Price?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-        await using var command = connection.CreateCommand();
 
-        var sql = "select id, data, cost, discount from prices where id = @id";
+        var sql = """
+                  SELECT id, data, cost, discount
+                  FROM prices
+                  WHERE id = @id
+                  """;
 
         var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(sql, new { id });
         return dao.ToDomain();

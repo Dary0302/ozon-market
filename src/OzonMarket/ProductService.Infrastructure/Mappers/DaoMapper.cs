@@ -16,6 +16,6 @@ public static class DaoMapper
     {
         return dao is null 
             ? null
-            : new Price(dao.Data, dao.Cost, dao.Discount);
+            : new Price(dao.Date, dao.Cost, dao.Discount);
     }
 }
