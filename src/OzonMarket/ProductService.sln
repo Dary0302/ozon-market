@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Api", "OzonMarket.Api\OzonMarket.Api.csproj", "{0302ED19-C9B2-411D-A9A0-DE43A077036B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Api", "ProductService.Api\ProductService.Api.csproj", "{0302ED19-C9B2-411D-A9A0-DE43A077036B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Application", "OzonMarket.Application\OzonMarket.Application.csproj", "{86346679-F5FF-454F-9F7F-19C717832F9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Application", "ProductService.Application\ProductService.Application.csproj", "{86346679-F5FF-454F-9F7F-19C717832F9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Domain", "OzonMarket.Domain\OzonMarket.Domain.csproj", "{910E98A3-FEF0-43CD-86D3-25F13DE57773}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Domain", "ProductService.Domain\ProductService.Domain.csproj", "{910E98A3-FEF0-43CD-86D3-25F13DE57773}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Infrastructure", "OzonMarket.Infrastructure\OzonMarket.Infrastructure.csproj", "{3AEC8EE3-2159-4CCE-B7EB-B51FBE17CE0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Infrastructure", "ProductService.Infrastructure\ProductService.Infrastructure.csproj", "{3AEC8EE3-2159-4CCE-B7EB-B51FBE17CE0D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Common", "..\Core\Core.Common\Core.Common.csproj", "{5B765DBC-AB36-4C8E-A78A-B52D4CC98D98}"
 EndProject
@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{8EBE27A9-3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{011E296C-8C17-48CB-9B46-B8CDBD0B37F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OzonMarket.Tests", "OzonMarket.Tests\OzonMarket.Tests.csproj", "{99DE5E8A-E770-41B0-8D45-4CFE85F7C680}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Tests", "ProductService.Tests\ProductService.Tests.csproj", "{99DE5E8A-E770-41B0-8D45-4CFE85F7C680}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

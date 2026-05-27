@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace OzonMarket.Application;
+namespace ProductService.Application;
 
 public static class ApplicationConfiguration
 {

@@ -1,6 +1,6 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace OzonMarket.Api.Extensions;
+namespace ProductService.Api.Extensions;
 
 public static class OpenApiConfiguration
 {
@@ -28,7 +28,7 @@ public static class OpenApiConfiguration
     {
         var baseDirectory = AppContext.BaseDirectory;
                 
-        const string projectPrefix = "OzonMarket"; 
+        const string projectPrefix = "ProductService"; 
 
         var xmlFiles = Directory.EnumerateFiles(baseDirectory, "*.xml")
             .Where(file => Path.GetFileName(file).StartsWith(projectPrefix));

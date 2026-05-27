@@ -7,6 +7,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
+        <RootNamespace>ProductService.Api</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,9 +18,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Core\Core.Common\Core.Common.csproj" />
-        <ProjectReference Include="..\OzonMarket.Application\OzonMarket.Application.csproj" />
-        <ProjectReference Include="..\OzonMarket.Domain\OzonMarket.Domain.csproj" />
-        <ProjectReference Include="..\OzonMarket.Infrastructure\OzonMarket.Infrastructure.csproj" />
+        <ProjectReference Include="..\ProductService.Application\ProductService.Application.csproj" />
+        <ProjectReference Include="..\ProductService.Domain\ProductService.Domain.csproj" />
+        <ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>

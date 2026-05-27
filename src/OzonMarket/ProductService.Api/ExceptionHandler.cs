@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace OzonMarket.Api;
+namespace ProductService.Api;
 
 public class ExceptionHandler : IExceptionHandler
 {

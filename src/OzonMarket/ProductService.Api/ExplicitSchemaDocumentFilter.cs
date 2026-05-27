@@ -1,8 +1,8 @@
 using Microsoft.OpenApi;
-using OzonMarket.Application;
+using ProductService.Application;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace OzonMarket.Api;
+namespace ProductService.Api;
 
 public class ExplicitSchemaDocumentFilter : IDocumentFilter
 {
