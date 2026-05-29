@@ -12,5 +12,5 @@ public record OrderDao : BaseDao
     
     public Status Status { get; init; }
     
-    public double Amount { get; init; }
+    public decimal Amount { get; init; }
 }

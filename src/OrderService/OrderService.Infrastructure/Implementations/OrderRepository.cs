@@ -1,8 +1,5 @@
 ﻿using Dapper;
-using Core.Common.DbHelpers;
-using Core.Common.Errors;
-using FluentResults;
-using Npgsql;
+using Core.Common.DbHelpers.Interfaces;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Models;
 using OrderService.Domain;
@@ -43,7 +40,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return dao?.ToDomain();
     }
 
-    public async Task<OrdersPagedResult<Order>> GetAll(int pageNumber, int pageSize)
+    public async Task<PagedResult<Order>> GetAll(int pageNumber, int pageSize)
     {
         await using var connection = connectionFactory.GetConnection();
         
@@ -60,7 +57,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         var items = daos.Select(dao => dao.ToDomain()).ToList();
         var total = await multiple.ReadFirstAsync<int>();
         
-        return new OrdersPagedResult<Order>(items, total);
+        return new PagedResult<Order>(items, total);
     }
 
     public async Task<Guid> UpdateStatus(Guid id, Status status)

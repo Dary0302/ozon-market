@@ -1,8 +1,5 @@
-﻿using Core.Common.DbHelpers;
-using Core.Common.Errors;
+﻿using Core.Common.DbHelpers.Interfaces;
 using Dapper;
-using FluentResults;
-using Npgsql;
 using OrderService.Application.Interfaces;
 using OrderService.Domain;
 using OrderService.Infrastructure.Models;
@@ -12,25 +9,25 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) : IOrderItemRepository
 {
-    public async Task<Guid> Add(OrderItem orderItem)
+    public async Task<Guid> Add(List<OrderItem> orderItems)
     {
         await using var connection = connectionFactory.GetConnection();
 
         var sql = "INSERT INTO order_items (order_id, product_id, quantity) " +
-                  "VALUES (@order_id, @product_id, @quantity) " +
+                  "SELECT @orderId, unnest(@productIds), unnest(@quantities) " +
                   "ON CONFLICT (order_id, product_id) DO NOTHING";
 
         var rows = await connection.ExecuteAsync(sql, new
         {
-            order_id = orderItem.OrderId,
-            product_id = orderItem.ProductId,
-            quantity = orderItem.Quantity
+            order_id = orderItems.First().OrderId,
+            product_id = orderItems.Select(x => x.ProductId).ToArray(),
+            quantities = orderItems.Select(x => x.Quantity).ToArray()
         });
         
-        if (rows == 0)
-            throw new InvalidOperationException($"Продукт {orderItem.ProductId} уже добавлен в заказ {orderItem.OrderId}");
+        if (rows != orderItems.Count)
+            throw new InvalidOperationException($"Заказ содержит дублирующие позиции");
 
-        return orderItem.OrderId;
+        return orderItems.First().OrderId;
     }
 
     public async Task<List<OrderItem>> GetAllByOrderId(Guid orderId)

@@ -1,9 +1,8 @@
-﻿using FluentResults;
-using OrderService.Domain;
+﻿using OrderService.Domain;
 
 namespace OrderService.Application.Interfaces;
 
-public interface IOrderItemRepository
+public interface IOrderItemService
 {
     Task<Guid> Add(OrderItem orderItem);
     

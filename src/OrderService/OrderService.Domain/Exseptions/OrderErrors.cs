@@ -14,4 +14,13 @@ public class OrderErrors
         => AppError.Conflict("Заказ должен быть передан в доставку");
     public static AppError InvalidStateForCancel(string state)
         => AppError.Conflict($"Заказ не может быть отменен в состоянии '{state}'");
+    public static AppError InsufficientStock(List<LackingProduct> products)
+    {
+        var error = new AppError(ErrorStatus.Conflict, "Недостаточно товаров на складе");
+        error.Metadata["LackingProducts"] = products;
+        return error;
+    }
+    public static AppError NotFound(Guid id) => 
+        AppError.NotFound($"Заказ {id} не найден");
+    public static AppError InvalidAmount() => AppError.Conflict("Сумма заказа неактуальна");
 }
