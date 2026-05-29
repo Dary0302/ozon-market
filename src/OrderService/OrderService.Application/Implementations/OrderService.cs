@@ -10,6 +10,7 @@ namespace OrderService.Application.Implementations;
 
 public class OrderService(IOrderRepository orderRepository, 
     IOrderItemRepository orderItemRepository, 
+    IOrderInfoRepository orderInfoRepository,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderService
 {
@@ -103,8 +104,6 @@ public class OrderService(IOrderRepository orderRepository,
         return new OrderInfo(order, itemsTask.Result);
     }
 
-    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize) 
+        => await  orderInfoRepository.GetAll(pageNumber, pageSize);
 }

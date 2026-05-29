@@ -1,5 +1,5 @@
 ﻿using OrderService.Domain;
 
-namespace OrderService.Application.Models;
+namespace OrderService.Domain;
 
 public record OrderInfo(Order Order, List<OrderItem> OrderItems);
