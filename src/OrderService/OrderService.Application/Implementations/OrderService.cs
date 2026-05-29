@@ -81,11 +81,29 @@ public class OrderService(IOrderRepository orderRepository,
     public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize) 
         => await orderRepository.GetAll(pageNumber, pageSize);
 
-    public async Task<Result<Guid>> UpdateStatus(Guid id, Status status)
+    public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus)
     {
-        //TODO: подумать, где валидировать смену статуса
-        var result = await orderRepository.UpdateStatus(id, status);
-        return result;
+        var order = await orderRepository.GetById(id);
+
+        if (order is null)
+            return Result.Fail(OrderErrors.NotFound(id));
+
+        Result result = newStatus switch
+        {
+            Status.Paid => order.Pay(),
+            Status.InAssembly => order.Collect(),
+            Status.TransferredForDelivery => order.TransferForDelivery(),
+            Status.Delivered => order.Complete(),
+            Status.Canceled => order.Cancel(),
+            _ => Result.Fail(OrderErrors.InvalidStatusTransition())
+        };
+
+        if (result.IsFailed)
+            return Result.Fail(result.Errors);
+
+        await orderRepository.Save(order);
+
+        return order.Id;
     }
 
     public async Task Delete(Guid id) => await orderRepository.Delete(id);

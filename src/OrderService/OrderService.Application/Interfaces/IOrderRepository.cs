@@ -12,7 +12,7 @@ public interface IOrderRepository
     
     Task<PagedResult<Order>> GetAll(int pageNumber, int pageSize);
     
-    Task<Guid> UpdateStatus(Guid id, Status status);
+    Task<Guid> Save(Order order);
     
     Task Delete(Guid id);
 }

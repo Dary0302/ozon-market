@@ -23,4 +23,6 @@ public class OrderErrors
     public static AppError NotFound(Guid id) => 
         AppError.NotFound($"Заказ {id} не найден");
     public static AppError InvalidAmount() => AppError.Conflict("Сумма заказа неактуальна");
+    
+    public static AppError InvalidStatusTransition() => AppError.Conflict("Неизвестный статус заказа");
 }

@@ -64,7 +64,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return new PagedResult<Order>(items, total);
     }
 
-    public async Task<Guid> UpdateStatus(Guid id, Status status)
+    public async Task<Guid> Save(Order order)
     {
         await using var connection =  connectionFactory.GetConnection();
         
@@ -72,10 +72,14 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
                   "SET status = @status " +
                   "WHERE id = @id";
         
-        var rows = await connection.ExecuteAsync(sql, new { status, id });
+        var rows = await connection.ExecuteAsync(sql, new
+        {
+            status = order.Status, 
+            id = order.Id,
+        });
         if (rows == 0)
-            throw new KeyNotFoundException($"Заказ с id {id} не найден");
-        return id;
+            throw new KeyNotFoundException($"Заказ с id {order.Id} не найден");
+        return order.Id;
     }
 
     public async Task Delete(Guid id)
