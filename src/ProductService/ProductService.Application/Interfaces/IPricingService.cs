@@ -9,5 +9,5 @@ public interface IPricingService
 
     Task<Result<decimal>> GetActualPrice(Guid productId);
 
-    Task<Result<bool>> SetDiscount(Guid productId, decimal discountPercent);
+    Task<Result> SetDiscount(Guid productId, decimal discountPercent);
 }

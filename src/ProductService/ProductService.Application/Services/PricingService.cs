@@ -1,3 +1,4 @@
+using Core.Common.Errors;
 using FluentResults;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
@@ -20,18 +21,39 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
             return Result.Fail("Цена на один или несколько товаров не найдена");
         }
 
-        var sum = prices.Sum(price => (decimal)price.Cost * (1 - price.Discount / 100));
+        var sum = prices.Sum(GetCostWithDiscount);
 
         return Result.Ok(sum);
     }
 
-    public Task<Result<decimal>> GetActualPrice(Guid productId)
+    public async Task<Result<decimal>> GetActualPrice(Guid productId)
     {
-        throw new NotImplementedException();
+        var price = await priceRepository.GetPrice(productId);
+
+        if (price is null)
+        {
+            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+        }
+
+        var actualPrice = GetCostWithDiscount(price);
+
+        return Result.Ok(actualPrice);
     }
 
-    public Task<Result<bool>> SetDiscount(Guid productId, decimal discountPercent)
+    public async Task<Result> SetDiscount(Guid productId, decimal discountPercent)
     {
-        throw new NotImplementedException();
+        if (discountPercent is <= 0 or > 100)
+        {
+            return Result.Fail(AppError.Validation("Скидка не может быть меньше 0%, либо больше 100%"));
+        }
+        
+        await priceRepository.SetDiscount(productId, discountPercent);
+
+        return Result.Ok();
+    }
+    
+    private static decimal GetCostWithDiscount(Price price)
+    {
+        return (decimal)price.Cost * (1 - price.Discount / 100);
     }
 }
