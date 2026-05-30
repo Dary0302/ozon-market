@@ -1,8 +1,5 @@
 ﻿using Dapper;
-using Core.Common.DbHelpers;
-using Core.Common.Errors;
-using FluentResults;
-using Npgsql;
+using Core.Common.DbHelpers.Interfaces;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Models;
 using OrderService.Domain;
@@ -17,15 +14,16 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "INSERT INTO orders (id, pvz_id, status, date, amount) " +
-                  "VALUES (@id, @pvz_id, @status, @date, @amount)";
+        var sql = "INSERT INTO orders (id, pvz_id, created_on, status, dalivery_date, amount) " +
+                  "VALUES (@id, @pvz_id, @createdOn, @status, @deliveryDate, @amount)";
 
         var rows = await connection.ExecuteAsync(sql, new
         {
             id = order.Id,
             pvz_id = order.PvzId,
+            createdOn = order.CreatedOn,
             status = order.Status,
-            date = order.CreatedOn,
+            deliveryDate = order.DeliveryDate,
             amount = order.Amount
         });
 
@@ -36,23 +34,26 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "SELECT id, pvz_id, status, date, amount " +
+        var sql = "SELECT id, pvz_id, created_on, status, delivery_date, amount " +
                   "FROM orders " +
                   "WHERE id = @id";
         var dao = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id });
         return dao?.ToDomain();
     }
 
-    public async Task<OrdersPagedResult<Order>> GetAll(int pageNumber, int pageSize)
+    public async Task<PagedResult<Order>> GetAll(int pageNumber, int pageSize)
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "SELECT id, pvz_id, status, date, amount " +
-                  "FROM orders " +
-                  "OFFSET @skip " +
-                  "LIMIT @pageSize; " +
-                  "SELECT COUNT(1) " +
-                  "FROM orders;";
+        var sql =
+            "SELECT id, pvz_id, created_on, status, delivery_date, amount " +
+            "FROM orders " +
+            "ORDER BY created_on DESC " +
+            "OFFSET @skip " +
+            "LIMIT @pageSize; " +
+            "SELECT COUNT(1) " +
+            "FROM orders;";
+        
         var skip = (pageNumber - 1) * pageSize;
         await using var multiple = await connection.QueryMultipleAsync(sql, new {skip, pageSize});
         
@@ -60,10 +61,10 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         var items = daos.Select(dao => dao.ToDomain()).ToList();
         var total = await multiple.ReadFirstAsync<int>();
         
-        return new OrdersPagedResult<Order>(items, total);
+        return new PagedResult<Order>(items, total);
     }
 
-    public async Task<Guid> UpdateStatus(Guid id, Status status)
+    public async Task<Guid> Save(Order order)
     {
         await using var connection =  connectionFactory.GetConnection();
         
@@ -71,10 +72,14 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
                   "SET status = @status " +
                   "WHERE id = @id";
         
-        var rows = await connection.ExecuteAsync(sql, new { status, id });
+        var rows = await connection.ExecuteAsync(sql, new
+        {
+            status = order.Status, 
+            id = order.Id,
+        });
         if (rows == 0)
-            throw new KeyNotFoundException($"Заказ с id {id} не найден");
-        return id;
+            throw new KeyNotFoundException($"Заказ с id {order.Id} не найден");
+        return order.Id;
     }
 
     public async Task Delete(Guid id)

@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 
-namespace Core.Common.DbHelpers;
+namespace Core.Common.DbHelpers.Interfaces;
 
 public interface IPostgresConnectionFactory
 {

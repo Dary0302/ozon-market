@@ -14,14 +14,14 @@ public record Order : BaseEntity
     
     public Status Status { get; private set; }
     
-    public double Amount { get; init; }
+    public decimal Amount { get; init; }
     
     public Order()
     {
         
     }
     
-    public Order(double amount, Guid pvzId, DateTime deliveryDate)
+    public Order(decimal amount, Guid pvzId, DateTime deliveryDate)
     {
         PvzId = pvzId;
         CreatedOn = DateTime.UtcNow;
@@ -30,7 +30,7 @@ public record Order : BaseEntity
         DeliveryDate = deliveryDate;
     }
 
-    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, DateTime deliveryDate, Status status, double amount)
+    public static Order Restore(Guid id, Guid pvzId, DateTime createdOn, DateTime deliveryDate, Status status, decimal amount)
     {
         return new Order
         {

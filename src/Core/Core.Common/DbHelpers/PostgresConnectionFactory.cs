@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Core.Common.DbHelpers.Interfaces;
+using Npgsql;
 
 namespace Core.Common.DbHelpers;
 
