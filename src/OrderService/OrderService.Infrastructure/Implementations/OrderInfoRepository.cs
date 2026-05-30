@@ -32,7 +32,7 @@ public class OrderInfoRepository(IPostgresConnectionFactory connectionFactory) :
         var skip = (pageNumber - 1) * pageSize;
         await using var multiple = await connection.QueryMultipleAsync(sql, new {skip, pageSize});
         
-        var daos = (await multiple.ReadAsync<OrderInfoRowDao>()).ToList();
+        var daos = (await multiple.ReadAsync<OrderInfoRowDao>());
         var items = daos.ToDomain();
         var total = await multiple.ReadFirstAsync<int>();
         

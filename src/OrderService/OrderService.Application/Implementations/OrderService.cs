@@ -14,11 +14,11 @@ public class OrderService(IOrderRepository orderRepository,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderService
 {
-    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, List<ProductQuantity> products)
+    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, IEnumerable<ProductQuantity> products)
     {
         //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
-        var productIds = normalizedProducts.Select(x => x.ProductId).Distinct().ToArray();
+        var productIds = normalizedProducts.Select(product => product.ProductId);
 
         var stockTask = storageServiceMock.CheckStock(normalizedProducts);
         var deliveryTask = storageServiceMock.GetDeliveryDate(pvzId, productIds);
@@ -29,31 +29,30 @@ public class OrderService(IOrderRepository orderRepository,
         if (!IsAmountValid(calculatedAmount, clientAmount))
             return Result.Fail(OrderErrors.InvalidAmount());
 
-        var lackingProducts =GetLackingProducts( stockTask.Result);
+        var lackingProducts = GetLackingProducts(stockTask.Result);
         if (lackingProducts.Any())
             return Result.Fail(OrderErrors.InsufficientStock(lackingProducts));
 
         var order = new Order(calculatedAmount, pvzId, deliveryTask.Result);
         var items = normalizedProducts
-            .Select(p => new OrderItem(order.Id, p.ProductId, p.Quantity))
-            .ToList();
+            .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
         
         //TODO: подумать над механизмом единых транзакций для бд и сервисов, вероятно, нужен паттерн Saga
         await orderRepository.Create(order);
         await orderItemRepository.Add(items);
         await storageServiceMock.ReduceCountOfProducts(normalizedProducts);
         
-        return order.Id;
+        return Result.Ok(order.Id);
     }
     
     private List<ProductQuantity> NormalizeProducts(
-        List<ProductQuantity> products)
+        IEnumerable<ProductQuantity> products)
     {
         return products
-            .GroupBy(x => x.ProductId)
-            .Select(x => new ProductQuantity(
-                x.Key,
-                x.Sum(y => y.Quantity)))
+            .GroupBy(product => product.ProductId)
+            .Select(product => new ProductQuantity(
+                product.Key,
+                product.Sum(item => item.Quantity)))
             .ToList();
     }
     
@@ -69,17 +68,24 @@ public class OrderService(IOrderRepository orderRepository,
         IEnumerable<StockCheckResult> stock)
     {
         return stock
-            .Where(p => p.Difference < 0)
-            .Select(p => new LackingProduct(
-                p.ProductId,
-                Math.Abs(p.Difference)))
+            .Where(stockCheck => stockCheck.Difference < 0)
+            .Select(stockCheck => new LackingProduct(
+                stockCheck.ProductId,
+                Math.Abs(stockCheck.Difference)))
             .ToList();
     }
 
-    public async Task<Result<Order?>> GetById(Guid id) => await orderRepository.GetById(id);
+    public async Task<Result<Order?>> GetById(Guid id)
+    {
+        var result = await orderRepository.GetById(id);
+        return Result.Ok(result);
+    }
 
-    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize) 
-        => await orderRepository.GetAll(pageNumber, pageSize);
+    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize)
+    {
+        var result = await orderRepository.GetAll(pageNumber, pageSize);
+        return Result.Ok(result);
+    }
 
     public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus)
     {
@@ -103,10 +109,14 @@ public class OrderService(IOrderRepository orderRepository,
 
         await orderRepository.Save(order);
 
-        return order.Id;
+        return Result.Ok(order.Id);
     }
 
-    public async Task Delete(Guid id) => await orderRepository.Delete(id);
+    public async Task<Result> Delete(Guid id)
+    {
+        await orderRepository.Delete(id);
+        return Result.Ok();
+    }
 
     public async Task<Result<OrderInfo>> GetInfoById(Guid id)
     {
@@ -119,9 +129,12 @@ public class OrderService(IOrderRepository orderRepository,
         if (order == null)
             return Result.Fail(OrderErrors.NotFound(id));
         
-        return new OrderInfo(order, itemsTask.Result);
+        return Result.Ok(new OrderInfo(order, itemsTask.Result));
     }
 
-    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize) 
-        => await  orderInfoRepository.GetAll(pageNumber, pageSize);
+    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize)
+    {
+        var result = await orderInfoRepository.GetAll(pageNumber, pageSize);
+        return Result.Ok(result);
+    }
 }

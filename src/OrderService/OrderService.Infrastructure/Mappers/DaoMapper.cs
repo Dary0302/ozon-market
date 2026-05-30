@@ -21,10 +21,10 @@ public static class DaoMapper
         return new OrderItem(dao.OrderId, dao.ProductId, dao.Quantity);
     }
 
-    public static List<OrderInfo> ToDomain(this IEnumerable<OrderInfoRowDao> rows)
+    public static IEnumerable<OrderInfo> ToDomain(this IEnumerable<OrderInfoRowDao> rows)
     {
         return rows
-            .GroupBy(o => o.OrderId)
+            .GroupBy(orderInfo => orderInfo.OrderId)
             .Select(group =>
             {
                 var firstRow = group.First();
@@ -36,11 +36,10 @@ public static class DaoMapper
                     firstRow.Status,
                     firstRow.Amount);
                 var items = group
-                    .Select(i => new OrderItem(i.OrderId, i.ProductId, i.Quantity))
+                    .Select(item => new OrderItem(item.OrderId, item.ProductId, item.Quantity))
                     .ToList();
 
                 return new OrderInfo(order, items);
-            })
-            .ToList();
+            });
     }
 }
