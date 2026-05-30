@@ -1,4 +1,4 @@
-using Core.Common.DbHelpers;
+using Core.Common.DbHelpers.Interfaces;
 using Dapper;
 using ProductService.Domain;
 using ProductService.Domain.Interfaces;

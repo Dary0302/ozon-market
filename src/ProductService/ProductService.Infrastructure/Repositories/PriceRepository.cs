@@ -1,4 +1,4 @@
-using Core.Common.DbHelpers;
+using Core.Common.DbHelpers.Interfaces;
 using Dapper;
 using ProductService.Domain;
 using ProductService.Domain.Interfaces;
@@ -9,7 +9,7 @@ namespace ProductService.Infrastructure.Repositories;
 
 public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactory) : IPriceRepository
 {
-    public async Task Add(Price price)
+    public async Task SetPrice(Price price)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         
@@ -26,7 +26,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
         });
     }
 
-    public async Task<Price?> Get(Guid id)
+    public async Task<Price?> GetPrice(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
