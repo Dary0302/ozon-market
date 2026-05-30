@@ -1,5 +1,6 @@
 using Microsoft.OpenApi;
 using StorageService.Application;
+using StorageService.Application.Configurations;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace StorageService.Api;

@@ -1,7 +1,8 @@
 using Dapper;
 using StorageService.Application.Interfaces;
 using StorageService.Domain;
-using StorageService.Infrastructure.Helpers;
+using Core.Common.DbHelpers;
+using StorageService.Application.Interfaces.Repositories;
 
 namespace StorageService.Infrastructure.Implementations;
 

@@ -1,12 +1,17 @@
+using Core.Common;
 using StorageService.Api;
 using Core.Common.Migrations;
 using StorageService.Infrastructure.Migrations;
 
-Host.CreateDefaultBuilder(args)
-    .ConfigureWebHostDefaults(builder =>
+var host = Host
+    .CreateDefaultBuilder(args)
+    .ConfigureServices((_, services) =>
     {
-        builder.UseStartup<Startup>();
+        services.AddCore(Host.CreateDefaultBuilder(args));
     })
-    .Build()
-    .RunMigrations<MigrationMarker>()
+    .ConfigureWebHostDefaults(builder =>
+        builder.UseStartup<Startup>())
+    .Build();
+
+host.RunMigrations<MigrationMarker>()
     .Run();

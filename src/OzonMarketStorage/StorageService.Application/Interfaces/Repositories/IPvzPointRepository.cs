@@ -1,6 +1,6 @@
 using StorageService.Domain;
 
-namespace StorageService.Application.Interfaces;
+namespace StorageService.Application.Interfaces.Repositories;
 
 public interface IPvzPointRepository
 {

@@ -1,53 +1,31 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using StorageService.Infrastructure.Helpers;
-using Core.Common;
 using StorageService.Api.Extensions;
 using StorageService.Application;
+using StorageService.Application.Configurations;
+using StorageService.Infrastructure.Configurations;
 
 namespace StorageService.Api;
 
-public class Startup
+public class Startup(IConfiguration configuration)
 {
-    private readonly IConfiguration configuration;
-    private readonly IHostBuilder hostBuilder;
-    
-    public Startup(IConfiguration configuration,  IHostBuilder hostBuilder)
+    public void ConfigureServices(IServiceCollection services)
     {
-        this.configuration = configuration;
-        this.hostBuilder = hostBuilder;
-    }
+        services.AddControllers();
 
-    public virtual void ConfigureServices(IServiceCollection services)
-    {
-        services.AddHttpContextAccessor()
-            .AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            });
-        
-        services.AddCore(hostBuilder)
-            .AddApplicationServices()
+        services.AddApplicationServices()
             .AddOpenApi();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection") 
-                               ?? throw new NullReferenceException("DefaultConnection");
-        services.AddSingleton<IPostgresConnectionFactory>(new PostgresConnectionFactory(connectionString));
+        services.AddInfrastructureServices(configuration);
     }
 
     public void Configure(IApplicationBuilder app)
     {
-        app.UseRouting();
-        
-        app.UseExceptionHandler();
-        app.UseOpenApi();
-        app.UseHttpsRedirection();
-        
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-        });
+        app
+            .UseRouting()
+            .UseOpenApi()
+            .UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                }
+            );
     }
 }

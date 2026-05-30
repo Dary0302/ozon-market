@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace StorageService.Application;
+namespace StorageService.Application.Configurations;
 
 public static class ApplicationConfiguration
 {

@@ -14,4 +14,8 @@
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.4.26230.115" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Interfaces\Servises\" />
+    </ItemGroup>
+
 </Project>
