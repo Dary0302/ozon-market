@@ -5,11 +5,6 @@ namespace ProductService.Application.Interfaces;
 
 public interface IProductManagementService
 {
-    /*│   ├── AddProduct
-│   ├── UpdateProduct
-│   ├── DeleteProduct
-│   └── GetProduct
-*/
     Task<Result<Product>> GetProduct(Guid id);
     
     Task<Result<Guid>> AddProduct(Product product);
