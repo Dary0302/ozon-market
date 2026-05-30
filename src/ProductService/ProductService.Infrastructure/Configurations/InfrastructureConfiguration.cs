@@ -1,4 +1,5 @@
 using Core.Common.DbHelpers;
+using Core.Common.DbHelpers.Interfaces;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
