@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using ProductService.Application.Interfaces;
+using ProductService.Application.Services;
 
 namespace ProductService.Application;
 
@@ -6,10 +8,9 @@ public static class ApplicationConfiguration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // services
-            //TODO: Добавить реализации всех хендлеров и сервисов
-            // .AddScoped<IAnimalService, AnimalService>()
-            // .AddScoped<IEntityChangeHandler, HuntChangeHandler>()
+        services
+            .AddScoped<IProductManagementService, ProductManagementService>()
+            .AddScoped<IPricingService, PricingService>();
         
         return services;
     }

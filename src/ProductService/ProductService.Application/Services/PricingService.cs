@@ -8,7 +8,7 @@ namespace ProductService.Application.Services;
 
 public class PricingService(IPriceRepository priceRepository) : IPricingService
 {
-    public async Task<Result<decimal>> CalculateAmount(List<ProductQuantity> products)
+    public async Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products)
     {
         var productsIds = products
             .Select(product => product.ProductId)
