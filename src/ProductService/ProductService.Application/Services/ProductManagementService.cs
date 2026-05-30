@@ -1,28 +1,59 @@
+using Core.Common.Errors;
 using FluentResults;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
+using ProductService.Domain.Interfaces;
 
 namespace ProductService.Application.Services;
 
-public class ProductManagementService : IProductManagementService
+public class ProductManagementService(IProductRepository productRepository) : IProductManagementService
 {
-    public Task<Result<Product>> GetProduct(Guid id)
+    private const string NotFoundExceptionMessage = "Продукт не найден";
+    
+    public async Task<Result<Product>> GetProduct(Guid id)
     {
-        throw new NotImplementedException();
+        var product = await productRepository.Get(id);
+
+        if (product is null)
+        {
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
+        }
+
+        return Result.Ok(product);
     }
 
-    public Task<Result<Guid>> AddProduct(Product product)
+    public async Task<Result<Guid>> AddProduct(Product product)
     {
-        throw new NotImplementedException();
+        await productRepository.Add(product);
+
+        return Result.Ok(product.Id);
     }
 
-    public Task<Result<bool>> UpdateProduct(Guid id, Product product)
+    public async Task<Result<bool>> UpdateProduct(Guid id, Product product)
     {
-        throw new NotImplementedException();
+        var existingProduct = await productRepository.Get(id);
+
+        if (existingProduct is null)
+        {
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
+        }
+
+        await productRepository.Update(id, product);
+
+        return Result.Ok();
     }
 
-    public Task<Result<bool>> DeleteProduct(Guid id)
+    public async Task<Result<bool>> DeleteProduct(Guid id)
     {
-        throw new NotImplementedException();
+        var existingProduct = await productRepository.Get(id);
+
+        if (existingProduct is null)
+        {
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
+        }
+
+        await productRepository.Delete(id);
+
+        return Result.Ok();
     }
 }
