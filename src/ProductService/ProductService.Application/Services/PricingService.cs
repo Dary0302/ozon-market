@@ -18,10 +18,10 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
 
         if (prices.Count != productsIds.Count)
         {
-            return Result.Fail("Цена на один или несколько товаров не найдена");
+            return Result.Fail(AppError.NotFound("Цена на один или несколько товаров не найдена"));
         }
 
-        var sum = prices.Sum(GetCostWithDiscount);
+        var sum = prices.Sum(GetCostWithDiscount!);
 
         return Result.Ok(sum);
     }
