@@ -40,7 +40,7 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
         return Result.Ok(actualPrice);
     }
 
-    public async Task<Result> SetPrice(Guid productId, Price newPrice)
+    public async Task<Result> SetPrice(Price newPrice)
     {
         if (newPrice.Cost < 0)
         {
@@ -52,7 +52,7 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
             return Result.Fail(AppError.Validation("Скидка не может быть меньше 0%, либо больше 100%"));
         }
         
-        await priceRepository.SetPrice(productId, discountPercent);
+        await priceRepository.SetPrice(newPrice);
 
         return Result.Ok();
     }

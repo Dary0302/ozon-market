@@ -9,5 +9,5 @@ public interface IPricingService
 
     Task<Result<decimal>> GetActualPrice(Guid productId);
 
-    Task<Result> SetPrice(Guid productId, Price newPrice);
+    Task<Result> SetPrice(Price newPrice);
 }
