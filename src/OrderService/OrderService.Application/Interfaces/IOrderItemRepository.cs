@@ -7,5 +7,5 @@ public interface IOrderItemRepository
 {
     Task<Guid> Add(List<OrderItem> orderItems);
     
-    Task<List<OrderItem>> GetAllByOrderId(Guid orderId);
+    Task<IEnumerable<OrderItem>> GetAllByOrderId(Guid orderId);
 }

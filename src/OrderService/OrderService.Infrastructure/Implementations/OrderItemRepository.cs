@@ -20,25 +20,25 @@ public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) :
         var rows = await connection.ExecuteAsync(sql, new
         {
             order_id = orderItems.First().OrderId,
-            product_id = orderItems.Select(x => x.ProductId).ToArray(),
-            quantities = orderItems.Select(x => x.Quantity).ToArray()
+            product_id = orderItems.Select(item => item.ProductId).ToArray(),
+            quantities = orderItems.Select(item => item.Quantity).ToArray()
         });
         
-        if (rows != orderItems.Count)
+        if (rows != orderItems.Count())
             throw new InvalidOperationException($"Заказ содержит дублирующие позиции");
 
         return orderItems.First().OrderId;
     }
 
-    public async Task<List<OrderItem>> GetAllByOrderId(Guid orderId)
+    public async Task<IEnumerable<OrderItem>> GetAllByOrderId(Guid orderId)
     {
         await using var connection = connectionFactory.GetConnection();
         
         var sql = "SELECT product_id, quantity " +
                   "FROM order_items " +
                   "WHERE order_id = @orderId";
-        var daos = (await connection.QueryAsync<OrderItemDao>(sql, new { orderId })).ToList();
-        var items = daos.Select(dao => dao.ToDomain()).ToList();
+        var daos = (await connection.QueryAsync<OrderItemDao>(sql, new { orderId }));
+        var items = daos.Select(dao => dao.ToDomain());
         return items;
     }
 }

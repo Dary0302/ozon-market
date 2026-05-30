@@ -57,8 +57,8 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         var skip = (pageNumber - 1) * pageSize;
         await using var multiple = await connection.QueryMultipleAsync(sql, new {skip, pageSize});
         
-        var daos = (await multiple.ReadAsync<OrderDao>()).ToList();
-        var items = daos.Select(dao => dao.ToDomain()).ToList();
+        var daos = (await multiple.ReadAsync<OrderDao>());
+        var items = daos.Select(dao => dao.ToDomain());
         var total = await multiple.ReadFirstAsync<int>();
         
         return new PagedResult<Order>(items, total);
@@ -77,8 +77,10 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
             status = order.Status, 
             id = order.Id,
         });
+        
         if (rows == 0)
             throw new KeyNotFoundException($"Заказ с id {order.Id} не найден");
+        
         return order.Id;
     }
 
