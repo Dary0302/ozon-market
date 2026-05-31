@@ -74,9 +74,13 @@ public class OrderManagementService(IOrderRepository orderRepository,
             .ToList();
     }
 
-    public async Task<Result<Order?>> GetById(Guid id)
+    public async Task<Result<Order>> GetById(Guid id)
     {
         var result = await orderRepository.GetById(id);
+
+        if (result == null)
+            return Result.Fail(OrderErrors.NotFound(id));
+            
         return Result.Ok(result);
     }
 
@@ -125,6 +129,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         await Task.WhenAll(orderTask, itemsTask);
 
         var order = orderTask.Result;
+        
         if (order == null)
             return Result.Fail(OrderErrors.NotFound(id));
         

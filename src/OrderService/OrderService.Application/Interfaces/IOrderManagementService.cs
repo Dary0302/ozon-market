@@ -8,7 +8,7 @@ public interface IOrderManagementService
 {
     Task<Result<Guid>> Create(Guid pvzId, decimal amount, IEnumerable<ProductQuantity> productIds);
     
-    Task<Result<Order?>> GetById(Guid id);
+    Task<Result<Order>> GetById(Guid id);
     
     Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize);
     
