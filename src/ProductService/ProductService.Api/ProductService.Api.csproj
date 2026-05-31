@@ -7,7 +7,6 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
-        <RootNamespace>ProductService.Api</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
