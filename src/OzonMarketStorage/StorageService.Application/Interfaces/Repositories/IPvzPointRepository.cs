@@ -6,7 +6,7 @@ public interface IPvzPointRepository
 {
     Task Add(PvzPoint pvzPoint);
 
-    Task<PvzPoint> Get(Guid id);
+    Task<PvzPoint?> Get(Guid id);
     
     Task Update(PvzPoint pvzPoint);
     

@@ -1,8 +1,3 @@
 namespace StorageService.Domain;
 
-public record StoredProduct
-{
-    public Guid ProductId { get; set; }
-    public Guid StorageId { get; set; }
-    public int Quantity { get; set; }
-};
+public record StoredProduct(Guid ProductId, Guid StorageId, int Quantity);

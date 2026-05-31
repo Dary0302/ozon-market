@@ -6,7 +6,7 @@ public interface IStorageRepository
 {
     Task Add(Storage storage);
 
-    Task<Storage> Get(Guid id);
+    Task<Storage?> Get(Guid id);
     
     Task Update(Storage storage);
     

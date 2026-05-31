@@ -1,5 +1,4 @@
 using Dapper;
-using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
@@ -23,34 +22,86 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         });
     }
 
-    public async Task<StoredProduct> Get(Guid id)
+    public async Task<IEnumerable<StoredProduct>> GetByOrderedProducts(List<DecreaseQuantity> orderedProducts)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
+        
         var sql = @"SELECT 
                         productId AS Id, 
                         storageId AS StorageId,
-                        quantity AS Quantity
+                        quantity - @quantity AS Quantity
                     FROM storedProducts
-                    WHERE productId = @productId";
+                    WHERE productId = @productId
+                    AND storageId = @storageId";
         
-        var storedProduct = await connection.QueryFirstOrDefaultAsync<StoredProduct>(sql, new { id });
-        return storedProduct;
+        var storedProducts = await connection.QueryAsync<StoredProduct>(sql, orderedProducts);
+        return storedProducts;
     }
 
-    public async Task Update(StoredProduct storedProduct)
+    public async Task<IEnumerable<ProductQuantity>> GetAllInStock()
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "UPDATE storedProducts SET storageId = @storageId, quantity = @quantity" +
-                  "WHERE productId = @productId";
+        var sql = @"SELECT productId, SUM(quantity) AS quantity
+                    FROM storedProducts
+                    GROUP BY productId
+                    HAVING totalQuantity > 0";
         
-        await connection.ExecuteAsync(sql, new
-        {
-            storageId =  storedProduct.StorageId,
-            quantity = storedProduct.Quantity,
-            productId = storedProduct.ProductId
-        });
+        var storedProducts = await connection.QueryAsync<ProductQuantity>(sql);
+        
+        return storedProducts;
     }
+    
+    public async Task<List<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+
+        var sql = @"SELECT productId, SUM(quantity) AS quantity
+                    FROM storedProducts
+                    WHERE productId IN @productIds 
+                    GROUP BY productId";
+        
+        var storedProducts = await connection.QueryAsync<ProductQuantity>(sql, new { productIds });
+        
+        return storedProducts.ToList();
+    }
+    
+    public async Task<List<StoredProduct>> GetProductsStorages(IEnumerable<Guid> productIds)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+
+        var sql = @"SELECT productId, storageId, quantity
+                    FROM storedProducts
+                    WHERE productId IN @productIds";
+        
+        var storedProducts = await connection.QueryAsync<StoredProduct>(sql, new { productIds });
+        
+        return storedProducts.ToList();
+    }
+
+    public async Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+
+        var sql = @"UPDATE storedProducts 
+            SET Quantity = Quantity - @Quantity 
+            WHERE Id = @ProductId 
+            AND Quantity >= @Quantity"; 
+
+        await connection.ExecuteAsync(sql, orderedProducts);
+    }
+    
+    public async Task IncreaseCount(IEnumerable<IncreaseQuantity> arrivedProducts)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+
+        var sql = @"UPDATE storedProducts 
+            SET Quantity = Quantity + @Quantity 
+            WHERE Id = @ProductId"; 
+
+        await connection.ExecuteAsync(sql, arrivedProducts);
+    }
+    
 
     public async Task Delete(Guid id)
     {

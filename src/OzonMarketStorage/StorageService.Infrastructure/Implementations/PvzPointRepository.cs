@@ -24,7 +24,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         });
     }
 
-    public async Task<PvzPoint> Get(Guid id)
+    public async Task<PvzPoint?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 

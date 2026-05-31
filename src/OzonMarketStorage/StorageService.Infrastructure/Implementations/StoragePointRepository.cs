@@ -24,9 +24,10 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         });
     }
 
-    public async Task<StoragePoint> Get(Guid id)
+    public async Task<StoragePoint?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
+        
         var sql = @"SELECT 
                         pointId AS Id, 
                         storageId AS StorageId,
@@ -37,6 +38,22 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         
         var storagePoint = await connection.QueryFirstOrDefaultAsync<StoragePoint>(sql, new { id });
         return storagePoint;
+    }
+
+    public async Task<IEnumerable<StoragePoint>> GetStoragePoints(IEnumerable<Guid> storageIds)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+        
+        var sql = @"SELECT 
+                        pointId AS Id, 
+                        storageId AS StorageId,
+                        longitude AS Longitude,
+                        latitude AS Latitude
+                    FROM storagePoints 
+                    WHERE id IN @storageIds";
+        
+        var storagePoints = await connection.QueryAsync<StoragePoint>(sql, new { storageIds });
+        return storagePoints;
     }
 
     public async Task Update(StoragePoint storagePoint)

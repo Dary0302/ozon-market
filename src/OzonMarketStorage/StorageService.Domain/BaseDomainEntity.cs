@@ -2,5 +2,5 @@ namespace StorageService.Domain;
 
 public abstract record BaseDomainEntity
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; } = Guid.NewGuid();
 };

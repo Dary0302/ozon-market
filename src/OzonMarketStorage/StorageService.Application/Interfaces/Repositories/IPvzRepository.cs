@@ -6,7 +6,9 @@ public interface IPvzRepository
 {
     Task Add(Pvz pvz);
 
-    Task<Pvz> Get(Guid id);
+    Task<Pvz?> Get(Guid id);
+    
+    Task<IEnumerable<Pvz>> GetAll();
     
     Task Update(Pvz pvz);
     

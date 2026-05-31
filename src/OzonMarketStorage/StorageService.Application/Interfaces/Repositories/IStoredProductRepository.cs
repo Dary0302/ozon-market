@@ -6,9 +6,17 @@ public interface IStoredProductRepository
 {
     Task Add(StoredProduct storedProduct);
 
-    Task<StoredProduct> Get(Guid id);
+    Task<IEnumerable<StoredProduct>> GetByOrderedProducts(List<DecreaseQuantity> orderedProducts);
     
-    Task Update(StoredProduct storedProduct);
+    Task<IEnumerable<ProductQuantity>> GetAllInStock();
+    
+    Task<List<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds);
+
+    Task<List<StoredProduct>> GetProductsStorages(IEnumerable<Guid> productIds);
+    
+    Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts);
+    
+    Task IncreaseCount(IEnumerable<IncreaseQuantity> arrivedProducts);
     
     Task Delete(Guid id);
 }

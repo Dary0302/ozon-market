@@ -23,9 +23,10 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         });
     }
 
-    public async Task<Pvz> Get(Guid id)
+    public async Task<Pvz?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
+        
         var sql = @"SELECT 
                         id AS Id, 
                         address AS Address,
@@ -35,6 +36,17 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         
         var pvz = await connection.QueryFirstOrDefaultAsync<Pvz>(sql, new { id });
         return pvz;
+    }
+
+    public async Task<IEnumerable<Pvz>> GetAll()
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+        
+        var sql = "SELECT id, address, pointId FROM pvz";
+        
+        var allPvz = await connection.QueryAsync<Pvz>(sql);
+
+        return allPvz;
     }
 
     public async Task Update(Pvz pvz)

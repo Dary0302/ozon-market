@@ -23,7 +23,7 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
         });
     }
 
-    public async Task<Storage> Get(Guid id)
+    public async Task<Storage?> Get(Guid id)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         var sql = @"SELECT 
