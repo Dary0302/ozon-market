@@ -14,7 +14,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
     {
         await using var connection = connectionFactory.GetConnection();
         
-        var sql = "INSERT INTO orders (id, pvz_id, created_on, status, dalivery_date, amount) " +
+        var sql = "INSERT INTO orders (id, pvz_id, created_on, status, delivery_date, amount) " +
                   "VALUES (@id, @pvz_id, @createdOn, @status, @deliveryDate, @amount)";
 
         var rows = await connection.ExecuteAsync(sql, new

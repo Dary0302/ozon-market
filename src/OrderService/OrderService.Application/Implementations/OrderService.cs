@@ -18,10 +18,9 @@ public class OrderService(IOrderRepository orderRepository,
     {
         //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
-        var productIds = normalizedProducts.Select(product => product.ProductId);
 
         var stockTask = storageServiceMock.CheckStock(normalizedProducts);
-        var deliveryTask = storageServiceMock.GetDeliveryDate(pvzId, productIds);
+        var deliveryTask = storageServiceMock.GetDeliveryDate(pvzId, normalizedProducts);
         var amountTask = productServiceMock.CalculateAmount(normalizedProducts);
         await Task.WhenAll(stockTask, deliveryTask, amountTask);
 
