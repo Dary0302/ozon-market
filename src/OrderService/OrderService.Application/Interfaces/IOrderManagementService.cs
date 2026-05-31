@@ -4,7 +4,7 @@ using OrderService.Domain;
 
 namespace OrderService.Application.Interfaces;
 
-public interface IOrderService
+public interface IOrderManagementService
 {
     Task<Result<Guid>> Create(Guid pvzId, decimal amount, IEnumerable<ProductQuantity> productIds);
     

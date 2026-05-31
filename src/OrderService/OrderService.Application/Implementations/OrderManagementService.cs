@@ -8,11 +8,11 @@ using OrderService.Domain.Exseptions;
 
 namespace OrderService.Application.Implementations;
 
-public class OrderService(IOrderRepository orderRepository, 
+public class OrderManagementService(IOrderRepository orderRepository, 
     IOrderItemRepository orderItemRepository, 
     IOrderInfoRepository orderInfoRepository,
     IStorageServiceMock storageServiceMock,
-    IProductServiceMock productServiceMock) : IOrderService
+    IProductServiceMock productServiceMock) : IOrderManagementService
 {
     public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, IEnumerable<ProductQuantity> products)
     {
