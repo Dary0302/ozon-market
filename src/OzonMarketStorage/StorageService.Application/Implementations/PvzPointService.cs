@@ -8,6 +8,8 @@ namespace StorageService.Application.Implementations;
 
 public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPointService
 {
+    private const string NotFoundExceptionMessage = "Местоположение пункта выдачи заказов не найдено";
+    
     public async Task<Result<Guid>> AddPvzPoint(PvzPoint pvzPoint)
     {
         await pvzPointRepository.Add(pvzPoint);
@@ -21,7 +23,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
 
         if (existingPvzPoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение пункта выдачи заказов не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         return Result.Ok(existingPvzPoint);
@@ -33,7 +35,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
         
         if (existingStoragePoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение пункта выдачи заказов не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
 
         await pvzPointRepository.Update(pvzPoint);
@@ -47,7 +49,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
         
         if (existingPvzPoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение пункта выдачи заказов не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         await pvzPointRepository.Delete(id);

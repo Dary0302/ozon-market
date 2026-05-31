@@ -11,6 +11,8 @@ public class StoredProductService(
     IStoragePointRepository storagePointRepository,
     IPvzPointRepository pvzPointRepository) : IStoredProductService
 {
+    private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
+    
     public async Task<Result<bool>> AddStoredProduct(StoredProduct storedProduct)
     {
         await storedProductRepository.Add(storedProduct);
@@ -29,33 +31,26 @@ public class StoredProductService(
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         
-        var storedProducts = await storedProductRepository.GetProductsQuantity(productIds);
+        var storedProducts = (await storedProductRepository.GetProductsQuantity(productIds)).ToList();
 
         if (storedProducts.Count != orderedProducts.Count)
         {
-            return Result.Fail(AppError.Validation("Количество заказанных товаров и товаров на складе не совпадает"));
+            return Result.Fail(AppError.UnprocessableContent("Количество заказанных товаров и товаров на складе не совпадает"));
         }
 
         var stockCheckResults = CheckStock(storedProducts, orderedProducts);
         
         if (stockCheckResults.Any(result => result.Difference < 0))
         {
-            return Result.Fail(AppError.Validation("Товара на складе не хватает"));
+            return Result.Fail(AppError.UnprocessableContent(NotEnoughProductExceptionMessage));
         }
 
         return Result.Ok(stockCheckResults);
     }
-
+    
     public async Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts)
     {
-        var productIds = orderedProducts.Select(product => product.ProductId);
-        var storedProducts = await storedProductRepository.GetProductsStorages(productIds);
-        var finalCount = storedProducts.Select(product => product.ProductId).Distinct().Count();
-        
-        if (finalCount != orderedProducts.Count())
-        {
-            return Result.Fail(AppError.Validation("Количество заказанных товаров и товаров на складе не совпадает"));
-        }
+        var storedProducts = (await storedProductRepository.GetProductsStorages(orderedProducts)).ToList();
         
         var pvzPoint =  await pvzPointRepository.Get(pvzId);
 
@@ -63,25 +58,46 @@ public class StoredProductService(
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
-        
-        var suitableStorages = GetSuitableStorages(storedProducts, orderedProducts);
 
-        var storageIds = suitableStorages.Select(product => product.StorageId);
+        var storageIds = storedProducts.Select(product => product.StorageId);
         
-        var storagePoints = (await storagePointRepository.GetStoragePoints(storageIds)).ToList();
+        var storagePoints = await storagePointRepository.GetStoragePoints(storageIds);
         
-        var orderStorages = ChooseOrderStorages(suitableStorages, storagePoints, pvzPoint);
+        var orderStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
         
         var farthestStorageDistance = orderStorages.Max(product => product.Distance);
 
+        var deliveryTime = CalculateDeliveryTime(farthestStorageDistance);
+
+        return Result.Ok(deliveryTime);
+    }
+
+    /// <summary>
+    /// Возвращает примерное время доставки заказа
+    /// </summary>
+    /// <param name="farthestStorageDistance">
+    /// Евклидово расстояние до самого далёкого склада из заказа
+    /// </param>
+    /// <returns>
+    /// DateTime = DateTime.Now + время доставки от склада в пункт выдачи
+    /// </returns>
+    /// <remarks>
+    /// <b>Константы расчета:</b>
+    /// <code>
+    /// scale = 100           // масштаб в км/координатам
+    /// shiftDuration = 12      // длительность смены водителя
+    /// averageSpeed = 70        // средняя скорость в км/ч
+    /// </code>
+    /// </remarks>
+    private static DateTime CalculateDeliveryTime(double farthestStorageDistance)
+    {
         const double scale = 100;
         const double shiftDuration = 12;
         const double averageSpeed = 70;
 
         var travelTime = farthestStorageDistance * scale / (averageSpeed * shiftDuration);
         var deliveryTime = DateTime.Now.AddHours(travelTime);
-        
-        return Result.Ok(deliveryTime);
+        return deliveryTime;
     }
 
     public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
@@ -90,7 +106,7 @@ public class StoredProductService(
 
         if (storedProducts.Any(product => product.Quantity < 0))
         {
-            return Result.Fail(AppError.Validation("Не хватает товара на складе"));
+            return Result.Fail(AppError.UnprocessableContent(NotEnoughProductExceptionMessage));
         }
 
         await storedProductRepository.DecreaseCount(orderedProducts);
@@ -126,7 +142,7 @@ public class StoredProductService(
     /// </summary>
     private static List<OrderStorage> ChooseOrderStorages(
         List<StoredProduct> storedProducts, 
-        List<StoragePoint> storagePoints, 
+        IEnumerable<StoragePoint> storagePoints, 
         PvzPoint pvzPoint)
     {
         var orderStorages = storedProducts.Join(storagePoints,
@@ -144,26 +160,5 @@ public class StoredProductService(
             .ToList();
         
         return orderStorages;
-    }
-
-    /// <summary>
-    /// Возвращает список из складов, в которых достаточно продуктов для заказа
-    /// </summary>
-    private static List<StoredProduct> GetSuitableStorages(List<StoredProduct> storedProducts, List<ProductQuantity> orderedProducts)
-    {
-        var suitableStorages = storedProducts.Join(orderedProducts,
-                storedProduct => storedProduct.ProductId,
-                orderedProduct => orderedProduct.ProductId,
-                (storedProduct, orderedProduct) => new
-                {
-                    ProductId = storedProduct.ProductId,
-                    StorageId = storedProduct.StorageId,
-                    StoredQuantity = storedProduct.Quantity,
-                    OrderedQuantity = orderedProduct.Quantity
-                })
-            .Where(storedProduct => storedProduct.StoredQuantity >= storedProduct.OrderedQuantity)
-            .Select(product => new StoredProduct(product.ProductId, product.StorageId, product.StoredQuantity));
-        
-        return suitableStorages.ToList();
     }
 }

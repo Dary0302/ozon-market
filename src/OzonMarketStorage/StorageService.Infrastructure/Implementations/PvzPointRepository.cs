@@ -3,6 +3,8 @@ using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Mappers;
+using StorageService.Infrastructure.Models;
 
 namespace StorageService.Infrastructure.Implementations;
 
@@ -35,8 +37,8 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
                     FROM pvzPoints 
                     WHERE id = @id";
         
-        var pvzPoint = await connection.QueryFirstOrDefaultAsync<PvzPoint>(sql, new { id });
-        return pvzPoint;
+        var dao = await connection.QueryFirstOrDefaultAsync<PvzPointDao>(sql, new { id });
+        return dao?.ToDomain();
     }
 
     public async Task Update(PvzPoint pvzPoint)

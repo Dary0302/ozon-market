@@ -10,9 +10,9 @@ public interface IStoredProductRepository
     
     Task<IEnumerable<ProductQuantity>> GetAllInStock();
     
-    Task<List<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds);
+    Task<IEnumerable<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds);
 
-    Task<List<StoredProduct>> GetProductsStorages(IEnumerable<Guid> productIds);
+    Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts);
     
     Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts);
     

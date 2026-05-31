@@ -3,6 +3,8 @@ using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Mappers;
+using StorageService.Infrastructure.Models;
 
 namespace StorageService.Infrastructure.Implementations;
 
@@ -36,8 +38,9 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
                     FROM storagePoints 
                     WHERE id = @id";
         
-        var storagePoint = await connection.QueryFirstOrDefaultAsync<StoragePoint>(sql, new { id });
-        return storagePoint;
+        var dao = await connection.QueryFirstOrDefaultAsync<StoragePointDao>(sql, new { id });
+        
+        return dao?.ToDomain();
     }
 
     public async Task<IEnumerable<StoragePoint>> GetStoragePoints(IEnumerable<Guid> storageIds)
@@ -52,7 +55,10 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
                     FROM storagePoints 
                     WHERE id IN @storageIds";
         
-        var storagePoints = await connection.QueryAsync<StoragePoint>(sql, new { storageIds });
+        var daos = await connection.QueryAsync<StoragePointDao>(sql, new { storageIds });
+
+        var storagePoints = daos.Select(dao => dao.ToDomain());
+        
         return storagePoints;
     }
 

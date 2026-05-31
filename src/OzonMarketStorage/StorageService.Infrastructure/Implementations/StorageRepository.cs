@@ -3,6 +3,8 @@ using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Mappers;
+using StorageService.Infrastructure.Models;
 
 namespace StorageService.Infrastructure.Implementations;
 
@@ -33,8 +35,9 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
                     FROM storages 
                     WHERE id = @id";
         
-        var storage = await connection.QueryFirstOrDefaultAsync<Storage>(sql, new { id });
-        return storage;
+        var dao = await connection.QueryFirstOrDefaultAsync<StorageDao>(sql, new { id });
+        
+        return dao?.ToDomain();
     }
 
     public async Task Update(Storage storage)

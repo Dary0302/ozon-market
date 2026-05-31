@@ -8,6 +8,8 @@ namespace StorageService.Application.Implementations;
 
 public class StorageService(IStorageRepository storageRepository) : IStorageService
 {
+    private const string NotFoundExceptionMessage = "Склад не найден";
+    
     public async Task<Result<Guid>> AddStorage(Storage storage)
     {
         await storageRepository.Add(storage);
@@ -21,7 +23,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
 
         if (existingStorage is null)
         {
-            return Result.Fail(AppError.NotFound("Склад не найден"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         return Result.Ok(existingStorage);
@@ -33,7 +35,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         
         if (existingStorage is null)
         {
-            return Result.Fail(AppError.NotFound("Склад не найден"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
 
         await storageRepository.Update(storage);
@@ -47,7 +49,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         
         if (existingStorage is null)
         {
-            return Result.Fail(AppError.NotFound("Склад не найден"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         await storageRepository.Delete(id);

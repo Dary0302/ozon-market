@@ -8,6 +8,8 @@ namespace StorageService.Application.Implementations;
 
 public class StoragePointService(IStoragePointRepository storagePointRepository) : IStoragePointService
 {
+    private const string NotFoundExceptionMessage = "Местоположение склада не найдено";
+    
     public async Task<Result<Guid>> AddStoragePoint(StoragePoint storagePoint)
     {
         await storagePointRepository.Add(storagePoint);
@@ -21,7 +23,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
 
         if (existingStoragePoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение склада не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         return Result.Ok(existingStoragePoint);
@@ -33,7 +35,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
         
         if (existingStoragePoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение склада не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
 
         await storagePointRepository.Update(storagePoint);
@@ -47,7 +49,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
         
         if (existingStoragePoint is null)
         {
-            return Result.Fail(AppError.NotFound("Местоположение склада не найдено"));
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
         await storagePointRepository.Delete(id);

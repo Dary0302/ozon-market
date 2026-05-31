@@ -3,6 +3,8 @@ using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Mappers;
+using StorageService.Infrastructure.Models;
 
 namespace StorageService.Infrastructure.Implementations;
 
@@ -34,8 +36,8 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
                     FROM pvz 
                     WHERE id = @id";
         
-        var pvz = await connection.QueryFirstOrDefaultAsync<Pvz>(sql, new { id });
-        return pvz;
+        var dao = await connection.QueryFirstOrDefaultAsync<PvzDao>(sql, new { id });
+        return dao?.ToDomain();
     }
 
     public async Task<IEnumerable<Pvz>> GetAll()
@@ -44,7 +46,9 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         
         var sql = "SELECT id, address, pointId FROM pvz";
         
-        var allPvz = await connection.QueryAsync<Pvz>(sql);
+        var daos = await connection.QueryAsync<PvzDao>(sql);
+        
+        var allPvz = daos.Select(dao => dao.ToDomain());
 
         return allPvz;
     }

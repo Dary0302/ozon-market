@@ -5,11 +5,11 @@ namespace StorageService.Application.Interfaces.Services;
 
 public interface IPvzPointService
 {
-    public Task<Result<Guid>> AddPvzPoint(PvzPoint pvzPoint);
+    Task<Result<Guid>> AddPvzPoint(PvzPoint pvzPoint);
     
-    public Task<Result<PvzPoint>> GetPvzPoint(Guid id);
+    Task<Result<PvzPoint>> GetPvzPoint(Guid id);
     
-    public Task<Result> UpdatePvzPoint(Guid id, PvzPoint pvzPoint);
+    Task<Result> UpdatePvzPoint(Guid id, PvzPoint pvzPoint);
     
-    public Task<Result> DeletePvzPoint(Guid id);
+    Task<Result> DeletePvzPoint(Guid id);
 }

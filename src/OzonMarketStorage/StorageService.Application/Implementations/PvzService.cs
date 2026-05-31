@@ -8,6 +8,8 @@ namespace StorageService.Application.Implementations;
 
 public class PvzService(IPvzRepository pvzRepository) : IPvzService
 {
+    private const string NotFounExceptionMessage = "Пункт выдачи заказов не найден";
+    
     public async Task<Result<Guid>> AddPvz(Pvz pvz)
     {
         await pvzRepository.Add(pvz);
@@ -21,7 +23,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
 
         if (existingPvz is null)
         {
-            return Result.Fail(AppError.NotFound("Пункт выдачи заказов не найден"));
+            return Result.Fail(AppError.NotFound(NotFounExceptionMessage));
         }
         
         return Result.Ok(existingPvz);
@@ -40,7 +42,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         
         if (existingPvz is null)
         {
-            return Result.Fail(AppError.NotFound("Пункт выдачи заказов не найден"));
+            return Result.Fail(AppError.NotFound(NotFounExceptionMessage));
         }
 
         await pvzRepository.Update(pvz);
@@ -54,7 +56,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         
         if (existingPvz is null)
         {
-            return Result.Fail(AppError.NotFound("Пункт выдачи заказов не найден"));
+            return Result.Fail(AppError.NotFound(NotFounExceptionMessage));
         }
         
         await pvzRepository.Delete(id);

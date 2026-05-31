@@ -2,6 +2,8 @@ using Dapper;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
 using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Mappers;
+using StorageService.Infrastructure.Models;
 
 namespace StorageService.Infrastructure.Implementations;
 
@@ -21,20 +23,35 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
             quantity = storedProduct.Quantity
         });
     }
-
+    
     public async Task<IEnumerable<StoredProduct>> GetByOrderedProducts(List<DecreaseQuantity> orderedProducts)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
+    
+        var sql = @"
+                    SELECT 
+                        sp.productId AS Id, 
+                        sp.storageId AS StorageId,
+                        sp.quantity - req.quantity AS Quantity
+                    FROM storedProducts sp
+                    JOIN UNNEST(@ProductIds::uuid[], @StorageIds::uuid[], @Quantities::int[]) 
+                        AS req(productId, storageId, quantity)
+                        ON sp.productId = req.productId 
+                        AND sp.storageId = req.storageId";
+    
+        var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
+        var storageIds = orderedProducts.Select(x => x.StorageId).ToArray();
+        var quantities = orderedProducts.Select(x => x.Quantity).ToArray();
+    
+        var daos =  await connection.QueryAsync<StoredProductDao>(sql, new
+        {
+            ProductIds = productIds,
+            StorageIds = storageIds,
+            Quantities = quantities
+        });
+
+        var storedProducts = daos.Select(dao => dao.ToDomain());
         
-        var sql = @"SELECT 
-                        productId AS Id, 
-                        storageId AS StorageId,
-                        quantity - @quantity AS Quantity
-                    FROM storedProducts
-                    WHERE productId = @productId
-                    AND storageId = @storageId";
-        
-        var storedProducts = await connection.QueryAsync<StoredProduct>(sql, orderedProducts);
         return storedProducts;
     }
 
@@ -52,7 +69,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         return storedProducts;
     }
     
-    public async Task<List<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds)
+    public async Task<IEnumerable<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -63,45 +80,69 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         
         var storedProducts = await connection.QueryAsync<ProductQuantity>(sql, new { productIds });
         
-        return storedProducts.ToList();
+        return storedProducts;
     }
     
-    public async Task<List<StoredProduct>> GetProductsStorages(IEnumerable<Guid> productIds)
+    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts)
     {
+        var productIds = orderedProducts.Select(product => product.ProductId);
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = @"SELECT productId, storageId, quantity
                     FROM storedProducts
                     WHERE productId IN @productIds";
         
-        var storedProducts = await connection.QueryAsync<StoredProduct>(sql, new { productIds });
+        var daos = await connection.QueryAsync<StoredProductDao>(sql, new { productIds });
+
+        daos = GetSuitableStorages(daos, orderedProducts);
         
-        return storedProducts.ToList();
+        var storedProducts = daos.Select(dao => dao.ToDomain());
+        
+        return storedProducts;
     }
 
     public async Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"UPDATE storedProducts 
-            SET Quantity = Quantity - @Quantity 
-            WHERE Id = @ProductId 
-            AND Quantity >= @Quantity"; 
+        var sql = @"
+                    UPDATE storedProducts sp
+                    SET Quantity = sp.Quantity - req.quantity
+                    FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
+                        AS req(productId, quantity)
+                    WHERE sp.Id = req.productId 
+                      AND sp.Quantity >= req.quantity";
+        
+        var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
+        var quantities = orderedProducts.Select(x => x.Quantity).ToArray();
 
-        await connection.ExecuteAsync(sql, orderedProducts);
+        await connection.ExecuteAsync(sql, new
+        {
+            ProductIds = productIds,
+            Quantities = quantities
+        });
     }
     
     public async Task IncreaseCount(IEnumerable<IncreaseQuantity> arrivedProducts)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"UPDATE storedProducts 
-            SET Quantity = Quantity + @Quantity 
-            WHERE Id = @ProductId"; 
+        var sql = @"
+                    UPDATE storedProducts sp
+                    SET Quantity = sp.Quantity + req.quantity
+                    FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
+                        AS req(productId, quantity)
+                    WHERE sp.Id = req.productId";
+        
+        var productIds = arrivedProducts.Select(x => x.ProductId).ToArray();
+        var quantities = arrivedProducts.Select(x => x.Quantity).ToArray();
 
-        await connection.ExecuteAsync(sql, arrivedProducts);
+        await connection.ExecuteAsync(sql, new
+        {
+            ProductIds = productIds,
+            Quantities = quantities
+        });
     }
-    
 
     public async Task Delete(Guid id)
     {
@@ -110,5 +151,26 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         var sql = "DELETE FROM storedProducts WHERE productId = @productId";
 
         await connection.ExecuteAsync(sql, new { id });
+    }
+    
+    /// <summary>
+    /// Возвращает список из складов, в которых достаточно продуктов для заказа
+    /// </summary>
+    private static IEnumerable<StoredProductDao> GetSuitableStorages(IEnumerable<StoredProductDao> storedProducts, List<ProductQuantity> orderedProducts)
+    {
+        var suitableStorages = storedProducts.Join(orderedProducts,
+                storedProduct => storedProduct.ProductId,
+                orderedProduct => orderedProduct.ProductId,
+                (storedProduct, orderedProduct) => new
+                {
+                    ProductId = storedProduct.ProductId,
+                    StorageId = storedProduct.StorageId,
+                    StoredQuantity = storedProduct.Quantity,
+                    OrderedQuantity = orderedProduct.Quantity
+                })
+            .Where(storedProduct => storedProduct.StoredQuantity >= storedProduct.OrderedQuantity)
+            .Select(product => new StoredProductDao(product.ProductId, product.StorageId, product.StoredQuantity));
+        
+        return suitableStorages;
     }
 }

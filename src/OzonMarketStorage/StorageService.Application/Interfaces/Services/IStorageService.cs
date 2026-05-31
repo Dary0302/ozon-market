@@ -5,11 +5,11 @@ namespace StorageService.Application.Interfaces.Services;
 
 public interface IStorageService
 {
-    public Task<Result<Guid>> AddStorage(Storage storage);
+    Task<Result<Guid>> AddStorage(Storage storage);
     
-    public Task<Result<Storage>> GetStorage(Guid id);
+    Task<Result<Storage>> GetStorage(Guid id);
     
-    public Task<Result> UpdateStorage(Guid id, Storage storage);
+    Task<Result> UpdateStorage(Guid id, Storage storage);
     
-    public Task<Result> DeleteStorage(Guid id);
+    Task<Result> DeleteStorage(Guid id);
 }
