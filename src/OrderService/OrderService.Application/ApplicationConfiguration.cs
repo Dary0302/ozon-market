@@ -8,7 +8,7 @@ public static class ApplicationConfiguration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddSingleton<IOrderManagementService, Implementations.OrderManagementService>();
+        services.AddSingleton<IOrderManagementService, OrderManagementService>();
         
         return services;
     }
