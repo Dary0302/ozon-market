@@ -27,7 +27,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         return Result.Ok(existingStorage);
     }
 
-    public async Task<Result<bool>> UpdateStorage(Guid id, Storage storage)
+    public async Task<Result> UpdateStorage(Guid id, Storage storage)
     {
         var existingStorage = await storageRepository.Get(id);
         
@@ -41,7 +41,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         return Result.Ok();
     }
 
-    public async Task<Result<bool>> DeleteStorage(Guid id)
+    public async Task<Result> DeleteStorage(Guid id)
     {
         var existingStorage = await storageRepository.Get(id);
         

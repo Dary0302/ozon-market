@@ -2,6 +2,8 @@ using Core.Common.DbHelpers;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StorageService.Application.Interfaces.Repositories;
+using StorageService.Infrastructure.Implementations;
 
 namespace StorageService.Infrastructure.Configurations;
 
@@ -15,6 +17,12 @@ public static class InfrastructureConfiguration
                                ?? throw new NullReferenceException("No database connection string found.");;
 
         services.AddSingleton<IPostgresConnectionFactory>(new PostgresConnectionFactory(connectionString));
+
+        services.AddSingleton<IStorageRepository, StorageRepository>();
+        services.AddSingleton<IStoragePointRepository, StoragePointRepository>();
+        services.AddSingleton<IPvzRepository, PvzRepository>();
+        services.AddSingleton<IPvzPointRepository, PvzPointRepository>();
+        services.AddSingleton<IStoredProductRepository, StoredProductRepository>();
     
         return services;
     }

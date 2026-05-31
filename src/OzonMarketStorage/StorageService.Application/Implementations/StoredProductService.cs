@@ -84,7 +84,7 @@ public class StoredProductService(
         return Result.Ok(deliveryTime);
     }
 
-    public async Task<Result<bool>> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
+    public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
     {
         var storedProducts = await storedProductRepository.GetByOrderedProducts(orderedProducts);
 
@@ -95,14 +95,14 @@ public class StoredProductService(
 
         await storedProductRepository.DecreaseCount(orderedProducts);
         
-        return Result.Ok(true);
+        return Result.Ok();
     }
 
-    public async Task<Result<bool>> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts)
+    public async Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts)
     {
         await storedProductRepository.IncreaseCount(arrivedProducts);
         
-        return Result.Ok(true);
+        return Result.Ok();
     }
 
     /// <summary>

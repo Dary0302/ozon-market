@@ -27,7 +27,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
         return Result.Ok(existingPvzPoint);
     }
 
-    public async Task<Result<bool>> UpdatePvzPoint(Guid id, PvzPoint pvzPoint)
+    public async Task<Result> UpdatePvzPoint(Guid id, PvzPoint pvzPoint)
     {
         var existingStoragePoint = await pvzPointRepository.Get(id);
         
@@ -41,7 +41,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
         return Result.Ok();
     }
 
-    public async Task<Result<bool>> DeletePvzPoint(Guid id)
+    public async Task<Result> DeletePvzPoint(Guid id)
     {
         var existingPvzPoint = await pvzPointRepository.Get(id);
         

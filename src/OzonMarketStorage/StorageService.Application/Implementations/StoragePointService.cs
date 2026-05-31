@@ -27,7 +27,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
         return Result.Ok(existingStoragePoint);
     }
 
-    public async Task<Result<bool>> UpdateStoragePoint(Guid id, StoragePoint storagePoint)
+    public async Task<Result> UpdateStoragePoint(Guid id, StoragePoint storagePoint)
     {
         var existingStoragePoint = await storagePointRepository.Get(id);
         
@@ -41,7 +41,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
         return Result.Ok();
     }
 
-    public async Task<Result<bool>> DeleteStoragePoint(Guid id)
+    public async Task<Result> DeleteStoragePoint(Guid id)
     {
         var existingStoragePoint = await storagePointRepository.Get(id);
         

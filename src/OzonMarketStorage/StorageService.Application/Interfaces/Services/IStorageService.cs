@@ -9,7 +9,7 @@ public interface IStorageService
     
     public Task<Result<Storage>> GetStorage(Guid id);
     
-    public Task<Result<bool>> UpdateStorage(Guid id, Storage storage);
+    public Task<Result> UpdateStorage(Guid id, Storage storage);
     
-    public Task<Result<bool>> DeleteStorage(Guid id);
+    public Task<Result> DeleteStorage(Guid id);
 }

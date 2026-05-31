@@ -34,7 +34,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         return Result.Ok(allPvz);
     }
 
-    public async Task<Result<bool>> UpdatePvz(Guid id, Pvz pvz)
+    public async Task<Result> UpdatePvz(Guid id, Pvz pvz)
     {
         var existingPvz = await pvzRepository.Get(id);
         
@@ -48,7 +48,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         return Result.Ok();
     }
 
-    public async Task<Result<bool>> DeletePvz(Guid id)
+    public async Task<Result> DeletePvz(Guid id)
     {
         var existingPvz = await pvzRepository.Get(id);
         

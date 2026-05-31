@@ -13,7 +13,7 @@ public interface IStoredProductService
 
     public Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts);
     
-    public Task<Result<bool>> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts);
+    public Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts);
     
-    public Task<Result<bool>> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts);
+    public Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts);
 }
