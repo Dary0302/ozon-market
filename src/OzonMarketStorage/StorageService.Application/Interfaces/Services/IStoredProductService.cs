@@ -12,6 +12,8 @@ public interface IStoredProductService
     Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts);
 
     Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts);
+
+    Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts);
     
     Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts);
     

@@ -50,8 +50,6 @@ public class StoredProductService(
     
     public async Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts)
     {
-        var storedProducts = (await storedProductRepository.GetProductsStorages(orderedProducts)).ToList();
-        
         var pvzPoint =  await pvzPointRepository.Get(pvzId);
 
         if (pvzPoint is null)
@@ -59,17 +57,49 @@ public class StoredProductService(
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
 
-        var storageIds = storedProducts.Select(product => product.StorageId);
+        var result = await GetOrderStorages(orderedProducts);
+        var storedProducts = result.Item1;
+        var storagePoints = result.Item2;
         
-        var storagePoints = await storagePointRepository.GetStoragePoints(storageIds);
-        
-        var orderStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
-        
-        var farthestStorageDistance = orderStorages.Max(product => product.Distance);
+        var chosenStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
+
+        var farthestStorageDistance = chosenStorages.Max(product => product.Distance);
 
         var deliveryTime = CalculateDeliveryTime(farthestStorageDistance);
 
         return Result.Ok(deliveryTime);
+    }
+
+    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts)
+    {
+        var pvzPoint =  await pvzPointRepository.Get(pvzId);
+
+        if (pvzPoint is null)
+        {
+            return Result.Fail(AppError.NotFound("Пвз не найден"));
+        }
+        
+        var result = await GetOrderStorages(orderedProducts);
+        var storedProducts = result.Item1;
+        
+        var orderStorages = storedProducts.Select(product => new DecreaseQuantity (
+            product.ProductId,
+            product.StorageId,
+            product.Quantity
+        )).ToList();
+
+        return orderStorages;
+    }
+    
+    private async Task<(List<StoredProduct>, IEnumerable<StoragePoint>)> GetOrderStorages(List<ProductQuantity> orderedProducts)
+    {
+        var storedProducts = (await storedProductRepository.GetProductsStorages(orderedProducts)).ToList();
+
+        var storageIds = storedProducts.Select(product => product.StorageId);
+        
+        var storagePoints = await storagePointRepository.GetStoragePoints(storageIds);
+        
+        return (storedProducts, storagePoints);
     }
 
     /// <summary>
