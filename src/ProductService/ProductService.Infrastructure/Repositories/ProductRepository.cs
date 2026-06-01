@@ -14,8 +14,8 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO products (id, name, description, type)
-                  VALUES (@id, @name, @description, @type)
+                  INSERT INTO products (id, name, description, type, photoId)
+                  VALUES (@id, @name, @description, @type, @photoId)
                   """;
 
         await connection.ExecuteAsync(sql,
@@ -24,7 +24,8 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
                 id = product.Id, 
                 name = product.Name, 
                 description = product.Description, 
-                type = product.Type 
+                type = product.Type,
+                photoId = product.PhotoId
             });
     }
 
@@ -33,7 +34,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  SELECT id, name, description, type
+                  SELECT id, name, description, type, photoId
                   FROM products
                   WHERE id = @id
                   """;
@@ -49,18 +50,20 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         var sql = """
                   UPDATE products
                   SET
-                      name = @Name,
-                      description = @Description,
-                      type = @Type
+                      name = @name,
+                      description = @description,
+                      type = @type,
+                      photoId = @photoId
                   WHERE id = @Id
                   """;
 
         await connection.ExecuteAsync(sql, new
         {
-            Id = id,
-            product.Name,
-            product.Description,
-            product.Type
+            id = id,
+            name = product.Name,
+            description = product.Description,
+            type = product.Type,
+            photoId = product.PhotoId
         });
     }
 

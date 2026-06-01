@@ -1,6 +1,6 @@
 namespace ProductService.Application.Dto;
 
-public class AddPhotoDto
+public record AddPhotoDto
 {
     public byte[] PhotoData { get; init; }
 }

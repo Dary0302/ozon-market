@@ -9,7 +9,7 @@ public static class DaoMapper
     {
         return dao is null
             ? null
-            : new Product(dao.Name, dao.Description, dao.Type);
+            : new Product(dao.Name, dao.Description, dao.Type, dao.PhotoId);
     }
 
     public static Price? ToDomain(this PriceDao? dao)
