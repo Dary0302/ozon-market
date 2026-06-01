@@ -10,7 +10,7 @@
       <PackageReference Include="FluentResults" Version="4.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
       <PackageReference Include="AWSSDK.S3" Version="4.0.23.5" />
-      <PackageReference Include="SixLabors.ImageSharp" Version="4.0.0" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     </ItemGroup>
 
     <ItemGroup>
