@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
-namespace ProductService.Api;
+namespace Core.Common.HttpLogic;
 
 public class ExceptionHandler : IExceptionHandler
 {

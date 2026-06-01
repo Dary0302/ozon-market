@@ -13,7 +13,8 @@ public static class HttpServiceSetup
     {
         services
             .AddHttpContextAccessor()
-            .AddHttpClient();
+            .AddHttpClient()
+            .AddExceptionHandler<ExceptionHandler>();
         
         services.TryAddTransient<IHttpRequestService, HttpRequestService>();
         services.AddTransient<IHttpConnectionService, HttpConnectionService>();
