@@ -10,6 +10,18 @@ public class ProductManagementService(IProductRepository productRepository) : IP
 {
     private const string NotFoundExceptionMessage = "Продукт не найден";
     
+    public async Task<Result<Product>> GetProducts(Filter filter)
+    {
+        var product = await productRepository.Get(id);
+
+        if (product is null)
+        {
+            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
+        }
+
+        return Result.Ok(product);
+    }
+    
     public async Task<Result<Product>> GetProduct(Guid id)
     {
         var product = await productRepository.Get(id);
@@ -29,7 +41,7 @@ public class ProductManagementService(IProductRepository productRepository) : IP
         return Result.Ok(product.Id);
     }
 
-    public async Task<Result<bool>> UpdateProduct(Guid id, Product product)
+    public async Task<Result> UpdateProduct(Guid id, Product product)
     {
         var existingProduct = await productRepository.Get(id);
 
@@ -43,7 +55,7 @@ public class ProductManagementService(IProductRepository productRepository) : IP
         return Result.Ok();
     }
 
-    public async Task<Result<bool>> DeleteProduct(Guid id)
+    public async Task<Result> DeleteProduct(Guid id)
     {
         var existingProduct = await productRepository.Get(id);
 

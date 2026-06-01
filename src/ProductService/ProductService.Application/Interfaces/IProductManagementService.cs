@@ -9,7 +9,7 @@ public interface IProductManagementService
     
     Task<Result<Guid>> AddProduct(Product product);
     
-    Task<Result<bool>> UpdateProduct(Guid id, Product product);
+    Task<Result> UpdateProduct(Guid id, Product product);
     
-    Task<Result<bool>> DeleteProduct(Guid id);
+    Task<Result> DeleteProduct(Guid id);
 }

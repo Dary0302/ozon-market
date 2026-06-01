@@ -10,7 +10,9 @@ public static class ApplicationConfiguration
     {
         services
             .AddScoped<IProductManagementService, ProductManagementService>()
-            .AddScoped<IPricingService, PricingService>();
+            .AddScoped<IPricingService, PricingService>()
+            .AddScoped<IS3StorageService, S3StorageService>()
+            .AddScoped<IPhotoService, PhotoService>();
         
         return services;
     }
