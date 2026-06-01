@@ -32,7 +32,14 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                   )
                   """;
 
-        await connection.ExecuteAsync(sql, new { price.Id, price.ProductId, price.Date, price.Cost, price.Discount });
+        await connection.ExecuteAsync(sql, new
+        {
+            id = price.Id, 
+            productId = price.ProductId, 
+            date = price.Date,
+            cost = price.Cost,
+            discount = price.Discount
+        });
     }
 
     public async Task<Price?> GetPrice(Guid productId)
@@ -59,7 +66,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
         return dao.ToDomain();
     }
 
-    public async Task<List<Price?>> GetPrices(List<Guid> productIds)
+    public async Task<IEnumerable<Price?>> GetPrices(List<Guid> productIds)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -80,7 +87,6 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
             new { productIds });
 
         return daos
-            .Select(x => x.ToDomain())
-            .ToList();
+            .Select(x => x.ToDomain());
     }
 }

@@ -6,5 +6,5 @@ public interface IPriceRepository
     
     Task<Price?> GetPrice(Guid productId);
     
-    Task<List<Price?>> GetPrices(List<Guid> productIds);
+    Task<IEnumerable<Price?>> GetPrices(List<Guid> productIds);
 }

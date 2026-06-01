@@ -14,7 +14,7 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
             .Select(product => product.ProductId)
             .ToList();
 
-        var prices = await priceRepository.GetPrices(productsIds);
+        var prices = (await priceRepository.GetPrices(productsIds)).ToList();
 
         if (prices.Count != productsIds.Count)
         {
