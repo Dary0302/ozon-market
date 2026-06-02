@@ -20,7 +20,7 @@ public class StoredProductService(
         return Result.Ok();
     }
 
-    public async Task<Result<IEnumerable<ProductQuantity>>> GetStoredProducts()
+    public async Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock()
     {
         var storedProducts = await storedProductRepository.GetAllInStock();
 
@@ -56,10 +56,9 @@ public class StoredProductService(
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
-
-        var result = await GetOrderStorages(orderedProducts);
-        var storedProducts = result.Item1;
-        var storagePoints = result.Item2;
+        
+        var storedProducts = (await GetProductsStorages(orderedProducts)).ToList();
+        var storagePoints = await GetOrderStorages(storedProducts);
         
         var chosenStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
 
@@ -79,8 +78,7 @@ public class StoredProductService(
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
         
-        var result = await GetOrderStorages(orderedProducts);
-        var storedProducts = result.Item1;
+        var storedProducts = (await GetProductsStorages(orderedProducts)).ToList();
         
         var orderStorages = storedProducts.Select(product => new DecreaseQuantity (
             product.ProductId,
@@ -90,18 +88,45 @@ public class StoredProductService(
 
         return orderStorages;
     }
-    
-    private async Task<(List<StoredProduct>, IEnumerable<StoragePoint>)> GetOrderStorages(List<ProductQuantity> orderedProducts)
-    {
-        var storedProducts = (await storedProductRepository.GetProductsStorages(orderedProducts)).ToList();
 
+    public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
+    {
+        var storedProducts = await storedProductRepository.GetByOrderedProducts(orderedProducts);
+
+        if (storedProducts.Any(product => product.Quantity < 0))
+        {
+            return Result.Fail(AppError.UnprocessableContent(NotEnoughProductExceptionMessage));
+        }
+
+        await storedProductRepository.DecreaseCount(orderedProducts);
+        
+        return Result.Ok();
+    }
+
+    public async Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts)
+    {
+        await storedProductRepository.IncreaseCount(arrivedProducts);
+        
+        return Result.Ok();
+    }
+    
+    
+    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts)
+    {
+        var storedProducts = await storedProductRepository.GetProductsStorages(orderedProducts);
+
+        return storedProducts;
+    }
+
+    public async Task<IEnumerable<StoragePoint>> GetOrderStorages(List<StoredProduct> storedProducts)
+    {
         var storageIds = storedProducts.Select(product => product.StorageId);
         
         var storagePoints = await storagePointRepository.GetStoragePoints(storageIds);
-        
-        return (storedProducts, storagePoints);
-    }
 
+        return storagePoints;
+    }
+    
     /// <summary>
     /// Возвращает примерное время доставки заказа
     /// </summary>
@@ -128,27 +153,6 @@ public class StoredProductService(
         var travelTime = farthestStorageDistance * scale / (averageSpeed * shiftDuration);
         var deliveryTime = DateTime.Now.AddHours(travelTime);
         return deliveryTime;
-    }
-
-    public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
-    {
-        var storedProducts = await storedProductRepository.GetByOrderedProducts(orderedProducts);
-
-        if (storedProducts.Any(product => product.Quantity < 0))
-        {
-            return Result.Fail(AppError.UnprocessableContent(NotEnoughProductExceptionMessage));
-        }
-
-        await storedProductRepository.DecreaseCount(orderedProducts);
-        
-        return Result.Ok();
-    }
-
-    public async Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts)
-    {
-        await storedProductRepository.IncreaseCount(arrivedProducts);
-        
-        return Result.Ok();
     }
 
     /// <summary>

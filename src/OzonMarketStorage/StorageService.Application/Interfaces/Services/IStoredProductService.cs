@@ -7,7 +7,7 @@ public interface IStoredProductService
 {
     Task<Result> AddStoredProduct(StoredProduct storedProduct);
     
-    Task<Result<IEnumerable<ProductQuantity>>> GetStoredProducts();
+    Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock();
     
     Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts);
 
