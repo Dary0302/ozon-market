@@ -5,7 +5,7 @@ namespace StorageService.Application.Interfaces.Services;
 
 public interface IStoredProductService
 {
-    Task<Result<bool>> AddStoredProduct(StoredProduct storedProduct);
+    Task<Result> AddStoredProduct(StoredProduct storedProduct);
     
     Task<Result<IEnumerable<ProductQuantity>>> GetStoredProducts();
     

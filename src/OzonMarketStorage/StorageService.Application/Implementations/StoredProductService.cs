@@ -13,7 +13,7 @@ public class StoredProductService(
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
-    public async Task<Result<bool>> AddStoredProduct(StoredProduct storedProduct)
+    public async Task<Result> AddStoredProduct(StoredProduct storedProduct)
     {
         await storedProductRepository.Add(storedProduct);
         

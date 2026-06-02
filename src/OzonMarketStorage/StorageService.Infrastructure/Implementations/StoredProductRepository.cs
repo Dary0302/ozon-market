@@ -64,7 +64,9 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
                     GROUP BY productId
                     HAVING totalQuantity > 0";
         
-        var storedProducts = await connection.QueryAsync<ProductQuantity>(sql);
+        var daos = await connection.QueryAsync<ProductQuantityDao>(sql);
+
+        var storedProducts = daos.Select(dao => dao.ToDomain());
         
         return storedProducts;
     }
@@ -78,7 +80,9 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
                     WHERE productId IN @productIds 
                     GROUP BY productId";
         
-        var storedProducts = await connection.QueryAsync<ProductQuantity>(sql, new { productIds });
+        var daos = await connection.QueryAsync<ProductQuantityDao>(sql, new { productIds });
+
+        var storedProducts = daos.Select(dao => dao.ToDomain());
         
         return storedProducts;
     }

@@ -29,4 +29,9 @@ public static class DaoMapper
     {
         return new StoredProduct(dao.ProductId, dao.StorageId, dao.Quantity);
     }
+
+    public static ProductQuantity ToDomain(this ProductQuantityDao dao)
+    {
+        return new ProductQuantity(dao.ProductId, dao.Quantity);
+    }
 }
