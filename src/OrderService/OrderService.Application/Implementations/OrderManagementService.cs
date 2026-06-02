@@ -11,6 +11,7 @@ namespace OrderService.Application.Implementations;
 public class OrderManagementService(IOrderRepository orderRepository, 
     IOrderItemRepository orderItemRepository, 
     IOrderInfoRepository orderInfoRepository,
+    IUnitOfWork unitOfWork,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderManagementService
 {
@@ -37,10 +38,21 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
         var productStock = PrepareProductStock(storageTask.Result, normalizedProducts);
+
+        await unitOfWork.ExecuteInTransaction(async () =>
+        {
+            await orderRepository.Create(
+                order,
+                unitOfWork.CurrentConnection,
+                unitOfWork.CurrentTransaction);
+
+            await orderItemRepository.Add(
+                items,
+                unitOfWork.CurrentConnection,
+                unitOfWork.CurrentTransaction);
+        });
         
-        //TODO: подумать над механизмом единых транзакций для бд и сервисов, вероятно, нужен паттерн Saga
-        await orderRepository.Create(order);
-        await orderItemRepository.Add(items);
+        //TODO: внести в кафку
         await storageServiceMock.ReduceCountOfProducts(productStock);
         
         return Result.Ok(order.Id);
@@ -126,14 +138,16 @@ public class OrderManagementService(IOrderRepository orderRepository,
         if (result.IsFailed)
             return Result.Fail(result.Errors);
 
-        await orderRepository.Save(order);
+        await unitOfWork.ExecuteInTransaction(async () =>
+            await orderRepository.Save(order, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
 
         return Result.Ok(order.Id);
     }
 
     public async Task<Result> Delete(Guid id)
     {
-        await orderRepository.Delete(id);
+        await unitOfWork.ExecuteInTransaction(async () =>
+            await orderRepository.Delete(id, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
         return Result.Ok();
     }
 

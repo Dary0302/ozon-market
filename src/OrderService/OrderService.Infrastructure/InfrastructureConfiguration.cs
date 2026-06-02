@@ -21,6 +21,7 @@ public static class InfrastructureConfiguration
         services.AddSingleton<IOrderRepository, OrderRepository>();
         services.AddSingleton<IOrderItemRepository, OrderItemRepository>();
         services.AddSingleton<IOrderInfoRepository, OrderInfoRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     
         return services;
     }
