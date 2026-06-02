@@ -1,4 +1,5 @@
-﻿using OrderService.Domain;
+﻿using OrderService.Application.Models;
+using OrderService.Domain;
 
 namespace OrderService.Application.Mocks;
 

@@ -20,9 +20,10 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var normalizedProducts = NormalizeProducts(products);
 
         var stockTask = storageServiceMock.CheckStock(normalizedProducts);
-        var deliveryTask = storageServiceMock.GetDeliveryDate(pvzId, normalizedProducts);
+        var deliveryDateTask = storageServiceMock.GetDeliveryDate(pvzId, normalizedProducts);
+        var storageTask = storageServiceMock.GetProductStorage(normalizedProducts);
         var amountTask = productServiceMock.CalculateAmount(normalizedProducts);
-        await Task.WhenAll(stockTask, deliveryTask, amountTask);
+        await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);
 
         var calculatedAmount = amountTask.Result;
         if (!IsAmountValid(calculatedAmount, clientAmount))
@@ -32,14 +33,15 @@ public class OrderManagementService(IOrderRepository orderRepository,
         if (lackingProducts.Any())
             return Result.Fail(OrderErrors.InsufficientStock(lackingProducts));
 
-        var order = new Order(calculatedAmount, pvzId, deliveryTask.Result);
+        var order = new Order(calculatedAmount, pvzId, deliveryDateTask.Result);
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
+        var productStock = PrepareProductStock(storageTask.Result, normalizedProducts);
         
         //TODO: подумать над механизмом единых транзакций для бд и сервисов, вероятно, нужен паттерн Saga
         await orderRepository.Create(order);
         await orderItemRepository.Add(items);
-        await storageServiceMock.ReduceCountOfProducts(normalizedProducts);
+        await storageServiceMock.ReduceCountOfProducts(productStock);
         
         return Result.Ok(order.Id);
     }
@@ -72,6 +74,20 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 stockCheck.ProductId,
                 Math.Abs(stockCheck.Difference)))
             .ToList();
+    }
+
+    private IEnumerable<DecreaseQuantity> PrepareProductStock(IEnumerable<ProductStorage> productsStorage, 
+        IEnumerable<ProductQuantity> productsStock)
+    {
+        return productsStock
+            .Join(
+                productsStorage,
+                product => product.ProductId,
+                storage => storage.ProductId,
+                (product, storage) => new DecreaseQuantity(
+                    product.ProductId,
+                    storage.StorageId,
+                    product.Quantity));
     }
 
     public async Task<Result<Order>> GetById(Guid id)
