@@ -8,22 +8,23 @@ using OrderService.Domain.Exseptions;
 
 namespace OrderService.Application.Implementations;
 
-public class OrderService(IOrderRepository orderRepository, 
+public class OrderManagementService(IOrderRepository orderRepository, 
     IOrderItemRepository orderItemRepository, 
     IOrderInfoRepository orderInfoRepository,
+    IUnitOfWork unitOfWork,
     IStorageServiceMock storageServiceMock,
-    IProductServiceMock productServiceMock) : IOrderService
+    IProductServiceMock productServiceMock) : IOrderManagementService
 {
     public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, IEnumerable<ProductQuantity> products)
     {
         //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
-        var productIds = normalizedProducts.Select(product => product.ProductId);
 
         var stockTask = storageServiceMock.CheckStock(normalizedProducts);
-        var deliveryTask = storageServiceMock.GetDeliveryDate(pvzId, productIds);
+        var deliveryDateTask = storageServiceMock.GetDeliveryDate(pvzId, normalizedProducts);
+        var storageTask = storageServiceMock.GetProductStorage(normalizedProducts);
         var amountTask = productServiceMock.CalculateAmount(normalizedProducts);
-        await Task.WhenAll(stockTask, deliveryTask, amountTask);
+        await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);
 
         var calculatedAmount = amountTask.Result;
         if (!IsAmountValid(calculatedAmount, clientAmount))
@@ -33,14 +34,26 @@ public class OrderService(IOrderRepository orderRepository,
         if (lackingProducts.Any())
             return Result.Fail(OrderErrors.InsufficientStock(lackingProducts));
 
-        var order = new Order(calculatedAmount, pvzId, deliveryTask.Result);
+        var order = new Order(calculatedAmount, pvzId, deliveryDateTask.Result);
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
+        var productStock = PrepareProductStock(storageTask.Result, normalizedProducts);
+
+        await unitOfWork.ExecuteInTransaction(async () =>
+        {
+            await orderRepository.Create(
+                order,
+                unitOfWork.CurrentConnection,
+                unitOfWork.CurrentTransaction);
+
+            await orderItemRepository.Add(
+                items,
+                unitOfWork.CurrentConnection,
+                unitOfWork.CurrentTransaction);
+        });
         
-        //TODO: подумать над механизмом единых транзакций для бд и сервисов, вероятно, нужен паттерн Saga
-        await orderRepository.Create(order);
-        await orderItemRepository.Add(items);
-        await storageServiceMock.ReduceCountOfProducts(normalizedProducts);
+        //TODO: внести в кафку
+        await storageServiceMock.ReduceCountOfProducts(productStock);
         
         return Result.Ok(order.Id);
     }
@@ -75,9 +88,27 @@ public class OrderService(IOrderRepository orderRepository,
             .ToList();
     }
 
-    public async Task<Result<Order?>> GetById(Guid id)
+    private IEnumerable<DecreaseQuantity> PrepareProductStock(IEnumerable<ProductStorage> productsStorage, 
+        IEnumerable<ProductQuantity> productsStock)
+    {
+        return productsStock
+            .Join(
+                productsStorage,
+                product => product.ProductId,
+                storage => storage.ProductId,
+                (product, storage) => new DecreaseQuantity(
+                    product.ProductId,
+                    storage.StorageId,
+                    product.Quantity));
+    }
+
+    public async Task<Result<Order>> GetById(Guid id)
     {
         var result = await orderRepository.GetById(id);
+
+        if (result == null)
+            return Result.Fail(OrderErrors.NotFound(id));
+            
         return Result.Ok(result);
     }
 
@@ -107,14 +138,16 @@ public class OrderService(IOrderRepository orderRepository,
         if (result.IsFailed)
             return Result.Fail(result.Errors);
 
-        await orderRepository.Save(order);
+        await unitOfWork.ExecuteInTransaction(async () =>
+            await orderRepository.Save(order, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
 
         return Result.Ok(order.Id);
     }
 
     public async Task<Result> Delete(Guid id)
     {
-        await orderRepository.Delete(id);
+        await unitOfWork.ExecuteInTransaction(async () =>
+            await orderRepository.Delete(id, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
         return Result.Ok();
     }
 
@@ -126,6 +159,7 @@ public class OrderService(IOrderRepository orderRepository,
         await Task.WhenAll(orderTask, itemsTask);
 
         var order = orderTask.Result;
+        
         if (order == null)
             return Result.Fail(OrderErrors.NotFound(id));
         

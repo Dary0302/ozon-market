@@ -28,7 +28,7 @@ public static class OpenApiConfiguration
     {
         var baseDirectory = AppContext.BaseDirectory;
                 
-        const string projectPrefix = "OrderService"; 
+        const string projectPrefix = "OrderManagementService"; 
 
         var xmlFiles = Directory.EnumerateFiles(baseDirectory, "*.xml")
             .Where(file => Path.GetFileName(file).StartsWith(projectPrefix));

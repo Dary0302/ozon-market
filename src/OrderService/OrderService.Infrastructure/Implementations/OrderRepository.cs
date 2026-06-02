@@ -1,5 +1,7 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using Core.Common.DbHelpers.Interfaces;
+using Npgsql;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Models;
 using OrderService.Domain;
@@ -10,14 +12,12 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOrderRepository
 {
-    public async Task<Guid> Create(Order order)
-    {
-        await using var connection = connectionFactory.GetConnection();
-        
-        var sql = "INSERT INTO orders (id, pvz_id, created_on, status, dalivery_date, amount) " +
+    public async Task<Guid> Create(Order order, IDbConnection dbConnection, IDbTransaction dbTransaction)
+    { 
+        var sql = "INSERT INTO orders (id, pvz_id, created_on, status, delivery_date, amount) " +
                   "VALUES (@id, @pvz_id, @createdOn, @status, @deliveryDate, @amount)";
 
-        var rows = await connection.ExecuteAsync(sql, new
+        var rows = await dbConnection.ExecuteAsync(sql, new
         {
             id = order.Id,
             pvz_id = order.PvzId,
@@ -25,7 +25,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
             status = order.Status,
             deliveryDate = order.DeliveryDate,
             amount = order.Amount
-        });
+        }, dbTransaction);
 
         return order.Id;
     }
@@ -64,19 +64,17 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return new PagedResult<Order>(items, total);
     }
 
-    public async Task<Guid> Save(Order order)
+    public async Task<Guid> Save(Order order, IDbConnection dbConnection, IDbTransaction dbTransaction)
     {
-        await using var connection =  connectionFactory.GetConnection();
-        
         var sql = "UPDATE orders " +
                   "SET status = @status " +
                   "WHERE id = @id";
         
-        var rows = await connection.ExecuteAsync(sql, new
+        var rows = await dbConnection.ExecuteAsync(sql, new
         {
             status = order.Status, 
             id = order.Id,
-        });
+        }, dbTransaction);
         
         if (rows == 0)
             throw new KeyNotFoundException($"Заказ с id {order.Id} не найден");
@@ -84,12 +82,10 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return order.Id;
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, IDbConnection dbConnection, IDbTransaction dbTransaction)
     {
-        await using var connection = connectionFactory.GetConnection();
-
         var sql = "DELETE FROM orders WHERE id = @id";
-        var rows = await connection.ExecuteAsync(sql, new { id });
+        var rows = await dbConnection.ExecuteAsync(sql, new { id }, dbTransaction);
 
         if (rows == 0)
             throw new KeyNotFoundException($"Заказ с id {id} не найден");

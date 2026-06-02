@@ -1,4 +1,5 @@
-﻿using Core.Common.DbHelpers.Interfaces;
+﻿using System.Data;
+using Core.Common.DbHelpers.Interfaces;
 using Dapper;
 using OrderService.Application.Interfaces;
 using OrderService.Domain;
@@ -9,20 +10,18 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) : IOrderItemRepository
 {
-    public async Task<Guid> Add(List<OrderItem> orderItems)
+    public async Task<Guid> Add(List<OrderItem> orderItems, IDbConnection dbConnection, IDbTransaction dbTransaction)
     {
-        await using var connection = connectionFactory.GetConnection();
-
         var sql = "INSERT INTO order_items (order_id, product_id, quantity) " +
                   "SELECT @orderId, unnest(@productIds), unnest(@quantities) " +
                   "ON CONFLICT (order_id, product_id) DO NOTHING";
 
-        var rows = await connection.ExecuteAsync(sql, new
+        var rows = await dbConnection.ExecuteAsync(sql, new
         {
             order_id = orderItems.First().OrderId,
             product_id = orderItems.Select(item => item.ProductId).ToArray(),
             quantities = orderItems.Select(item => item.Quantity).ToArray()
-        });
+        }, dbTransaction);
         
         if (rows != orderItems.Count())
             throw new InvalidOperationException($"Заказ содержит дублирующие позиции");

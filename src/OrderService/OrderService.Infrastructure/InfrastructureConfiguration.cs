@@ -20,6 +20,8 @@ public static class InfrastructureConfiguration
         services.AddSingleton<IPostgresConnectionFactory>(new PostgresConnectionFactory(connectionString));
         services.AddSingleton<IOrderRepository, OrderRepository>();
         services.AddSingleton<IOrderItemRepository, OrderItemRepository>();
+        services.AddSingleton<IOrderInfoRepository, OrderInfoRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
     
         return services;
     }
