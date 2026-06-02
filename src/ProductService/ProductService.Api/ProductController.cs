@@ -31,7 +31,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
     /// <param name="filter">Критерии фильтрации продуктов</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [HttpGet]
+    [HttpPost]
     public async Task<ActionResult<IReadOnlyCollection<Product?>>> GetProducts(
         [FromBody] ProductFilter filter,
         CancellationToken cancellationToken)
@@ -46,7 +46,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
     /// <param name="product">Данные продукта</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [HttpPost]
+    [HttpPost("add")]
     public async Task<ActionResult<Guid>> Add(
         [FromBody] CreateProductDto product,
         CancellationToken cancellationToken)
