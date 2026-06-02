@@ -12,7 +12,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 {
     private const string NotFoundExceptionMessage = "Продукт не найден";
 
-    public async Task<Result<Product>> GetProducts(Filter filter)
+    public async Task<Result<Product>> GetProduct(Guid id)
     {
         var product = await productRepository.Get(id);
 
@@ -23,15 +23,10 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 
         return Result.Ok(product);
     }
-
-    public async Task<Result<Product>> GetProduct(Guid id)
+    
+    public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter)
     {
-        var product = await productRepository.Get(id);
-
-        if (product is null)
-        {
-            return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
-        }
+        var product = await productRepository.GetProductsByFilter(filter);
 
         return Result.Ok(product);
     }
