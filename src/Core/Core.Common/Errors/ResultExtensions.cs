@@ -42,4 +42,16 @@ public static class ResultExtensions
         
         return ConvertToActionResult(error);
     }
+    
+    public static ActionResult<TDto> ToActionResult<T, TDto>(this Result<T> result, Func<T, TDto> mapper)
+    {
+        if (result.IsSuccess)
+            return new OkObjectResult(mapper(result.Value));
+
+        var error = result.Errors.OfType<AppError>().FirstOrDefault()
+                    ?? result.Errors[0] as AppError
+                    ?? new AppError(ErrorStatus.Unknown, result.Errors[0].Message);
+
+        return ConvertToActionResult(error);
+    }
 }

@@ -31,4 +31,8 @@
       <PackageReference Include="Dapper" Version="2.1.79" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Validators\" />
+    </ItemGroup>
+
 </Project>

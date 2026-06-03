@@ -2,5 +2,5 @@
 
 public record BaseDto
 {
-    private Guid Id { get; init; }
+    public Guid Id { get; init; }
 }

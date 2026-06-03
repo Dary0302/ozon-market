@@ -2,9 +2,11 @@
 
 namespace OrderService.Api.Dto;
 
-public record GetOrderResponseDto(
-    Guid PvzId, 
-    Status Status,
-    DateTime DeliveryDate,
-    DateTime CreatedOn,
-    decimal Amount) : BaseDto;
+public record GetOrderResponseDto : BaseDto
+{
+    public required Guid PvzId { get; init; }
+    public required string Status { get; init; }
+    public required DateTime DeliveryDate { get; init; }
+    public required DateTime CreatedOn { get; init; }
+    public required decimal Amount { get; init; }
+}
