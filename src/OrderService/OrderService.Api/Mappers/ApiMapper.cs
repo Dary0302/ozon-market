@@ -6,9 +6,9 @@ namespace OrderService.Api.Mappers;
 
 public static class ApiMapper
 {
-    public static GetOrderResponseDto ToHttp(this Order response)
+    public static OrderResponseDto ToHttp(this Order response)
     {
-        return new GetOrderResponseDto
+        return new OrderResponseDto
         {
             Id = response.Id,
             PvzId = response.PvzId,
@@ -19,9 +19,9 @@ public static class ApiMapper
         };
     }
     
-    public static GetOrderInfoResponseDto ToHttp(this OrderInfo response)
+    public static OrderInfoResponseDto ToHttp(this OrderInfo response)
     {
-        return new GetOrderInfoResponseDto
+        return new OrderInfoResponseDto
         {
             Id = response.Order.Id,
             PvzId = response.Order.PvzId,
@@ -32,13 +32,19 @@ public static class ApiMapper
         };
     }
 
-    public static PagedResponseDto<Order> ToHttp(this PagedResult<Order> response)
+    public static PagedResponseDto<OrderResponseDto> ToHttp(this PagedResult<Order> response)
     {
-        return new PagedResponseDto<Order>(response.Items, response.TotalCount);
+        return new PagedResponseDto<OrderResponseDto>(
+            response.Items
+                .Select(order => order.ToHttp()), 
+            response.TotalCount);
     }
     
-    public static PagedResponseDto<OrderInfo> ToHttp(this PagedResult<OrderInfo> response)
+    public static PagedResponseDto<OrderInfoResponseDto> ToHttp(this PagedResult<OrderInfo> response)
     {
-        return new PagedResponseDto<OrderInfo>(response.Items, response.TotalCount);
+        return new PagedResponseDto<OrderInfoResponseDto>(
+            response.Items
+                .Select(item => item.ToHttp()), 
+            response.TotalCount);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace OrderService.Api.Dto;
 
-public record GetOrderResponseDto : BaseDto
+public record OrderResponseDto : BaseDto
 {
     public required Guid PvzId { get; init; }
     public required string Status { get; init; }

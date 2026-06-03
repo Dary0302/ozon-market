@@ -3,7 +3,7 @@ using OrderService.Domain;
 
 namespace OrderService.Api.Dto;
 
-public record GetOrderInfoResponseDto : BaseDto
+public record OrderInfoResponseDto : BaseDto
 {
     public required Guid PvzId { get; init; }
     public required string Status { get; init; }

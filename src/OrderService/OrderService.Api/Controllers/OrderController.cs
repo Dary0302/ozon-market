@@ -9,7 +9,7 @@ namespace OrderService.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
-public class OrderController(IOrderManagementService service) : Controller
+public class OrderController(IOrderManagementService service) : ControllerBase
 {
     /// <summary>
     /// Создание заказа
@@ -18,7 +18,7 @@ public class OrderController(IOrderManagementService service) : Controller
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [HttpPost("createOrder")]
+    [HttpPost]
     public async Task<ActionResult<Guid>> CreateOrder([FromBody] CreateOrderRequestDto request)
     {
         var result = await service.Create(request.PvzId, request.ClientAmount, request.Products);
@@ -33,7 +33,7 @@ public class OrderController(IOrderManagementService service) : Controller
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<GetOrderResponseDto>> GetOrder(Guid id)
+    public async Task<ActionResult<OrderResponseDto>> GetOrder(Guid id)
     {
         var result = await service.GetById(id);
         return result.ToActionResult(orders => orders.ToHttp());
@@ -61,7 +61,7 @@ public class OrderController(IOrderManagementService service) : Controller
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{id:guid}/details")]
-    public async Task<ActionResult<GetOrderInfoResponseDto>> GetOrderInfo(Guid id)
+    public async Task<ActionResult<OrderInfoResponseDto>> GetOrderInfo(Guid id)
     {
         var result = await service.GetInfoById(id);
         return result.ToActionResult(orders => orders.ToHttp());
@@ -75,7 +75,7 @@ public class OrderController(IOrderManagementService service) : Controller
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet]
-    public async Task<ActionResult<PagedResponseDto<Order>>> GetAllOrders([FromQuery]PagedRequestDto request)
+    public async Task<ActionResult<PagedResponseDto<OrderResponseDto>>> GetAllOrders([FromQuery]PagedRequestDto request)
     {
         var result = await service.GetAll(request.PageNumber, request.PageSize);
         return result.ToActionResult(orders => orders.ToHttp());
@@ -89,7 +89,7 @@ public class OrderController(IOrderManagementService service) : Controller
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("details")]
-    public async Task<ActionResult<PagedResponseDto<OrderInfo>>> GetAllOrdersInfo([FromQuery]PagedRequestDto request)
+    public async Task<ActionResult<PagedResponseDto<OrderInfoResponseDto>>> GetAllOrdersInfo([FromQuery]PagedRequestDto request)
     {
         var result = await service.GetAllInfo(request.PageNumber, request.PageSize);
         return result.ToActionResult(orders => orders.ToHttp());
