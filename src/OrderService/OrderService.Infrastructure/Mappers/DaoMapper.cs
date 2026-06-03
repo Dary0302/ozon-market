@@ -5,8 +5,10 @@ namespace OrderService.Infrastructure.Mappers;
 
 public static class DaoMapper
 {
-    public static Order ToDomain(this OrderDao dao)
+    public static Order? ToDomain(this OrderDao? dao)
     {
+        if (dao is null) return null;
+    
         return Order.Restore(
             dao.Id,
             dao.PvzId,

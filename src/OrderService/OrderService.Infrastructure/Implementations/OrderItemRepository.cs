@@ -18,8 +18,8 @@ public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) :
 
         var rows = await dbConnection.ExecuteAsync(sql, new
         {
-            order_id = orderItems.First().OrderId,
-            product_id = orderItems.Select(item => item.ProductId).ToArray(),
+            orderId = orderItems.First().OrderId,
+            productIds = orderItems.Select(item => item.ProductId).ToArray(),
             quantities = orderItems.Select(item => item.Quantity).ToArray()
         }, dbTransaction);
         
