@@ -25,10 +25,10 @@ public class PricingServiceTests
         var productId = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrice(productId))
+            .Setup(repository => repository.GetPrice(productId, CancellationToken.None))
             .ReturnsAsync(new Price(productId, 100, 20));
 
-        var result = await service.GetActualPrice(productId);
+        var result = await service.GetActualPrice(productId, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(80);
@@ -38,10 +38,10 @@ public class PricingServiceTests
     public async Task GetActualPrice_ShouldFail_WhenPriceNotFound()
     {
         repositoryMock
-            .Setup(repository => repository.GetPrice(It.IsAny<Guid>()))
+            .Setup(repository => repository.GetPrice(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Price?)null);
 
-        var result = await service.GetActualPrice(Guid.NewGuid());
+        var result = await service.GetActualPrice(Guid.NewGuid(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -51,7 +51,7 @@ public class PricingServiceTests
     {
         var price = new Price(Guid.NewGuid(), -1, 10);
 
-        var result = await service.SetPrice(price);
+        var result = await service.SetPrice(price, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -61,7 +61,7 @@ public class PricingServiceTests
     {
         var price = new Price(Guid.NewGuid(), 100, 0);
 
-        var result = await service.SetPrice(price);
+        var result = await service.SetPrice(price, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -71,7 +71,7 @@ public class PricingServiceTests
     {
         var price = new Price(Guid.NewGuid(), 100, 101);
 
-        var result = await service.SetPrice(price);
+        var result = await service.SetPrice(price, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -81,11 +81,11 @@ public class PricingServiceTests
     {
         var price = new Price(Guid.NewGuid(), 100, 10);
 
-        var result = await service.SetPrice(price);
+        var result = await service.SetPrice(price, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
-        repositoryMock.Verify(repository => repository.SetPrice(price),
+        repositoryMock.Verify(repository => repository.SetPrice(price, CancellationToken.None),
             Times.Once);
     }
 
@@ -96,11 +96,11 @@ public class PricingServiceTests
         var productId2 = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>()))
+            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), CancellationToken.None))
             .ReturnsAsync([new Price(productId1, 100, 10), new Price(productId2, 50, 20)]);
 
         var result = await service.CalculateAmount(
-            [new ProductQuantity(productId1, 2), new ProductQuantity(productId2, 1)]);
+            [new ProductQuantity(productId1, 2), new ProductQuantity(productId2, 1)], CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -115,11 +115,11 @@ public class PricingServiceTests
         var productId2 = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>()))
+            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), CancellationToken.None))
             .ReturnsAsync([new Price(productId1, 100, 10)]);
 
         var result = await service.CalculateAmount(
-            [new ProductQuantity(productId1, 1), new ProductQuantity(productId2, 1)]);
+            [new ProductQuantity(productId1, 1), new ProductQuantity(productId2, 1)], CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }

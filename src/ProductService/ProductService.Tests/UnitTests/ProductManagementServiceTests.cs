@@ -35,10 +35,10 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(product.Id))
+            .Setup(repository => repository.Get(product.Id, CancellationToken.None))
             .ReturnsAsync(product);
 
-        var result = await productService.GetProduct(product.Id);
+        var result = await productService.GetProduct(product.Id, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(product);
@@ -48,10 +48,10 @@ public class ProductManagementServiceTests
     public async Task GetProduct_ShouldFail_WhenProductDoesNotExist()
     {
         productRepository
-            .Setup(repository => repository.Get(It.IsAny<Guid>()))
+            .Setup(repository => repository.Get(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Product?)null);
 
-        var result = await productService.GetProduct(Guid.NewGuid());
+        var result = await productService.GetProduct(Guid.NewGuid(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -68,10 +68,10 @@ public class ProductManagementServiceTests
         };
 
         productRepository
-            .Setup(repository => repository.GetProductsByFilter(It.IsAny<ProductFilter>()))
+            .Setup(repository => repository.GetProductsByFilter(It.IsAny<ProductFilter>(), CancellationToken.None))
             .ReturnsAsync(products);
 
-        var result = await productService.GetProducts(new ProductFilter());
+        var result = await productService.GetProducts(new ProductFilter(), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
@@ -81,10 +81,10 @@ public class ProductManagementServiceTests
     public async Task GetProducts_ShouldFail_WhenNothingFound()
     {
         productRepository
-            .Setup(repository => repository.GetProductsByFilter(It.IsAny<ProductFilter>()))
+            .Setup(repository => repository.GetProductsByFilter(It.IsAny<ProductFilter>(), CancellationToken.None))
             .ReturnsAsync(Array.Empty<Product>());
 
-        var result = await productService.GetProducts(new ProductFilter());
+        var result = await productService.GetProducts(new ProductFilter(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -104,7 +104,7 @@ public class ProductManagementServiceTests
             Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
         };
 
-        var result = await productService.AddProduct(dto);
+        var result = await productService.AddProduct(dto, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -112,7 +112,7 @@ public class ProductManagementServiceTests
                 product.Name == dto.Name &&
                 product.Description == dto.Description &&
                 product.Type == dto.Type &&
-                product.PhotoId == photoId)),
+                product.PhotoId == photoId), CancellationToken.None),
             Times.Once);
     }
 
@@ -129,11 +129,11 @@ public class ProductManagementServiceTests
             Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
         };
 
-        var result = await productService.AddProduct(dto);
+        var result = await productService.AddProduct(dto, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Add(It.IsAny<Product>()),
+        productRepository.Verify(repository => repository.Add(It.IsAny<Product>(), CancellationToken.None),
             Times.Never);
     }
 
@@ -141,16 +141,16 @@ public class ProductManagementServiceTests
     public async Task UpdateProduct_ShouldFail_WhenProductNotFound()
     {
         productRepository
-            .Setup(repository => repository.Get(It.IsAny<Guid>()))
+            .Setup(repository => repository.Get(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Product?)null);
 
         var dto = new CreateProductDto();
 
-        var result = await productService.UpdateProduct(Guid.NewGuid(), dto);
+        var result = await productService.UpdateProduct(Guid.NewGuid(), dto, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>()),
+        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
             Times.Never);
     }
 
@@ -163,7 +163,7 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(existingProduct.Id))
+            .Setup(repository => repository.Get(existingProduct.Id, CancellationToken.None))
             .ReturnsAsync(existingProduct);
 
         photoService
@@ -172,11 +172,11 @@ public class ProductManagementServiceTests
             .ReturnsAsync(Result.Fail("error"));
 
         var result = await productService.UpdateProduct(existingProduct.Id,
-            new CreateProductDto());
+            new CreateProductDto(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>()),
+        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
             Times.Never);
     }
 
@@ -189,7 +189,7 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(existingProduct.Id))
+            .Setup(repository => repository.Get(existingProduct.Id, CancellationToken.None))
             .ReturnsAsync(existingProduct);
 
         photoService
@@ -203,11 +203,11 @@ public class ProductManagementServiceTests
             .ReturnsAsync(Result.Fail<Guid>("error"));
 
         var result = await productService.UpdateProduct(existingProduct.Id,
-            new CreateProductDto());
+            new CreateProductDto(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>()),
+        productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
             Times.Never);
     }
 
@@ -222,7 +222,7 @@ public class ProductManagementServiceTests
         var newPhotoId = Guid.NewGuid();
 
         productRepository
-            .Setup(repository => repository.Get(existingProduct.Id))
+            .Setup(repository => repository.Get(existingProduct.Id, CancellationToken.None))
             .ReturnsAsync(existingProduct);
 
         photoService
@@ -240,7 +240,7 @@ public class ProductManagementServiceTests
             Name = "New", Description = "NewDescription", Type = ProductType.Phone, PhotoData = [1, 2, 3]
         };
 
-        var result = await productService.UpdateProduct(existingProduct.Id, dto);
+        var result = await productService.UpdateProduct(existingProduct.Id, dto, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
@@ -249,7 +249,7 @@ public class ProductManagementServiceTests
                     product.Name == dto.Name &&
                     product.Description == dto.Description &&
                     product.Type == dto.Type &&
-                    product.PhotoId == newPhotoId)),
+                    product.PhotoId == newPhotoId), CancellationToken.None),
             Times.Once);
     }
 
@@ -257,10 +257,10 @@ public class ProductManagementServiceTests
     public async Task DeleteProduct_ShouldFail_WhenProductNotFound()
     {
         productRepository
-            .Setup(repository => repository.Get(It.IsAny<Guid>()))
+            .Setup(repository => repository.Get(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Product?)null);
 
-        var result = await productService.DeleteProduct(Guid.NewGuid());
+        var result = await productService.DeleteProduct(Guid.NewGuid(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -274,7 +274,7 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(product.Id))
+            .Setup(repository => repository.Get(product.Id, CancellationToken.None))
             .ReturnsAsync(product);
 
         photoService
@@ -282,11 +282,11 @@ public class ProductManagementServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
-        var result = await productService.DeleteProduct(product.Id);
+        var result = await productService.DeleteProduct(product.Id, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Delete(It.IsAny<Guid>()),
+        productRepository.Verify(repository => repository.Delete(It.IsAny<Guid>(), CancellationToken.None),
             Times.Never);
     }
 
@@ -299,7 +299,7 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(product.Id))
+            .Setup(repository => repository.Get(product.Id, CancellationToken.None))
             .ReturnsAsync(product);
 
         photoService
@@ -307,11 +307,11 @@ public class ProductManagementServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
-        var result = await productService.DeleteProduct(product.Id);
+        var result = await productService.DeleteProduct(product.Id, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
-        productRepository.Verify(repository => repository.Delete(product.Id),
+        productRepository.Verify(repository => repository.Delete(product.Id, CancellationToken.None),
             Times.Once);
     }
 }
