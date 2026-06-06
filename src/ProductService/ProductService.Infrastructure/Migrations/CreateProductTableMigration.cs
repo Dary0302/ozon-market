@@ -10,11 +10,11 @@ public class CreateProductTableMigration : Migration
     {
         Create.Table("products")
             .InSchema("public")
-            .WithColumn(nameof(Product.Id)).AsGuid().PrimaryKey()
-            .WithColumn(nameof(Product.Name)).AsString().NotNullable()
-            .WithColumn(nameof(Product.Description)).AsString().NotNullable()
-            .WithColumn(nameof(Product.Type)).AsInt32().NotNullable()
-            .WithColumn(nameof(Product.PhotoId)).AsGuid();
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("name").AsString().NotNullable()
+            .WithColumn("description").AsString().NotNullable()
+            .WithColumn("type").AsInt32().NotNullable()
+            .WithColumn("photo_id").AsGuid();
     }
 
     public override void Down()
