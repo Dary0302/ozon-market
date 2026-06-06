@@ -9,7 +9,7 @@ namespace ProductService.Infrastructure.Repositories;
 
 public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactory) : IPriceRepository
 {
-    public async Task SetPrice(Price price)
+    public async Task SetPrice(Price price, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -32,17 +32,24 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                   )
                   """;
 
-        await connection.ExecuteAsync(sql, new
-        {
-            id = price.Id, 
-            productId = price.ProductId, 
-            date = price.Date,
-            cost = price.Cost,
-            discount = price.Discount
-        });
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                price.Id,
+                price.ProductId,
+                price.Date,
+                price.Cost,
+                price.Discount
+            },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task<Price?> GetPrice(Guid productId)
+    public async Task<Price?> GetPrice(
+        Guid productId,
+        CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -59,14 +66,19 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                   LIMIT 1
                   """;
 
-        var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(
+        var command = new CommandDefinition(
             sql,
-            new { productId });
+            new { productId },
+            cancellationToken: cancellationToken);
 
-        return dao.ToDomain();
+        var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(command);
+
+        return dao?.ToDomain();
     }
 
-    public async Task<IEnumerable<Price?>> GetPrices(List<Guid> productIds)
+    public async Task<IEnumerable<Price?>> GetPrices(
+        List<Guid> productIds,
+        CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -82,11 +94,13 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                   ORDER BY product_id, date DESC
                   """;
 
-        var daos = await connection.QueryAsync<PriceDao>(
+        var command = new CommandDefinition(
             sql,
-            new { productIds });
+            new { productIds },
+            cancellationToken: cancellationToken);
 
-        return daos
-            .Select(x => x.ToDomain());
+        var daos = await connection.QueryAsync<PriceDao>(command);
+
+        return daos.Select(dao => dao.ToDomain());
     }
 }

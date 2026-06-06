@@ -21,7 +21,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.GetProduct(productId);
+        var productResult = await service.GetProduct(productId, cancellationToken);
         return productResult.ToActionResult();
     }
 
@@ -36,7 +36,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromBody] ProductFilter filter,
         CancellationToken cancellationToken)
     {
-        var productsResult = await service.GetProducts(filter);
+        var productsResult = await service.GetProducts(filter, cancellationToken);
         return productsResult.ToActionResult();
     }
 
@@ -51,7 +51,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromBody] CreateProductDto product,
         CancellationToken cancellationToken)
     {
-        var addProductResult = await service.AddProduct(product);
+        var addProductResult = await service.AddProduct(product, cancellationToken);
         return addProductResult.ToActionResult();
     }
 
@@ -68,7 +68,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromBody] CreateProductDto newProduct,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.UpdateProduct(productId, newProduct);
+        var productResult = await service.UpdateProduct(productId, newProduct, cancellationToken);
         return productResult.ToActionResult();
     }
 
@@ -83,7 +83,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.DeleteProduct(productId);
+        var productResult = await service.DeleteProduct(productId, cancellationToken);
         return productResult.ToActionResult();
     }
 }

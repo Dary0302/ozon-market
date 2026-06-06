@@ -12,7 +12,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 {
     private const string NotFoundExceptionMessage = "Продукт не найден";
 
-    public async Task<Result<Product>> GetProduct(Guid id)
+    public async Task<Result<Product>> GetProduct(Guid id, CancellationToken cancellationToken)
     {
         var product = await productRepository.Get(id);
 
@@ -24,7 +24,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         return Result.Ok(product);
     }
     
-    public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter)
+    public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter, CancellationToken cancellationToken)
     {
         var products = await productRepository.GetProductsByFilter(filter);
 
@@ -36,10 +36,10 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         return Result.Ok(products);
     }
 
-    public async Task<Result<Guid>> AddProduct(CreateProductDto productDto)
+    public async Task<Result<Guid>> AddProduct(CreateProductDto productDto, CancellationToken cancellationToken)
     {
         var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, new());
+            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
         if (addPhotoResult.IsFailed)
         {
             return Result.Fail(AppError.UnprocessableContent());
@@ -52,7 +52,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         return Result.Ok(product.Id);
     }
 
-    public async Task<Result> UpdateProduct(Guid id, CreateProductDto productDto)
+    public async Task<Result> UpdateProduct(Guid id, CreateProductDto productDto, CancellationToken cancellationToken)
     {
         var existingProduct = await productRepository.Get(id);
         if (existingProduct is null)
@@ -61,7 +61,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         }
         
         var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, new());
+            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
         if (addPhotoResult.IsFailed)
         {
             return Result.Fail(AppError.UnprocessableContent());
@@ -70,7 +70,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
         await productRepository.Update(id, product);
 
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
+        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
         if (deletePhotoResult.IsFailed)
         {
             return Result.Ok()
@@ -80,7 +80,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         return Result.Ok();
     }
 
-    public async Task<Result> DeleteProduct(Guid id)
+    public async Task<Result> DeleteProduct(Guid id, CancellationToken cancellationToken)
     {
         var existingProduct = await productRepository.Get(id);
         if (existingProduct is null)
@@ -90,7 +90,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         
         await productRepository.Delete(id);
 
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
+        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
         if (deletePhotoResult.IsFailed)
         {
             return Result.Ok()
