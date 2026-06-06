@@ -11,7 +11,7 @@ public interface IPvzService
     
     Task<Result<IEnumerable<Pvz>>> GetAllPvz();
     
-    Task<Result> UpdatePvz(Guid id, Pvz storage);
+    Task<Result> UpdatePvz(Guid id, Pvz pvz);
     
     Task<Result> DeletePvz(Guid id);
 }
