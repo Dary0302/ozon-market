@@ -1,7 +1,7 @@
-using ProductService.Api.Extensions;
+using Core.Common.Extensions;
+using Core.Common.Extensions.Validation;
 using ProductService.Application;
 using ProductService.Infrastructure.Configurations;
-
 namespace ProductService.Api;
 
 public class Startup(IConfiguration configuration)
@@ -11,7 +11,8 @@ public class Startup(IConfiguration configuration)
         services
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
-            .AddOpenApi()
+            .AddOpenApi("ProductService", typeof(ApplicationConfiguration))
+            .AddValidation()
             .AddControllers();
     }
 
