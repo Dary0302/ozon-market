@@ -14,7 +14,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 
     public async Task<Result<Product>> GetProduct(Guid id, CancellationToken cancellationToken)
     {
-        var product = await productRepository.Get(id);
+        var product = await productRepository.Get(id, cancellationToken);
 
         if (product is null)
         {
@@ -26,7 +26,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
     
     public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter, CancellationToken cancellationToken)
     {
-        var products = await productRepository.GetProductsByFilter(filter);
+        var products = await productRepository.GetProductsByFilter(filter, cancellationToken);
 
         if (products.Count == 0)
         {
@@ -47,14 +47,14 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
         
-        await productRepository.Add(product);
+        await productRepository.Add(product, cancellationToken);
 
         return Result.Ok(product.Id);
     }
 
     public async Task<Result> UpdateProduct(Guid id, CreateProductDto productDto, CancellationToken cancellationToken)
     {
-        var existingProduct = await productRepository.Get(id);
+        var existingProduct = await productRepository.Get(id, cancellationToken);
         if (existingProduct is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
@@ -68,7 +68,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         }
         
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
-        await productRepository.Update(id, product);
+        await productRepository.Update(id, product, cancellationToken);
 
         var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
         if (deletePhotoResult.IsFailed)
@@ -82,13 +82,13 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 
     public async Task<Result> DeleteProduct(Guid id, CancellationToken cancellationToken)
     {
-        var existingProduct = await productRepository.Get(id);
+        var existingProduct = await productRepository.Get(id, cancellationToken);
         if (existingProduct is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        await productRepository.Delete(id);
+        await productRepository.Delete(id, cancellationToken);
 
         var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
         if (deletePhotoResult.IsFailed)
