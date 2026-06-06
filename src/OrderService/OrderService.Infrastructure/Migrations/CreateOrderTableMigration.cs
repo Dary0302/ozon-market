@@ -14,7 +14,7 @@ public class CreateOrderTableMigration : Migration
             .WithColumn(nameof(Order.CreatedOn)).AsDateTime().NotNullable()
             .WithColumn(nameof(Order.DeliveryDate)).AsDateTime().NotNullable()
             .WithColumn(nameof(Order.Status)).AsInt32().NotNullable()
-            .WithColumn(nameof(Order.Amount)).AsDouble().NotNullable();
+            .WithColumn(nameof(Order.Amount)).AsDecimal(12, 2).NotNullable();
     }
     
     public override void Down()
