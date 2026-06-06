@@ -46,8 +46,8 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
         
         // Act
-        await orderRepository.Create(order, connection, null!);
-        var returnedId = await orderItemRepository.Add(items,  connection, null!);
+        await orderRepository.Create(order, connection, null!, CancellationToken.None);
+        var returnedId = await orderItemRepository.Add(items,  connection, null!, CancellationToken.None);
         var sql = "SELECT  * FROM order_items WHERE order_id = @id";
         var rows = await connection.QueryAsync<OrderItemDao>(sql, new { id = order.Id });
         
@@ -69,7 +69,8 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
         
         // Act
-        var action = async () => await orderItemRepository.Add(items,  connection, null!);
+        var action = async () => await orderItemRepository.Add(
+            items,  connection, null!, CancellationToken.None);
         
         // Assert
         await action.Should().ThrowAsync();
@@ -90,13 +91,13 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             .Select(_ => EntityFactory.MakeOrderItem(order2.Id))
             .ToList();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await orderRepository.Create(order1, connection, null!);
-        await orderItemRepository.Add(items1,  connection, null!);
-        await orderRepository.Create(order2, connection, null!);
-        await orderItemRepository.Add(items2,  connection, null!);
+        await orderRepository.Create(order1, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items1,  connection, null!, CancellationToken.None);
+        await orderRepository.Create(order2, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items2,  connection, null!, CancellationToken.None);
         
         // Act
-        var rows = await orderItemRepository.GetAllByOrderId(order1.Id);
+        var rows = await orderItemRepository.GetAllByOrderId(order1.Id, CancellationToken.None);
         rows.Should().HaveCount(5);
         rows.Select(row => row.ProductId).Should()
             .BeEquivalentTo(items1.Select(i => i.ProductId));
@@ -112,11 +113,11 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             .ToList();
         var order2 = EntityFactory.MakeOrder();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await orderRepository.Create(order1, connection, null!);
-        await orderItemRepository.Add(items1,  connection, null!);
+        await orderRepository.Create(order1, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items1,  connection, null!, CancellationToken.None);
         
         // Act
-        var rows = await orderItemRepository.GetAllByOrderId(order2.Id);
+        var rows = await orderItemRepository.GetAllByOrderId(order2.Id, CancellationToken.None);
         rows.Should().BeEmpty();
     }
 }

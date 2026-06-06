@@ -52,13 +52,13 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             .Select(_ => EntityFactory.MakeOrderItem(order2.Id))
             .ToList();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await orderRepository.Create(order1, connection, null!);
-        await orderItemRepository.Add(items1,  connection, null!);
-        await orderRepository.Create(order2, connection, null!);
-        await orderItemRepository.Add(items2,  connection, null!);
+        await orderRepository.Create(order1, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items1,  connection, null!, CancellationToken.None);
+        await orderRepository.Create(order2, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items2,  connection, null!, CancellationToken.None);
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
         
         // Assert
         var info1 = result.Items.First(x => x.Order.Id == order1.Id);
@@ -83,12 +83,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 3);
+        var result = await orderInfoRepository.GetAll(1, 3, CancellationToken.None);
         
         // Assert
         result.Items.Should().HaveCount(3);
@@ -106,12 +106,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(2, 3);
+        var result = await orderInfoRepository.GetAll(2, 3, CancellationToken.None);
         
         // Assert
         result.Items.Should().HaveCount(2);
@@ -129,12 +129,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
         
         // Assert
         result.Items.Should().BeInDescendingOrder(orderInfo => orderInfo.Order.CreatedOn);
@@ -144,7 +144,7 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
     public async Task GetAll_ShouldReturnEmptyPage_WhenNoOrders()
     {
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
 
         // Assert
         result.Items.Should().BeEmpty();

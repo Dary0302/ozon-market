@@ -74,22 +74,23 @@ public class OrderManagementServiceTests
     private void SetupValidDefaultsForUpdateStatus(Order order)
     {
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>()))
+            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync(order);
         orderRepositoryMock
             .Setup(r => r.Save(It.IsAny<Order>(), 
                 It.IsAny<IDbConnection>(),  
-                It.IsAny<IDbTransaction>()))
+                It.IsAny<IDbTransaction>(),
+                CancellationToken.None))
             .ReturnsAsync(order.Id);
     }
 
     private void SetupValidDefaultsForGetInfo(Order order, IEnumerable<OrderItem> items)
     {
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id))
+            .Setup(r => r.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
         orderItemRepositoryMock
-            .Setup(r => r.GetAllByOrderId(order.Id))
+            .Setup(r => r.GetAllByOrderId(order.Id, CancellationToken.None))
             .ReturnsAsync(items);
     }
     
@@ -109,7 +110,7 @@ public class OrderManagementServiceTests
         var products = MakeProducts();
         
         // Act
-        var result = await service.Create(pvzId, 1000m, products);
+        var result = await service.Create(pvzId, 1000m, products, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -125,21 +126,23 @@ public class OrderManagementServiceTests
         var products = MakeProducts(3);
         
         // Act
-        await service.Create(pvzId, 1000m, products);
+        await service.Create(pvzId, 1000m, products, CancellationToken.None);
         
         // Assert
         orderRepositoryMock.Verify(
             r => r.Create(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
-                It.IsAny<IDbTransaction>()),
+                It.IsAny<IDbTransaction>(), 
+                CancellationToken.None),
             Times.Once);
 
         orderItemRepositoryMock.Verify(
             r => r.Add(
                 It.Is<List<OrderItem>>(items => items.Count() == 3),
                 It.IsAny<IDbConnection>(),
-                It.IsAny<IDbTransaction>()),
+                It.IsAny<IDbTransaction>(), 
+                CancellationToken.None),
             Times.Once);
     }
 
@@ -153,7 +156,7 @@ public class OrderManagementServiceTests
         var products = MakeProducts(3);
 
         // Act
-        var result = await service.Create(pvzId, clientAmount, products);
+        var result = await service.Create(pvzId, clientAmount, products, CancellationToken.None);
 
         // Assrert
         result.IsSuccess.Should().BeFalse();
@@ -171,7 +174,8 @@ public class OrderManagementServiceTests
             .ReturnsAsync(new[] { new StockCheckResult(lackingProduct.ProductId, -5) });
         
         // Act
-        var result = await service.Create(Guid.NewGuid(), clientAmount: 1000m, MakeProducts());
+        var result = await service.Create(Guid.NewGuid(), clientAmount: 1000m, 
+            MakeProducts(), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -192,7 +196,7 @@ public class OrderManagementServiceTests
         };
 
         // Act
-        await service.Create(Guid.NewGuid(), clientAmount: 1000m, products);
+        await service.Create(Guid.NewGuid(), clientAmount: 1000m, products, CancellationToken.None);
 
         // Assert 
         productServiceMock.Verify(
@@ -209,11 +213,11 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>()))
+            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync(order);
         
         // Act
-        var result = await service.GetById(order.Id);
+        var result = await service.GetById(order.Id, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -226,11 +230,11 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>()))
+            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Order?)null);
         
         // Act
-        var result = await service.GetById(order.Id);
+        var result = await service.GetById(order.Id, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -249,11 +253,11 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<Order>(orders, 3);
         
         orderRepositoryMock
-            .Setup(r => r.GetAll(3, 10))
+            .Setup(r => r.GetAll(3, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
         
         // Act
-        var result = await service.GetAll(3, 10);
+        var result = await service.GetAll(3, 10, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -270,11 +274,12 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<Order>(Enumerable.Empty<Order>(), 0);
         
         orderRepositoryMock
-            .Setup(r => r.GetAll(It.IsAny<int>(), It.IsAny<int>()))
+            .Setup(r => r.GetAll(It.IsAny<int>(), 
+                It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(pagedResult);
         
         // Act
-        var result = await service.GetAll(3, 10);
+        var result = await service.GetAll(3, 10, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -296,7 +301,7 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForUpdateStatus(order);
 
         // Act
-        var result = await service.UpdateStatus(order.Id, newStatus);
+        var result = await service.UpdateStatus(order.Id, newStatus, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -309,11 +314,11 @@ public class OrderManagementServiceTests
         // Arrange
         var orderId = Guid.NewGuid();
         orderRepositoryMock
-            .Setup(r => r.GetById(orderId))
+            .Setup(r => r.GetById(orderId, CancellationToken.None))
             .ReturnsAsync((Order?)null);
         
         // Act
-        var result = await service.UpdateStatus(orderId, Status.Paid);
+        var result = await service.UpdateStatus(orderId, Status.Paid, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -326,11 +331,11 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id))
+            .Setup(r => r.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
         
         // Act
-        var result = await service.UpdateStatus(order.Id, Status.InAssembly);
+        var result = await service.UpdateStatus(order.Id, Status.InAssembly, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -347,7 +352,7 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForUpdateStatus(order);
 
         // Act
-        var result = await service.UpdateStatus(order.Id, Status.Canceled);
+        var result = await service.UpdateStatus(order.Id, Status.Canceled, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -366,7 +371,7 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForUpdateStatus(order);
 
         // Act
-        var result = await service.UpdateStatus(order.Id, Status.Canceled);
+        var result = await service.UpdateStatus(order.Id, Status.Canceled, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -379,18 +384,19 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id))
+            .Setup(r => r.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
 
         // Act
-        await service.UpdateStatus(order.Id, Status.InAssembly);
+        await service.UpdateStatus(order.Id, Status.InAssembly, CancellationToken.None);
 
         // Assert
         orderRepositoryMock.Verify(
             r => r.Save(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
-                It.IsAny<IDbTransaction>()),
+                It.IsAny<IDbTransaction>(), 
+                CancellationToken.None),
             Times.Never);
     }
     
@@ -408,14 +414,15 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForUpdateStatus(order);
 
         // Act
-        await service.UpdateStatus(order.Id, newStatus);
+        await service.UpdateStatus(order.Id, newStatus, CancellationToken.None);
 
         // Assert
         orderRepositoryMock.Verify(
             r => r.Save(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
-                It.IsAny<IDbTransaction>()),
+                It.IsAny<IDbTransaction>(), 
+                CancellationToken.None),
             Times.Once);
     }
     
@@ -430,10 +437,11 @@ public class OrderManagementServiceTests
             .Setup(r => r.Delete(
                 It.IsAny<Guid>(),
                 It.IsAny<IDbConnection>(),
-                It.IsAny<IDbTransaction>()));
+                It.IsAny<IDbTransaction>(), 
+                CancellationToken.None));
         
         // Act
-        var result = await service.Delete(order.Id);
+        var result = await service.Delete(order.Id, CancellationToken.None);
         
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -449,7 +457,7 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForGetInfo(orderInfo.Order, orderInfo.OrderItems);
 
         // Act
-        var result = await service.GetInfoById(orderInfo.Order.Id);
+        var result = await service.GetInfoById(orderInfo.Order.Id, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -463,14 +471,14 @@ public class OrderManagementServiceTests
         var orderId = Guid.NewGuid();
     
         orderRepositoryMock
-            .Setup(r => r.GetById(orderId))
+            .Setup(r => r.GetById(orderId, CancellationToken.None))
             .ReturnsAsync((Order?)null);
         orderItemRepositoryMock
-            .Setup(r => r.GetAllByOrderId(orderId))
+            .Setup(r => r.GetAllByOrderId(orderId, CancellationToken.None))
             .ReturnsAsync(Enumerable.Empty<OrderItem>());
 
         // Act
-        var result = await service.GetInfoById(orderId);
+        var result = await service.GetInfoById(orderId, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -489,11 +497,11 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<OrderInfo>(orderInfos, TotalCount: 3);
     
         orderInfoRepositoryMock
-            .Setup(r => r.GetAll(1, 10))
+            .Setup(r => r.GetAll(1, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
 
         // Act
-        var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10);
+        var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -508,11 +516,11 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<OrderInfo>(Enumerable.Empty<OrderInfo>(), TotalCount: 0);
     
         orderInfoRepositoryMock
-            .Setup(r => r.GetAll(1, 10))
+            .Setup(r => r.GetAll(1, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
 
         // Act
-        var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10);
+        var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

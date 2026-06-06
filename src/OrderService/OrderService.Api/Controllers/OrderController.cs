@@ -19,9 +19,9 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpPost]
-    public async Task<ActionResult<Guid>> CreateOrder([FromBody] CreateOrderRequestDto request)
+    public async Task<ActionResult<Guid>> CreateOrder([FromBody] CreateOrderRequestDto request, CancellationToken cancellationToken)
     {
-        var result = await service.Create(request.PvzId, request.ClientAmount, request.Products);
+        var result = await service.Create(request.PvzId, request.ClientAmount, request.Products, cancellationToken);
         return result.ToActionResult();
     }
     
@@ -33,9 +33,9 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<OrderResponseDto>> GetOrder(Guid id)
+    public async Task<ActionResult<OrderResponseDto>> GetOrder(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.GetById(id);
+        var result = await service.GetById(id, cancellationToken);
         return result.ToActionResult(orders => orders.ToHttp());
     }
     
@@ -47,9 +47,9 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpPatch("{id:guid}/pay")]
-    public async Task<ActionResult<Guid>> PayOrder(Guid id)
+    public async Task<ActionResult<Guid>> PayOrder(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.UpdateStatus(id, Status.Paid);
+        var result = await service.UpdateStatus(id, Status.Paid, cancellationToken);
         return result.ToActionResult();
     }
     
@@ -61,9 +61,9 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{id:guid}/details")]
-    public async Task<ActionResult<OrderInfoResponseDto>> GetOrderInfo(Guid id)
+    public async Task<ActionResult<OrderInfoResponseDto>> GetOrderInfo(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.GetInfoById(id);
+        var result = await service.GetInfoById(id, cancellationToken);
         return result.ToActionResult(orders => orders.ToHttp());
     }
     
@@ -75,9 +75,10 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet]
-    public async Task<ActionResult<PagedResponseDto<OrderResponseDto>>> GetAllOrders([FromQuery]PagedRequestDto request)
+    public async Task<ActionResult<PagedResponseDto<OrderResponseDto>>> GetAllOrders([FromQuery]PagedRequestDto request, 
+        CancellationToken cancellationToken)
     {
-        var result = await service.GetAll(request.PageNumber, request.PageSize);
+        var result = await service.GetAll(request.PageNumber, request.PageSize, cancellationToken);
         return result.ToActionResult(orders => orders.ToHttp());
     }
     
@@ -89,9 +90,10 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("details")]
-    public async Task<ActionResult<PagedResponseDto<OrderInfoResponseDto>>> GetAllOrdersInfo([FromQuery]PagedRequestDto request)
+    public async Task<ActionResult<PagedResponseDto<OrderInfoResponseDto>>> GetAllOrdersInfo([FromQuery]PagedRequestDto request,
+        CancellationToken cancellationToken)
     {
-        var result = await service.GetAllInfo(request.PageNumber, request.PageSize);
+        var result = await service.GetAllInfo(request.PageNumber, request.PageSize, cancellationToken);
         return result.ToActionResult(orders => orders.ToHttp());
     }
 }

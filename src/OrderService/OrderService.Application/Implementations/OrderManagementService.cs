@@ -15,7 +15,8 @@ public class OrderManagementService(IOrderRepository orderRepository,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderManagementService
 {
-    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, IEnumerable<ProductQuantity> products)
+    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, 
+        IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {
         //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
@@ -44,12 +45,14 @@ public class OrderManagementService(IOrderRepository orderRepository,
             await orderRepository.Create(
                 order,
                 unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction);
+                unitOfWork.CurrentTransaction,
+                cancellationToken);
 
             await orderItemRepository.Add(
                 items,
                 unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction);
+                unitOfWork.CurrentTransaction,
+                cancellationToken);
         });
         
         //TODO: внести в кафку
@@ -102,9 +105,9 @@ public class OrderManagementService(IOrderRepository orderRepository,
                     product.Quantity));
     }
 
-    public async Task<Result<Order>> GetById(Guid id)
+    public async Task<Result<Order>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await orderRepository.GetById(id);
+        var result = await orderRepository.GetById(id, cancellationToken);
 
         if (result == null)
             return Result.Fail(OrderErrors.NotFound(id));
@@ -112,15 +115,16 @@ public class OrderManagementService(IOrderRepository orderRepository,
         return Result.Ok(result);
     }
 
-    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize)
+    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize, 
+        CancellationToken cancellationToken)
     {
-        var result = await orderRepository.GetAll(pageNumber, pageSize);
+        var result = await orderRepository.GetAll(pageNumber, pageSize, cancellationToken);
         return Result.Ok(result);
     }
 
-    public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus)
+    public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus, CancellationToken cancellationToken)
     {
-        var order = await orderRepository.GetById(id);
+        var order = await orderRepository.GetById(id, cancellationToken);
 
         if (order is null)
             return Result.Fail(OrderErrors.NotFound(id));
@@ -139,22 +143,24 @@ public class OrderManagementService(IOrderRepository orderRepository,
             return Result.Fail(result.Errors);
 
         await unitOfWork.ExecuteInTransaction(async () =>
-            await orderRepository.Save(order, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
+            await orderRepository.Save(order, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken));
 
         return Result.Ok(order.Id);
     }
 
-    public async Task<Result> Delete(Guid id)
+    public async Task<Result> Delete(Guid id, CancellationToken cancellationToken)
     {
         await unitOfWork.ExecuteInTransaction(async () =>
-            await orderRepository.Delete(id, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
+            await orderRepository.Delete(id, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken));
         return Result.Ok();
     }
 
-    public async Task<Result<OrderInfo>> GetInfoById(Guid id)
+    public async Task<Result<OrderInfo>> GetInfoById(Guid id, CancellationToken cancellationToken)
     {
-        var orderTask = orderRepository.GetById(id);
-        var itemsTask = orderItemRepository.GetAllByOrderId(id);
+        var orderTask = orderRepository.GetById(id, cancellationToken);
+        var itemsTask = orderItemRepository.GetAllByOrderId(id, cancellationToken);
         
         await Task.WhenAll(orderTask, itemsTask);
 
@@ -166,9 +172,10 @@ public class OrderManagementService(IOrderRepository orderRepository,
         return Result.Ok(new OrderInfo(order, itemsTask.Result));
     }
 
-    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize)
+    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize, 
+        CancellationToken cancellationToken)
     {
-        var result = await orderInfoRepository.GetAll(pageNumber, pageSize);
+        var result = await orderInfoRepository.GetAll(pageNumber, pageSize, cancellationToken);
         return Result.Ok(result);
     }
 }

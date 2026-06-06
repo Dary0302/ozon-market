@@ -35,11 +35,12 @@ public class OrderControllerTests
         var request = EntityFactory.MakeOrderRequestDto();
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount, request.Products))
+            .Setup(s => s.Create(request.PvzId, request.ClientAmount, 
+                request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderId));
 
         // Act
-        var result = await controller.CreateOrder(request);
+        var result = await controller.CreateOrder(request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>()
@@ -53,11 +54,12 @@ public class OrderControllerTests
         var request = EntityFactory.MakeOrderRequestDto();
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount, request.Products))
+            .Setup(s => s.Create(request.PvzId, request.ClientAmount,
+                request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.InvalidAmount()));
 
         // Act
-        var result = await controller.CreateOrder(request);
+        var result = await controller.CreateOrder(request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -72,11 +74,12 @@ public class OrderControllerTests
         var lackingProduct = new LackingProduct(Guid.NewGuid(), 5);
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount, request.Products))
+            .Setup(s => s.Create(request.PvzId, request.ClientAmount, 
+                request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.InsufficientStock(new[] { lackingProduct })));
 
         // Act
-        var result = await controller.CreateOrder(request);
+        var result = await controller.CreateOrder(request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -99,11 +102,11 @@ public class OrderControllerTests
             Amount = order.Amount};
 
         serviceMock
-            .Setup(s => s.GetById(order.Id))
+            .Setup(s => s.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(Result.Ok(order));
 
         // Act
-        var result = await controller.GetOrder(order.Id);
+        var result = await controller.GetOrder(order.Id, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>()
@@ -117,11 +120,11 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.GetById(orderId))
+            .Setup(s => s.GetById(orderId, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
-        var result = await controller.GetOrder(orderId);
+        var result = await controller.GetOrder(orderId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -137,11 +140,11 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid))
+            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderId));
 
         // Act
-        var result = await controller.PayOrder(orderId);
+        var result = await controller.PayOrder(orderId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>()
@@ -155,11 +158,11 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid))
+            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
-        var result = await controller.PayOrder(orderId);
+        var result = await controller.PayOrder(orderId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -173,11 +176,11 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid))
+            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.MustBeCreated()));
 
         // Act
-        var result = await controller.PayOrder(orderId);
+        var result = await controller.PayOrder(orderId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -202,11 +205,11 @@ public class OrderControllerTests
         };
 
         serviceMock
-            .Setup(s => s.GetInfoById(orderInfo.Order.Id))
+            .Setup(s => s.GetInfoById(orderInfo.Order.Id, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderInfo));
 
         // Act
-        var result = await controller.GetOrderInfo(orderInfo.Order.Id);
+        var result = await controller.GetOrderInfo(orderInfo.Order.Id, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>()
@@ -220,11 +223,11 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.GetInfoById(orderId))
+            .Setup(s => s.GetInfoById(orderId, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
-        var result = await controller.GetOrderInfo(orderId);
+        var result = await controller.GetOrderInfo(orderId, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>()
@@ -245,11 +248,11 @@ public class OrderControllerTests
         var request = new PagedRequestDto (1, 10);
 
         serviceMock
-            .Setup(s => s.GetAll(request.PageNumber, request.PageSize))
+            .Setup(s => s.GetAll(request.PageNumber, request.PageSize, CancellationToken.None))
             .ReturnsAsync(Result.Ok(pagedResult));
 
         // Act
-        var result = await controller.GetAllOrders(request);
+        var result = await controller.GetAllOrders(request, CancellationToken.None);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>()
@@ -270,11 +273,11 @@ public class OrderControllerTests
         var request = new PagedRequestDto (1, 10);
 
         serviceMock
-            .Setup(s => s.GetAllInfo(request.PageNumber, request.PageSize))
+            .Setup(s => s.GetAllInfo(request.PageNumber, request.PageSize, CancellationToken.None))
             .ReturnsAsync(Result.Ok(pagedResult));
 
         // Act
-        var result = await controller.GetAllOrdersInfo(request);
+        var result = await controller.GetAllOrdersInfo(request, CancellationToken.None);
 
         // Assert
         var dto = result.Result.Should().BeOfType<OkObjectResult>()
