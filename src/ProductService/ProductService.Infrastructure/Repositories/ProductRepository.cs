@@ -15,7 +15,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO products (id, name, description, type, photoId)
+                  INSERT INTO products (id, name, description, type, photo_id)
                   VALUES (@id, @name, @description, @type, @photoId)
                   """;
 
@@ -38,7 +38,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  SELECT id, name, description, type, photoId
+                  SELECT id, name, description, type, photo_id
                   FROM products
                   WHERE id = @id
                   """;
@@ -173,7 +173,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
                       name = @name,
                       description = @description,
                       type = @type,
-                      photoId = @photoId
+                      photo_id = @photoId
                   WHERE id = @Id
                   """;
 

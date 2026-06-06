@@ -5,7 +5,6 @@ using Npgsql;
 using NUnit.Framework;
 using ProductService.Domain;
 using ProductService.Infrastructure.Repositories;
-using ProductService.Tests.IntegrationTests.LocalDb;
 
 namespace ProductService.Tests.IntegrationTests;
 

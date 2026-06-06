@@ -28,4 +28,8 @@
       <ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="IntegrationTests\LocalDb\" />
+    </ItemGroup>
+
 </Project>

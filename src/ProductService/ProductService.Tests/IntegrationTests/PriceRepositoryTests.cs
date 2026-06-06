@@ -5,7 +5,6 @@ using Npgsql;
 using NUnit.Framework;
 using ProductService.Domain;
 using ProductService.Infrastructure.Repositories;
-using ProductService.Tests.IntegrationTests.LocalDb;
 
 namespace ProductService.Tests.IntegrationTests;
 
@@ -20,7 +19,7 @@ public class PriceRepositoryTests
     {
         await using var connection =
             new NpgsqlConnection(PostgresFixture.Container.GetConnectionString());
-
+        
         await connection.ExecuteAsync("""
                                       DELETE FROM prices;
                                       DELETE FROM products;
@@ -74,8 +73,7 @@ public class PriceRepositoryTests
         await productRepository.Add(product, CancellationToken.None);
 
         var oldPrice = new Price(product.Id, 100, 0) { Date = DateTime.UtcNow.AddDays(-1) };
-
-        var newPrice = new Price(product.Id, 200, 15) { Date = DateTime.UtcNow };
+        var newPrice = new Price(product.Id, 200, 15) { Date = DateTime.UtcNow.AddDays(1) };
 
         await priceRepository.SetPrice(oldPrice, CancellationToken.None);
         await priceRepository.SetPrice(newPrice, CancellationToken.None);
