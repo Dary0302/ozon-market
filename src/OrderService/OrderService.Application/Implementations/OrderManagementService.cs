@@ -108,7 +108,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
 
         if (result == null)
             return Result.Fail(OrderErrors.NotFound(id));
-            
+        
         return Result.Ok(result);
     }
 

@@ -1,0 +1,56 @@
+using Core.Common.Errors;
+using Microsoft.AspNetCore.Mvc;
+using ProductService.Application.Interfaces;
+using ProductService.Domain;
+
+namespace ProductService.Api.Controllers;
+
+[ApiController]
+[Route("api/products/prices")]
+public class PriceController(IPricingService service) : ControllerBase
+{
+    /// <summary>
+    /// Получение суммы цен по списку продуктов
+    /// </summary>
+    /// <param name="productQuantities">Список id продуктов и их количества</param>
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpPost("amount")]
+    public async Task<ActionResult<decimal>> GetAmount(
+        [FromBody] IEnumerable<ProductQuantity> productQuantities,
+        CancellationToken cancellationToken)
+    {
+        var productResult = await service.CalculateAmount(productQuantities);
+        return productResult.ToActionResult();
+    }  
+    
+    /// <summary>
+    /// Получение цены по id продукта
+    /// </summary>
+    /// <param name="productId">Id продукта</param>
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpGet("{product-id:guid}")]
+    public async Task<ActionResult<decimal>> Get(
+        [FromRoute(Name = "product-id")] Guid productId,
+        CancellationToken cancellationToken)
+    {
+        var productResult = await service.GetActualPrice(productId);
+        return productResult.ToActionResult();
+    }
+    
+    /// <summary>
+    /// Обновление цены продукта
+    /// </summary>
+    /// <param name="newPrice">Данные новой цены на продукт</param>
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpPut]
+    public async Task<ActionResult<Product>> Update(
+        [FromBody] Price newPrice,
+        CancellationToken cancellationToken)
+    {
+        var productResult = await service.SetPrice(newPrice);
+        return productResult.ToActionResult();
+    }
+}

@@ -15,7 +15,7 @@ public class OrderInfoRepository(IPostgresConnectionFactory connectionFactory) :
         await using var connection = connectionFactory.GetConnection();
 
         var sql =
-            "SELECT o.id, o.pvz_id, o.created_on, o.status, o.delivery_date, o.amount, oi.product_id, oi.quantity " +
+            "SELECT o.id AS order_id, o.pvz_id, o.created_on, o.status, o.delivery_date, o.amount, oi.product_id, oi.quantity " +
             "FROM orders AS o " +
             "LEFT JOIN order_items as oi ON oi.order_id = o.id " +
             "WHERE o.id IN ( " +
@@ -25,7 +25,7 @@ public class OrderInfoRepository(IPostgresConnectionFactory connectionFactory) :
             "OFFSET @skip " +
             "LIMIT @pageSize " +
             ") " +
-            "ORDER BY o.date DESC; " +
+            "ORDER BY o.created_on DESC; " +
             "SELECT COUNT(1) " +
             "FROM orders;";
         

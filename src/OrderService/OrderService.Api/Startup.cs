@@ -9,6 +9,7 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
+        services.AddValidation();
 
         services.AddApplicationServices()
             .AddOpenApi();

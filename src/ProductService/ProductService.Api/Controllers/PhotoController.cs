@@ -1,12 +1,10 @@
 using Core.Common.Errors;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Dto;
 using ProductService.Application.Interfaces;
 
-namespace ProductService.Api;
+namespace ProductService.Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/photos")]
 public class PhotoController(IPhotoService service) : ControllerBase
@@ -17,8 +15,6 @@ public class PhotoController(IPhotoService service) : ControllerBase
     /// <param name="photoId">Id фото</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [HttpGet("link/{photo-id:guid}")]
     public async Task<ActionResult<GetPhotoLinkDto>> Get(
         [FromRoute(Name = "photo-id")] Guid photoId,

@@ -26,9 +26,14 @@ public class ProductManagementService(IProductRepository productRepository, IPho
     
     public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter)
     {
-        var product = await productRepository.GetProductsByFilter(filter);
+        var products = await productRepository.GetProductsByFilter(filter);
 
-        return Result.Ok(product);
+        if (products.Count == 0)
+        {
+            return Result.Fail(AppError.NotFound("Нет продуктов по заданному фильтру"));
+        }
+        
+        return Result.Ok(products);
     }
 
     public async Task<Result<Guid>> AddProduct(CreateProductDto productDto)

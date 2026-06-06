@@ -10,18 +10,27 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
 {
     public async Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products)
     {
-        var productsIds = products
-            .Select(product => product.ProductId)
+        var productQuantities = products.ToList();
+
+        var productIds = productQuantities
+            .Select(x => x.ProductId)
             .ToList();
 
-        var prices = (await priceRepository.GetPrices(productsIds)).ToList();
+        var prices = (await priceRepository.GetPrices(productIds)).ToList();
 
-        if (prices.Count != productsIds.Count)
+        if (prices.Count != productIds.Count)
         {
             return Result.Fail(AppError.NotFound("Цена на один или несколько товаров не найдена"));
         }
 
-        var sum = prices.Sum(GetCostWithDiscount!);
+        var pricesByProductId = prices.ToDictionary(price => price!.ProductId);
+
+        var sum = productQuantities.Sum(product =>
+        {
+            var price = pricesByProductId[product.ProductId];
+
+            return GetCostWithDiscount(price!) * product.Quantity;
+        });
 
         return Result.Ok(sum);
     }
