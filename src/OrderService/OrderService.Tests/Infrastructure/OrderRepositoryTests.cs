@@ -33,6 +33,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
 
     public Task DisposeAsync() => Task.CompletedTask;
     
+    // --- Create ---
+    
     [Fact]
     public async Task Create_ShouldInsertOrder_AndReturnId()
     {
@@ -71,6 +73,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         await action.Should().ThrowAsync();
     }
     
+    // --- GetById ---
+    
     [Fact]
     public async Task GetById_ShouldReturnOrder_WhenOrderExists()
     {
@@ -104,6 +108,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Assert
         result.Should().BeNull();
     }
+    
+    // --- GetAll ---
     
     [Fact]
     public async Task GetAll_ShouldReturnPagedOrders()
@@ -169,6 +175,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         result.TotalCount.Should().Be(0);
     }
     
+    // --- Save ---
+    
     [Fact]
     public async Task Save_ShouldSaveStatus_AndReturnId()
     {
@@ -202,6 +210,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Assert 
         await action.Should().ThrowAsync<KeyNotFoundException>();
     }
+    
+    // --- Delete ---
 
     [Fact]
     public async Task Delete_ShouldDeleteOrder()

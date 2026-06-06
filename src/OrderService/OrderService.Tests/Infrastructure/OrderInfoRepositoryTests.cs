@@ -36,6 +36,8 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
+    
+    // --- GetAll ---
 
     [Fact]
     public async Task GetAll_ShouldReturnAllCorrectInfo()

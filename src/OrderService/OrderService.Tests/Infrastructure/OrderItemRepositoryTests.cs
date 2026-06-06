@@ -32,6 +32,8 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
+    
+    // --- Add ---
 
     [Fact]
     public async Task Add_ShouldInsertItem_AndReturnOrderId()
@@ -72,6 +74,8 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         // Assert
         await action.Should().ThrowAsync();
     }
+    
+    // --- GetAllByOrderId ---
 
     [Fact]
     public async Task GetAllByOrderId_ShouldReturnAllItems()
