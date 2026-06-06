@@ -3,12 +3,13 @@ using ProductService.Domain;
 
 namespace ProductService.Infrastructure.Migrations;
 
-[Migration(20260423782600, "Create products Table")]
+[Migration(20209723132600, "Create products Table")]
 public class CreateProductTableMigration : Migration
 {
     public override void Up()
     {
         Create.Table("products")
+            .InSchema("public")
             .WithColumn(nameof(Product.Id)).AsGuid().PrimaryKey()
             .WithColumn(nameof(Product.Name)).AsString().NotNullable()
             .WithColumn(nameof(Product.Description)).AsString().NotNullable()
