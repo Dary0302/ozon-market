@@ -1,5 +1,6 @@
 using Core.Common.Extensions;
 using Core.Common.Extensions.Validation;
+using ProductService.Api.Validators;
 using ProductService.Application;
 using ProductService.Infrastructure.Configurations;
 namespace ProductService.Api;
@@ -12,7 +13,7 @@ public class Startup(IConfiguration configuration)
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
             .AddOpenApi("ProductService", typeof(ApplicationConfiguration))
-            .AddValidation()
+            .AddValidation<IValidatorMarker>()
             .AddControllers();
     }
 

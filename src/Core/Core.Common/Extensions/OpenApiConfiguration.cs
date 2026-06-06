@@ -15,10 +15,7 @@ public static class OpenApiConfiguration
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(swaggerGenOptions =>
             {
-                swaggerGenOptions.DocumentFilter<ExplicitSchemaDocumentFilter>();
-
-                services.AddSingleton<IDocumentFilter>(_ =>
-                    new ExplicitSchemaDocumentFilter(configurationType.Assembly));
+                swaggerGenOptions.DocumentFilter<ExplicitSchemaDocumentFilter>(configurationType.Assembly);
                 ConfigureDisplayComments(swaggerGenOptions, projectPrefix);
             });
     }

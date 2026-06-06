@@ -6,10 +6,10 @@ namespace Core.Common.Extensions.Validation;
 
 public static class ValidationConfiguration
 {
-    public static IServiceCollection AddValidation(this IServiceCollection services)
+    public static IServiceCollection AddValidation<TMarker>(this IServiceCollection services)
     {
         return services
             .AddFluentValidationAutoValidation()
-            .AddValidatorsFromAssemblyContaining<IValidatorMarker>();
+            .AddValidatorsFromAssemblyContaining<TMarker>();
     }
 }
