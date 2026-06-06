@@ -2,6 +2,7 @@ using Dapper;
 using StorageService.Application.Interfaces;
 using StorageService.Domain;
 using Core.Common.DbHelpers;
+using Core.Common.DbHelpers.Interfaces;
 using StorageService.Application.Interfaces.Repositories;
 using StorageService.Infrastructure.Mappers;
 using StorageService.Infrastructure.Models;

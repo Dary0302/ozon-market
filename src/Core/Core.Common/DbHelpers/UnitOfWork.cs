@@ -1,7 +1,7 @@
-﻿using System.Data;
+﻿using Core.Common.DbHelpers.Interfaces;
 using Npgsql;
 
-namespace Core.Common.DbHelpers.Interfaces;
+namespace Core.Common.DbHelpers;
 
 public class UnitOfWork(IPostgresConnectionFactory connectionFactory) : IUnitOfWork
 {
