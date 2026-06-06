@@ -46,6 +46,7 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         }
 
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
+        
         await productRepository.Add(product);
 
         return Result.Ok(product.Id);
@@ -58,23 +59,24 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
-
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
-        if (deletePhotoResult.IsFailed)
-        {
-            return Result.Fail(AppError.NotFound("Фото не найдено"));
-        }
-
+        
         var addPhotoResult =
             await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, new());
         if (addPhotoResult.IsFailed)
         {
             return Result.Fail(AppError.UnprocessableContent());
         }
-
+        
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
         await productRepository.Update(id, product);
 
+        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
+        if (deletePhotoResult.IsFailed)
+        {
+            return Result.Ok()
+                .WithError("Товар успешно обновлён, старое фото для удаления не найдено");
+        }
+        
         return Result.Ok();
     }
 
@@ -85,14 +87,15 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
+        
+        await productRepository.Delete(id);
 
         var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
         if (deletePhotoResult.IsFailed)
         {
-            return Result.Fail(AppError.NotFound("Фото не найдено"));
+            return Result.Ok()
+                .WithError("Товар успешно удалён, но фото для удаления не найдено");
         }
-
-        await productRepository.Delete(id);
 
         return Result.Ok();
     }
