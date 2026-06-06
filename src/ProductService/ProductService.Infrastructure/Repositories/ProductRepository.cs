@@ -134,6 +134,17 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         parameters.Add("maxDiscount", filter.MaxDiscount.Value);
     }
 
+    var offset = (filter.Page - 1) * filter.PageSize;
+
+    sql.AppendLine("""
+                   ORDER BY product.name
+                   LIMIT @pageSize
+                   OFFSET @offset
+                   """);
+
+    parameters.Add("pageSize", filter.PageSize);
+    parameters.Add("offset", offset);
+    
     var daos = await connection.QueryAsync<ProductDao>(
         sql.ToString(),
         parameters);
