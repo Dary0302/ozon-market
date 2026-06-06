@@ -1,5 +1,6 @@
 using Core.Common.Errors;
 using FluentResults;
+using StorageService.Application.Dto;
 using StorageService.Application.Interfaces.Repositories;
 using StorageService.Application.Interfaces.Services;
 using StorageService.Domain;
@@ -10,16 +11,23 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
 {
     private const string NotFoundExceptionMessage = "Склад не найден";
     
-    public async Task<Result<Guid>> AddStorage(Storage storage)
+    public async Task<Result<Guid>> AddStorage(AddStorageDto addStorageDto, CancellationToken cancellationToken)
     {
-        await storageRepository.Add(storage);
+        var storage = new Storage
+        {
+            Id = addStorageDto.Id,
+            Address = addStorageDto.Address,
+            PointId = addStorageDto.PointId,
+        };
+        
+        await storageRepository.Add(storage, cancellationToken);
         
         return Result.Ok(storage.Id);
     }
 
-    public async Task<Result<Storage>> GetStorage(Guid id)
+    public async Task<Result<Storage>> GetStorage(Guid id, CancellationToken cancellationToken)
     {
-        var existingStorage = await storageRepository.Get(id);
+        var existingStorage = await storageRepository.Get(id, cancellationToken);
 
         if (existingStorage is null)
         {
@@ -29,30 +37,37 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         return Result.Ok(existingStorage);
     }
 
-    public async Task<Result> UpdateStorage(Guid id, Storage storage)
+    public async Task<Result> UpdateStorage(Guid id, AddStorageDto addStorageDto, CancellationToken cancellationToken)
     {
-        var existingStorage = await storageRepository.Get(id);
+        var existingStorage = await storageRepository.Get(id, cancellationToken);
         
         if (existingStorage is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
+        
+        var storage = new Storage
+        {
+            Id = addStorageDto.Id,
+            Address = addStorageDto.Address,
+            PointId = addStorageDto.PointId,
+        };
 
-        await storageRepository.Update(storage);
+        await storageRepository.Update(storage, cancellationToken);
         
         return Result.Ok();
     }
 
-    public async Task<Result> DeleteStorage(Guid id)
+    public async Task<Result> DeleteStorage(Guid id, CancellationToken cancellationToken)
     {
-        var existingStorage = await storageRepository.Get(id);
+        var existingStorage = await storageRepository.Get(id, cancellationToken);
         
         if (existingStorage is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        await storageRepository.Delete(id);
+        await storageRepository.Delete(id, cancellationToken);
         
         return Result.Ok();
     }

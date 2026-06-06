@@ -1,6 +1,6 @@
-namespace StorageService.Api.Dto;
+namespace StorageService.Application.Dto;
 
-public record PvzPointDto : BaseDto
+public record AddPvzPointDto : BaseDto
 {
     public Guid PvzId { get; init; }
     

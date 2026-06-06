@@ -1,3 +1,3 @@
-namespace StorageService.Api.Dto;
+namespace StorageService.Application.Dto;
 
 public record ProductQuantityDto(Guid ProductId, int Quantity);

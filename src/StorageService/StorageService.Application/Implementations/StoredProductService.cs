@@ -1,5 +1,6 @@
 using Core.Common.Errors;
 using FluentResults;
+using StorageService.Application.Dto;
 using StorageService.Application.Interfaces.Repositories;
 using StorageService.Application.Interfaces.Services;
 using StorageService.Domain;
@@ -13,25 +14,28 @@ public class StoredProductService(
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
-    public async Task<Result> AddStoredProduct(StoredProduct storedProduct)
+    public async Task<Result> AddStoredProduct(AddStoredProductDto addStoredProductDto, CancellationToken cancellationToken)
     {
-        await storedProductRepository.Add(storedProduct);
+        var storedProduct = new StoredProduct(addStoredProductDto.ProductId, addStoredProductDto.StorageId,
+            addStoredProductDto.Quantity);
+        
+        await storedProductRepository.Add(storedProduct, cancellationToken);
         
         return Result.Ok();
     }
 
-    public async Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock()
+    public async Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock(CancellationToken cancellationToken)
     {
-        var storedProducts = await storedProductRepository.GetAllInStock();
+        var storedProducts = await storedProductRepository.GetAllInStock(cancellationToken);
 
         return Result.Ok(storedProducts);
     }
 
-    public async Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts)
+    public async Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         
-        var storedProducts = (await storedProductRepository.GetProductsQuantity(productIds)).ToList();
+        var storedProducts = (await storedProductRepository.GetProductsQuantity(productIds, cancellationToken)).ToList();
 
         if (storedProducts.Count != orderedProducts.Count)
         {
@@ -48,17 +52,17 @@ public class StoredProductService(
         return Result.Ok(stockCheckResults);
     }
     
-    public async Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts)
+    public async Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var pvzPoint =  await pvzPointRepository.Get(pvzId);
+        var pvzPoint =  await pvzPointRepository.Get(pvzId, cancellationToken);
 
         if (pvzPoint is null)
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
         
-        var storedProducts = (await GetProductsStorages(orderedProducts)).ToList();
-        var storagePoints = await GetOrderStorages(storedProducts);
+        var storedProducts = (await GetProductsStorages(orderedProducts, cancellationToken)).ToList();
+        var storagePoints = await GetOrderStorages(storedProducts, cancellationToken);
         
         var chosenStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
 
@@ -69,16 +73,16 @@ public class StoredProductService(
         return Result.Ok(deliveryTime);
     }
 
-    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts)
+    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var pvzPoint =  await pvzPointRepository.Get(pvzId);
+        var pvzPoint =  await pvzPointRepository.Get(pvzId, cancellationToken);
 
         if (pvzPoint is null)
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }
         
-        var storedProducts = (await GetProductsStorages(orderedProducts)).ToList();
+        var storedProducts = (await GetProductsStorages(orderedProducts, cancellationToken)).ToList();
         
         var orderStorages = storedProducts.Select(product => new DecreaseQuantity (
             product.ProductId,
@@ -89,40 +93,40 @@ public class StoredProductService(
         return orderStorages;
     }
 
-    public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts)
+    public async Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var storedProducts = await storedProductRepository.GetByOrderedProducts(orderedProducts);
+        var storedProducts = await storedProductRepository.GetByOrderedProducts(orderedProducts, cancellationToken);
 
         if (storedProducts.Any(product => product.Quantity < 0))
         {
             return Result.Fail(AppError.UnprocessableContent(NotEnoughProductExceptionMessage));
         }
 
-        await storedProductRepository.DecreaseCount(orderedProducts);
+        await storedProductRepository.DecreaseCount(orderedProducts, cancellationToken);
         
         return Result.Ok();
     }
 
-    public async Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts)
+    public async Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts, CancellationToken cancellationToken)
     {
-        await storedProductRepository.IncreaseCount(arrivedProducts);
+        await storedProductRepository.IncreaseCount(arrivedProducts, cancellationToken);
         
         return Result.Ok();
     }
     
     
-    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts)
+    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var storedProducts = await storedProductRepository.GetProductsStorages(orderedProducts);
+        var storedProducts = await storedProductRepository.GetProductsStorages(orderedProducts, cancellationToken);
 
         return storedProducts;
     }
 
-    public async Task<IEnumerable<StoragePoint>> GetOrderStorages(List<StoredProduct> storedProducts)
+    public async Task<IEnumerable<StoragePoint>> GetOrderStorages(List<StoredProduct> storedProducts, CancellationToken cancellationToken)
     {
         var storageIds = storedProducts.Select(product => product.StorageId);
         
-        var storagePoints = await storagePointRepository.GetStoragePoints(storageIds);
+        var storagePoints = await storagePointRepository.GetStoragePoints(storageIds, cancellationToken);
 
         return storagePoints;
     }

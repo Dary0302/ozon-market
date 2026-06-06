@@ -1,6 +1,6 @@
 using Core.Common.Errors;
 using Microsoft.AspNetCore.Mvc;
-using StorageService.Api.Dto;
+using StorageService.Application.Dto;
 using StorageService.Api.Mappers;
 using StorageService.Application.Interfaces.Services;
 using StorageService.Domain;
@@ -14,14 +14,14 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     /// <summary>
     /// Добавление информации о местоположении склада
     /// </summary>
-    /// <param name="storagePoint"></param>
+    /// <param name="addStoragePoint"></param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpPost]
-    public async Task<ActionResult<Guid>> CreateStoragePoint([FromBody] StoragePoint storagePoint)
+    public async Task<ActionResult<Guid>> CreateStoragePoint([FromBody] AddStoragePointDto addStoragePoint, CancellationToken cancellationToken)
     {
-        var result = await service.AddStoragePoint(storagePoint);
+        var result = await service.AddStoragePoint(addStoragePoint, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -33,9 +33,9 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<StoragePointDto>> GetStoragePoint(Guid id)
+    public async Task<ActionResult<AddStoragePointDto>> GetStoragePoint(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.GetStoragePoint(id);
+        var result = await service.GetStoragePoint(id, cancellationToken);
         return result.ToActionResult(point => point.ToHttp());
     }
 
@@ -43,14 +43,14 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     /// Обновление информации о местоположении склада
     /// </summary>
     /// <param name="id"></param>
-    /// <param name="storagePoint"></param>
+    /// <param name="addStoragePoint"></param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult> UpdateStoragePoint(Guid id, [FromBody] StoragePoint storagePoint)
+    public async Task<ActionResult> UpdateStoragePoint(Guid id, [FromBody] AddStoragePointDto addStoragePoint, CancellationToken cancellationToken)
     {
-        var result = await service.UpdateStoragePoint(id, storagePoint);
+        var result = await service.UpdateStoragePoint(id, addStoragePoint, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -62,9 +62,9 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult> DeleteStoragePoint(Guid id)
+    public async Task<ActionResult> DeleteStoragePoint(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.DeleteStoragePoint(id);
+        var result = await service.DeleteStoragePoint(id, cancellationToken);
         return result.ToActionResult();
     }
 }

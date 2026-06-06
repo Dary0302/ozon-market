@@ -28,7 +28,7 @@ public static class OpenApiConfiguration
     {
         var baseDirectory = AppContext.BaseDirectory;
                 
-        const string projectPrefix = "OzonMarketStorage"; 
+        const string projectPrefix = "StorageService"; 
 
         var xmlFiles = Directory.EnumerateFiles(baseDirectory, "*.xml")
             .Where(file => Path.GetFileName(file).StartsWith(projectPrefix));

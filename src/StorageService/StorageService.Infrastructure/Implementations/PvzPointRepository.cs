@@ -1,7 +1,5 @@
 using Dapper;
-using StorageService.Application.Interfaces;
 using StorageService.Domain;
-using Core.Common.DbHelpers;
 using Core.Common.DbHelpers.Interfaces;
 using StorageService.Application.Interfaces.Repositories;
 using StorageService.Infrastructure.Mappers;
@@ -11,59 +9,88 @@ namespace StorageService.Infrastructure.Implementations;
 
 public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFactory) : IPvzPointRepository
 {
-    public async Task Add(PvzPoint pvzPoint)
+    public async Task Add(PvzPoint pvzPoint, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "INSERT INTO pvzPoints (pointId, pvzId, longitude, latitude)" +
-                  "VALUES (@pointId, @pvzId, @longitude, @latitude)";
+        var sql = """
+                  INSERT INTO pvzPoints (pointId, pvzId, longitude, latitude)
+                  VALUES (@pointId, @pvzId, @longitude, @latitude)
+                  """;
+
+        var command = new CommandDefinition(
+            sql, 
+            new
+            {
+                pointId = pvzPoint.Id,
+                pvzId = pvzPoint.PvzId,
+                longitude = pvzPoint.Longitude,
+                latitude = pvzPoint.Latitude
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            pointId = pvzPoint.Id,
-            pvzId = pvzPoint.PvzId,
-            longitude = pvzPoint.Longitude,
-            latitude = pvzPoint.Latitude
-        });
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task<PvzPoint?> Get(Guid id)
+    public async Task<PvzPoint?> Get(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-        var sql = @"SELECT 
-                        pointId AS Id, 
-                        pvzId AS PvzId,
-                        longitude AS Longitude,
-                        latitude AS Latitude
-                    FROM pvzPoints 
-                    WHERE id = @id";
         
-        var dao = await connection.QueryFirstOrDefaultAsync<PvzPointDao>(sql, new { id });
+        var sql = """
+                  SELECT
+                  pointId AS Id, 
+                      pvzId AS PvzId,
+                      longitude AS Longitude,
+                      latitude AS Latitude
+                  FROM pvzPoints 
+                  WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
+        
+        var dao = await connection.QueryFirstOrDefaultAsync<PvzPointDao>(command);
         return dao?.ToDomain();
     }
 
-    public async Task Update(PvzPoint pvzPoint)
+    public async Task Update(PvzPoint pvzPoint, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "UPDATE pvzPoints SET pvzId = @pvzId, longitude = @longitude, latitude = @latitude" +
-                  "WHERE pointId = @pointId";
+        var sql = """
+                    UPDATE pvzPoints SET pvzId = @pvzId, longitude = @longitude, latitude = @latitude
+                    WHERE pointId = @pointId
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                pvzId =  pvzPoint.PvzId,
+                longitude = pvzPoint.Longitude,
+                latitude = pvzPoint.Latitude,
+                pointId = pvzPoint.Id
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            pvzId =  pvzPoint.PvzId,
-            longitude = pvzPoint.Longitude,
-            latitude = pvzPoint.Latitude,
-            pointId = pvzPoint.Id
-        });
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         
-        var sql = "DELETE FROM pvzPoints WHERE pointId = @pointId";
+        var sql = """
+                  DELETE FROM pvzPoints WHERE pointId = @pointId
+                  """;
 
-        await connection.ExecuteAsync(sql, new { id });
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
 }

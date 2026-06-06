@@ -1,4 +1,4 @@
-namespace StorageService.Api.Dto;
+namespace StorageService.Application.Dto;
 
 public record BaseDto
 {

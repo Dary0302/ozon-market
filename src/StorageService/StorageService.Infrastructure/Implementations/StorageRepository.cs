@@ -11,56 +11,84 @@ namespace StorageService.Infrastructure.Implementations;
 
 public class StorageRepository(IPostgresConnectionFactory postgresConnectionFactory) : IStorageRepository
 {
-    public async Task Add(Storage storage)
+    public async Task Add(Storage storage, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "INSERT INTO storages (id, address, pointId)" +
-                  "VALUES (@id, @address, @pointId)";
+        var sql = """
+                  INSERT INTO storages (id, address, pointId)
+                  VALUES (@id, @address, @pointId)
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                id = storage.Id,
+                address = storage.Address,
+                pointId = storage.PointId
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            id = storage.Id,
-            address = storage.Address,
-            pointId = storage.PointId
-        });
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task<Storage?> Get(Guid id)
+    public async Task<Storage?> Get(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-        var sql = @"SELECT 
-                        id AS Id, 
-                        address AS Address,
-                        pointId AS PointId
-                    FROM storages 
-                    WHERE id = @id";
+        var sql = """
+                  SELECT
+                  id AS Id, 
+                      address AS Address,
+                      pointId AS PointId
+                  FROM storages 
+                  WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
         
-        var dao = await connection.QueryFirstOrDefaultAsync<StorageDao>(sql, new { id });
+        var dao = await connection.QueryFirstOrDefaultAsync<StorageDao>(command);
         
         return dao?.ToDomain();
     }
 
-    public async Task Update(Storage storage)
+    public async Task Update(Storage storage, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "UPDATE storages SET address = @address, pointId = @pointId WHERE id = @id";
+        var sql = """
+                  UPDATE storages SET address = @address, pointId = @pointId WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                address = storage.Address,
+                pointId = storage.PointId,
+                id = storage.Id
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            address = storage.Address,
-            pointId = storage.PointId,
-            id = storage.Id
-        });
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-        
-        var sql = "DELETE FROM storages WHERE id = @id";
 
-        await connection.ExecuteAsync(sql, new { id });
+        var sql = """
+                  DELETE FROM storages WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
 }

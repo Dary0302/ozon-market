@@ -10,26 +10,33 @@ namespace StorageService.Infrastructure.Implementations;
 
 public class StoredProductRepository(IPostgresConnectionFactory postgresConnectionFactory) : IStoredProductRepository
 {
-    public async Task Add(StoredProduct storedProduct)
+    public async Task Add(StoredProduct storedProduct, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "INSERT INTO storedProducts (productId, storageId, quantity)" +
-                  "VALUES (@productId, @storageId, @quantity)";
+        var sql = """
+                  INSERT INTO storedProducts (productId, storageId, quantity)
+                  VALUES (@productId, @storageId, @quantity)
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                productId = storedProduct.ProductId,
+                storageId = storedProduct.StorageId,
+                quantity = storedProduct.Quantity
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            productId = storedProduct.ProductId,
-            storageId = storedProduct.StorageId,
-            quantity = storedProduct.Quantity
-        });
+        await connection.ExecuteAsync(command);
     }
     
-    public async Task<IEnumerable<StoredProduct>> GetByOrderedProducts(List<DecreaseQuantity> orderedProducts)
+    public async Task<IEnumerable<StoredProduct>> GetByOrderedProducts(List<DecreaseQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
     
-        var sql = @"
+        var sql = """
                     SELECT 
                         sp.productId AS Id, 
                         sp.storageId AS StorageId,
@@ -38,66 +45,92 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
                     JOIN UNNEST(@ProductIds::uuid[], @StorageIds::uuid[], @Quantities::int[]) 
                         AS req(productId, storageId, quantity)
                         ON sp.productId = req.productId 
-                        AND sp.storageId = req.storageId";
+                        AND sp.storageId = req.storageId
+                  """;
     
         var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
         var storageIds = orderedProducts.Select(x => x.StorageId).ToArray();
         var quantities = orderedProducts.Select(x => x.Quantity).ToArray();
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                ProductIds = productIds,
+                StorageIds = storageIds,
+                Quantities = quantities
+            },
+            cancellationToken: cancellationToken);
     
-        var daos =  await connection.QueryAsync<StoredProductDao>(sql, new
-        {
-            ProductIds = productIds,
-            StorageIds = storageIds,
-            Quantities = quantities
-        });
+        var daos =  await connection.QueryAsync<StoredProductDao>(command);
 
         var storedProducts = daos.Select(dao => dao.ToDomain());
         
         return storedProducts;
     }
 
-    public async Task<IEnumerable<ProductQuantity>> GetAllInStock()
+    public async Task<IEnumerable<ProductQuantity>> GetAllInStock(CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"SELECT productId, SUM(quantity) AS quantity
-                    FROM storedProducts
-                    GROUP BY productId
-                    HAVING totalQuantity > 0";
+        var sql = """
+                  SELECT productId, SUM(quantity) AS quantity
+                  FROM storedProducts
+                  GROUP BY productId
+                  HAVING totalQuantity > 0
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            cancellationToken: cancellationToken);
         
-        var daos = await connection.QueryAsync<ProductQuantityDao>(sql);
+        var daos = await connection.QueryAsync<ProductQuantityDao>(command);
 
         var storedProducts = daos.Select(dao => dao.ToDomain());
         
         return storedProducts;
     }
     
-    public async Task<IEnumerable<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds)
+    public async Task<IEnumerable<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"SELECT productId, SUM(quantity) AS quantity
-                    FROM storedProducts
-                    WHERE productId IN @productIds 
-                    GROUP BY productId";
+        var sql = """
+                  SELECT productId, SUM(quantity) AS quantity
+                  FROM storedProducts
+                  WHERE productId IN @productIds 
+                  GROUP BY productId
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { productIds },
+            cancellationToken: cancellationToken);
         
-        var daos = await connection.QueryAsync<ProductQuantityDao>(sql, new { productIds });
+        var daos = await connection.QueryAsync<ProductQuantityDao>(command);
 
         var storedProducts = daos.Select(dao => dao.ToDomain());
         
         return storedProducts;
     }
     
-    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts)
+    public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"SELECT productId, storageId, quantity
-                    FROM storedProducts
-                    WHERE productId IN @productIds";
+        var sql = """
+                  SELECT productId, storageId, quantity
+                  FROM storedProducts
+                  WHERE productId IN @productIds
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { productIds },
+            cancellationToken: cancellationToken);
         
-        var daos = await connection.QueryAsync<StoredProductDao>(sql, new { productIds });
+        var daos = await connection.QueryAsync<StoredProductDao>(command);
 
         daos = GetSuitableStorages(daos, orderedProducts);
         
@@ -106,56 +139,75 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         return storedProducts;
     }
 
-    public async Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts)
+    public async Task DecreaseCount(IEnumerable<DecreaseQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"
+        var sql = """
                     UPDATE storedProducts sp
                     SET Quantity = sp.Quantity - req.quantity
                     FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
                         AS req(productId, quantity)
                     WHERE sp.Id = req.productId 
-                      AND sp.Quantity >= req.quantity";
+                      AND sp.Quantity >= req.quantity
+                  """;
         
         var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
         var quantities = orderedProducts.Select(x => x.Quantity).ToArray();
 
-        await connection.ExecuteAsync(sql, new
-        {
-            ProductIds = productIds,
-            Quantities = quantities
-        });
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                ProductIds = productIds,
+                Quantities = quantities
+            },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
     
-    public async Task IncreaseCount(IEnumerable<IncreaseQuantity> arrivedProducts)
+    public async Task IncreaseCount(IEnumerable<IncreaseQuantity> arrivedProducts, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = @"
+        var sql = """
                     UPDATE storedProducts sp
                     SET Quantity = sp.Quantity + req.quantity
                     FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
                         AS req(productId, quantity)
-                    WHERE sp.Id = req.productId";
+                    WHERE sp.Id = req.productId
+                  """;
         
         var productIds = arrivedProducts.Select(x => x.ProductId).ToArray();
         var quantities = arrivedProducts.Select(x => x.Quantity).ToArray();
 
-        await connection.ExecuteAsync(sql, new
-        {
-            ProductIds = productIds,
-            Quantities = quantities
-        });
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                ProductIds = productIds,
+                Quantities = quantities
+            },
+            cancellationToken: cancellationToken);
+        
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
-        
-        var sql = "DELETE FROM storedProducts WHERE productId = @productId";
 
-        await connection.ExecuteAsync(sql, new { id });
+        var sql = """
+                  DELETE FROM storedProducts WHERE productId = @productId
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
     
     /// <summary>

@@ -1,6 +1,6 @@
 using Core.Common.Errors;
 using Microsoft.AspNetCore.Mvc;
-using StorageService.Api.Dto;
+using StorageService.Application.Dto;
 using StorageService.Api.Mappers;
 using StorageService.Application.Interfaces.Services;
 using StorageService.Domain;
@@ -14,13 +14,13 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     /// <summary>
     /// Добавление продукта на склад
     /// </summary>
-    /// <param name="storedProduct">Информация о продукте</param>
+    /// <param name="addStoredProduct">Информация о продукте</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpPost]
-    public async Task<ActionResult> CreateStoredProduct([FromBody] StoredProduct storedProduct)
+    public async Task<ActionResult> CreateStoredProduct([FromBody] AddStoredProductDto addStoredProduct, CancellationToken cancellationToken)
     {
-        await service.AddStoredProduct(storedProduct);
+        await service.AddStoredProduct(addStoredProduct, cancellationToken);
         return Ok();
     }
 
@@ -31,9 +31,9 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("stock")]
-    public async Task<ActionResult<IEnumerable<ProductQuantityDto>>> GetStoredProductsInStock()
+    public async Task<ActionResult<IEnumerable<ProductQuantityDto>>> GetStoredProductsInStock(CancellationToken cancellationToken)
     {
-        var result = await service.GetStoredProductsInStock();
+        var result = await service.GetStoredProductsInStock(cancellationToken);
         return result.ToActionResult(products => products.Select(product => product.ToHttp()));
     }
 
@@ -46,9 +46,9 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{pvzId:guid}/date")]
-    public async Task<ActionResult<DateTime>> GetDeliveryDate(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts)
+    public async Task<ActionResult<DateTime>> GetDeliveryDate(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var deliveryDate = await service.GetDeliveryDate(pvzId, orderedProducts);
+        var deliveryDate = await service.GetDeliveryDate(pvzId, orderedProducts, cancellationToken);
         return deliveryDate.ToActionResult();
     }
 
@@ -61,9 +61,9 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     [HttpGet("{pvzId:guid}/records")]
-    public async Task<ActionResult<List<DecreaseQuantityDto>>> GetStoredProductRecords(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts)
+    public async Task<ActionResult<List<DecreaseQuantityDto>>> GetStoredProductRecords(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var result = await service.GetOrderStoragesRecords(pvzId, orderedProducts);
+        var result = await service.GetOrderStoragesRecords(pvzId, orderedProducts, cancellationToken);
         return result.ToActionResult(records => records.Select(record => record.ToHttp()).ToList());
     }
 }

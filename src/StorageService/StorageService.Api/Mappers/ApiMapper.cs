@@ -1,4 +1,4 @@
-using StorageService.Api.Dto;
+using StorageService.Application.Dto;
 using StorageService.Domain;
 
 namespace StorageService.Api.Mappers;
@@ -15,9 +15,9 @@ public static class ApiMapper
         return new DecreaseQuantityDto(quantity.ProductId, quantity.StorageId, quantity.Quantity);
     }
 
-    public static PvzDto ToHttp(this Pvz pvz)
+    public static AddPvzDto ToHttp(this Pvz pvz)
     {
-        return new PvzDto
+        return new AddPvzDto
         {
             Id = pvz.Id,
             Address = pvz.Address,
@@ -25,9 +25,9 @@ public static class ApiMapper
         };
     }
     
-    public static StorageDto ToHttp(this Storage storage)
+    public static AddStorageDto ToHttp(this Storage storage)
     {
-        return new StorageDto
+        return new AddStorageDto
         {
             Id = storage.Id,
             Address = storage.Address,
@@ -35,9 +35,9 @@ public static class ApiMapper
         };
     }
     
-    public static StoragePointDto ToHttp(this StoragePoint point)
+    public static AddStoragePointDto ToHttp(this StoragePoint point)
     {
-        return new StoragePointDto
+        return new AddStoragePointDto
         {
             Id = point.Id,
             StorageId = point.StorageId,
@@ -46,9 +46,9 @@ public static class ApiMapper
         };
     }
     
-    public static PvzPointDto ToHttp(this PvzPoint point)
+    public static AddPvzPointDto ToHttp(this PvzPoint point)
     {
-        return new PvzPointDto
+        return new AddPvzPointDto
         {
             Id = point.Id,
             PvzId = point.PvzId,

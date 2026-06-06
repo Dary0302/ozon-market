@@ -1,6 +1,6 @@
-namespace StorageService.Api.Dto;
+namespace StorageService.Application.Dto;
 
-public record StoragePointDto : BaseDto
+public record AddStoragePointDto : BaseDto
 {
     public Guid StorageId { get; init; }
     

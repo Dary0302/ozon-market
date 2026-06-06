@@ -11,69 +11,103 @@ namespace StorageService.Infrastructure.Implementations;
 
 public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory) : IPvzRepository
 {
-    public async Task Add(Pvz pvz)
+    public async Task Add(Pvz pvz, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "INSERT INTO pvz (id, address, pointId)" +
-                  "VALUES (@id, @address, @pointId)";
+        var sql = """
+                  INSERT INTO pvz (id, address, pointId)
+                  VALUES (@id, @address, @pointId)
+                  """;
         
-        await connection.ExecuteAsync(sql, new
-        {
-            id = pvz.Id,
-            address = pvz.Address,
-            pointId = pvz.PointId
-        });
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                id = pvz.Id,
+                address = pvz.Address,
+                pointId = pvz.PointId
+            },
+            cancellationToken: cancellationToken);
+        
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task<Pvz?> Get(Guid id)
+    public async Task<Pvz?> Get(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         
-        var sql = @"SELECT 
-                        id AS Id, 
-                        address AS Address,
-                        pointId AS PointId
-                    FROM pvz 
-                    WHERE id = @id";
+        var sql = """
+                  SELECT 
+                  id AS Id, 
+                      address AS Address,
+                      pointId AS PointId
+                  FROM pvz 
+                  WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
         
-        var dao = await connection.QueryFirstOrDefaultAsync<PvzDao>(sql, new { id });
+        var dao = await connection.QueryFirstOrDefaultAsync<PvzDao>(command);
         return dao?.ToDomain();
     }
 
-    public async Task<IEnumerable<Pvz>> GetAll()
+    public async Task<IEnumerable<Pvz>> GetAll(CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         
-        var sql = "SELECT id, address, pointId FROM pvz";
+        var sql = """
+                  SELECT id, address, pointId FROM pvz
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            cancellationToken: cancellationToken);
         
-        var daos = await connection.QueryAsync<PvzDao>(sql);
+        var daos = await connection.QueryAsync<PvzDao>(command);
         
         var allPvz = daos.Select(dao => dao.ToDomain());
 
         return allPvz;
     }
 
-    public async Task Update(Pvz pvz)
+    public async Task Update(Pvz pvz, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = "UPDATE pvz SET address = @address, pointId = @pointId WHERE id = @id";
+        var sql = """
+                  UPDATE pvz SET address = @address, pointId = @pointId WHERE id = @id
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            new
+            {
+                address = pvz.Address,
+                pointId = pvz.PointId,
+                id = pvz.Id
+            },
+            cancellationToken: cancellationToken);
         
-        await connection.ExecuteAsync(sql, new
-        {
-            address = pvz.Address,
-            pointId = pvz.PointId,
-            id = pvz.Id
-        });
+        await connection.ExecuteAsync(command);
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
         
-        var sql = "DELETE FROM pvz WHERE id = @id";
+        var sql = """
+                  DELETE FROM pvz WHERE id = @id
+                  """;
 
-        await connection.ExecuteAsync(sql, new { id });
+        var command = new CommandDefinition(
+            sql,
+            new { id },
+            cancellationToken: cancellationToken);
+
+        await connection.ExecuteAsync(command);
     }
 }

@@ -1,6 +1,6 @@
-namespace StorageService.Api.Dto;
+namespace StorageService.Application.Dto;
 
-public record StorageDto : BaseDto
+public record AddPvzDto : BaseDto
 {
     public string Address { get; init; }
     

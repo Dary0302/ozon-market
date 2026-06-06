@@ -1,5 +1,6 @@
+using Core.Common.Extensions.Validation;
 using StorageService.Api.Extensions;
-using StorageService.Application;
+using StorageService.Api.Validators;
 using StorageService.Application.Configurations;
 using StorageService.Infrastructure.Configurations;
 
@@ -13,6 +14,7 @@ public class Startup(IConfiguration configuration)
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
             .AddOpenApi()
+            .AddValidation<IValidationMarker>()
             .AddControllers();
     }
 
