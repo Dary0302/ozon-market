@@ -4,7 +4,7 @@ using ProductService.Application.Dto;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
 
-namespace ProductService.Api;
+namespace ProductService.Api.Controllers;
 
 [ApiController]
 [Route("api/products")]

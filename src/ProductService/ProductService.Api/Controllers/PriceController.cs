@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
 
-namespace ProductService.Api;
+namespace ProductService.Api.Controllers;
 
 [ApiController]
 [Route("api/products/prices")]

@@ -67,7 +67,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (!string.IsNullOrWhiteSpace(filter.Name))
     {
         sql.AppendLine("""
-            AND LOWER(p.name) LIKE LOWER(@name)
+            AND LOWER(product.name) LIKE LOWER(@name)
             """);
 
         parameters.Add("name", $"%{filter.Name}%");
@@ -76,7 +76,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (filter.Types?.Any() == true)
     {
         sql.AppendLine("""
-            AND p.type = ANY(@types)
+            AND product.type = ANY(@types)
             """);
 
         parameters.Add("types", filter.Types.ToArray());
@@ -85,7 +85,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (filter.MinPrice.HasValue)
     {
         sql.AppendLine("""
-            AND pr.cost >= @minPrice
+            AND price.cost >= @minPrice
             """);
 
         parameters.Add("minPrice", filter.MinPrice.Value);
@@ -94,7 +94,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (filter.MaxPrice.HasValue)
     {
         sql.AppendLine("""
-            AND pr.cost <= @maxPrice
+            AND price.cost <= @maxPrice
             """);
 
         parameters.Add("maxPrice", filter.MaxPrice.Value);
@@ -105,13 +105,13 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
         if (filter.HasDiscount.Value)
         {
             sql.AppendLine("""
-                AND pr.discount > 0
+                AND price.discount > 0
                 """);
         }
         else
         {
             sql.AppendLine("""
-                AND (pr.discount IS NULL OR pr.discount = 0)
+                AND (price.discount IS NULL OR price.discount = 0)
                 """);
         }
     }
@@ -119,7 +119,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (filter.MinDiscount.HasValue)
     {
         sql.AppendLine("""
-            AND pr.discount >= @minDiscount
+            AND price.discount >= @minDiscount
             """);
 
         parameters.Add("minDiscount", filter.MinDiscount.Value);
@@ -128,7 +128,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
     if (filter.MaxDiscount.HasValue)
     {
         sql.AppendLine("""
-            AND pr.discount <= @maxDiscount
+            AND price.discount <= @maxDiscount
             """);
 
         parameters.Add("maxDiscount", filter.MaxDiscount.Value);

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Dto;
 using ProductService.Application.Interfaces;
 
-namespace ProductService.Api;
+namespace ProductService.Api.Controllers;
 
 [ApiController]
 [Route("api/photos")]
