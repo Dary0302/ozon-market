@@ -6,4 +6,21 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.1.79" />
+      <PackageReference Include="FluentAssertions" Version="8.10.0" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+      <PackageReference Include="Npgsql" Version="10.0.3" />
+      <PackageReference Include="Testcontainers.PostgreSql" Version="4.12.0" />
+      <PackageReference Include="xunit" Version="2.9.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Core\Core.Common\Core.Common.csproj" />
+      <ProjectReference Include="..\StorageService.Api\StorageService.Api.csproj" />
+      <ProjectReference Include="..\StorageService.Application\StorageService.Application.csproj" />
+      <ProjectReference Include="..\StorageService.Domain\StorageService.Domain.csproj" />
+      <ProjectReference Include="..\StorageService.Infrastructure\StorageService.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>
