@@ -16,7 +16,7 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO storages (id, address, pointId)
+                  INSERT INTO storages (id, address, point_id)
                   VALUES (@id, @address, @pointId)
                   """;
 
@@ -40,7 +40,7 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
                   SELECT
                   id AS Id, 
                       address AS Address,
-                      pointId AS PointId
+                      point_id AS PointId
                   FROM storages 
                   WHERE id = @id
                   """;
@@ -60,7 +60,7 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  UPDATE storages SET address = @address, pointId = @pointId WHERE id = @id
+                  UPDATE storages SET address = @address, point_id = @pointId WHERE id = @id
                   """;
 
         var command = new CommandDefinition(

@@ -100,7 +100,7 @@ public class StorageRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingId = Guid.NewGuid();
 
-        Func<Task> act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
+        var act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -114,7 +114,7 @@ public class StorageRepositoryTests : IClassFixture<PostgresFixture>
         
         await repository.Add(storage1, CancellationToken.None);
 
-        Func<Task> act = async () => await repository.Add(storage2, CancellationToken.None);
+        var act = async () => await repository.Add(storage2, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }

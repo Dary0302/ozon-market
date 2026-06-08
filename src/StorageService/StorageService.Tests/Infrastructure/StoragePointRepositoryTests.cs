@@ -25,7 +25,6 @@ public class StoragePointRepositoryTests : IClassFixture<PostgresFixture>
         repository = new StoragePointRepository(connectionFactory);
         storageRepository = new StorageRepository(connectionFactory);
         
-        // Очищаем таблицы перед каждым тестом (сначала points, потом storage из-за внешнего ключа)
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
         connection.Execute("TRUNCATE TABLE storage_points CASCADE");
@@ -149,7 +148,7 @@ public class StoragePointRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingPoint = StoragePoint.Restore(Guid.NewGuid(), Guid.NewGuid(), 55.751244, 37.618423);
 
-        Func<Task> act = async () => await repository.Update(nonExistingPoint, CancellationToken.None);
+        var act = async () => await repository.Update(nonExistingPoint, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -173,7 +172,7 @@ public class StoragePointRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingId = Guid.NewGuid();
 
-        Func<Task> act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
+        var act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -188,7 +187,7 @@ public class StoragePointRepositoryTests : IClassFixture<PostgresFixture>
         
         await repository.Add(point1, CancellationToken.None);
 
-        Func<Task> act = async () => await repository.Add(point2, CancellationToken.None);
+        var act = async () => await repository.Add(point2, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }
@@ -272,7 +271,7 @@ public class StoragePointRepositoryTests : IClassFixture<PostgresFixture>
         var nonExistentStorageId = Guid.NewGuid();
         var storagePoint = StoragePoint.Restore(Guid.NewGuid(), nonExistentStorageId, 55.751244, 37.618423);
 
-        Func<Task> act = async () => await repository.Add(storagePoint, CancellationToken.None);
+        var act = async () => await repository.Add(storagePoint, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }

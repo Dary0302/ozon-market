@@ -47,7 +47,6 @@ public class StoredProductsControllerTests : IClassFixture<PostgresFixture>
         
         controller = new StoredProductsController(service);
         
-        // Очищаем таблицы перед каждым тестом
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
         connection.Execute("TRUNCATE TABLE stored_products CASCADE");
@@ -142,22 +141,17 @@ public class StoredProductsControllerTests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetDeliveryDate_WhenValidRequest_ShouldReturnOkWithDate()
     {
-        // Создаём ПВЗ
         var pvz = await CreateTestPvz();
         
-        // Создаём точку ПВЗ
         var pvzPoint = PvzPoint.Restore(pvz.PointId, pvz.Id, 55.751244, 37.618423);
         await pvzPointRepository.Add(pvzPoint, CancellationToken.None);
         
-        // Создаём склад
         var storage = Storage.Restore(Guid.NewGuid(), "Test Storage", Guid.NewGuid());
         await storageRepository.Add(storage, CancellationToken.None);
         
-        // Создаём точку склада
         var storagePoint = StoragePoint.Restore(storage.PointId, storage.Id, 55.751244, 37.618423);
         await storagePointRepository.Add(storagePoint, CancellationToken.None);
         
-        // Добавляем товар
         var productId = Guid.NewGuid();
         var storedProduct = new StoredProduct(productId, storage.Id, 100);
         await storedProductRepository.Add(storedProduct, CancellationToken.None);
@@ -193,22 +187,17 @@ public class StoredProductsControllerTests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetDeliveryDate_WhenNotEnoughProducts_ShouldReturnUnprocessableEntity()
     {
-        // Создаём ПВЗ
         var pvz = await CreateTestPvz();
         
-        // Создаём точку ПВЗ
         var pvzPoint = PvzPoint.Restore(pvz.PointId, pvz.Id, 55.751244, 37.618423);
         await pvzPointRepository.Add(pvzPoint, CancellationToken.None);
         
-        // Создаём склад
         var storage = Storage.Restore(Guid.NewGuid(), "Test Storage", Guid.NewGuid());
         await storageRepository.Add(storage, CancellationToken.None);
         
-        // Создаём точку склада
         var storagePoint = StoragePoint.Restore(storage.PointId, storage.Id, 55.751244, 37.618423);
         await storagePointRepository.Add(storagePoint, CancellationToken.None);
         
-        // Добавляем товар с малым количеством
         var productId = Guid.NewGuid();
         var storedProduct = new StoredProduct(productId, storage.Id, 10);
         await storedProductRepository.Add(storedProduct, CancellationToken.None);
@@ -228,18 +217,14 @@ public class StoredProductsControllerTests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetStoredProductRecords_WhenValidRequest_ShouldReturnOkWithRecords()
     {
-        // Создаём ПВЗ
         var pvz = await CreateTestPvz();
         
-        // Создаём точку ПВЗ
         var pvzPoint = PvzPoint.Restore(Guid.NewGuid(), pvz.Id, 55.751244, 37.618423);
         await pvzPointRepository.Add(pvzPoint, CancellationToken.None);
         
-        // Создаём склад
         var storage = Storage.Restore(Guid.NewGuid(), "Test Storage", Guid.NewGuid());
         await storageRepository.Add(storage, CancellationToken.None);
         
-        // Добавляем товары
         var productId1 = Guid.NewGuid();
         var productId2 = Guid.NewGuid();
         

@@ -16,7 +16,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO storagePoints (pointId, storageId, longitude, latitude)
+                  INSERT INTO storage_points (id, storage_id, longitude, latitude)
                   VALUES (@pointId, @storageId, @longitude, @latitude)
                   """;
 
@@ -40,11 +40,11 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         
         var sql = """
                   SELECT 
-                  pointId AS Id, 
-                      storageId AS StorageId,
+                  id AS Id, 
+                      storage_id AS StorageId,
                       longitude AS Longitude,
                       latitude AS Latitude
-                  FROM storagePoints 
+                  FROM storage_points 
                   WHERE id = @id
                   """;
 
@@ -60,27 +60,34 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
 
     public async Task<IEnumerable<StoragePoint>> GetStoragePoints(IEnumerable<Guid> storageIds, CancellationToken cancellationToken)
     {
+        if (storageIds == null || !storageIds.Any())
+        {
+            return Enumerable.Empty<StoragePoint>();
+        }
+    
+        var storageIdsArray = storageIds.ToArray(); 
+    
         await using var connection = postgresConnectionFactory.GetConnection();
-        
+    
         var sql = """
                   SELECT
-                  pointId AS Id, 
-                      storageId AS StorageId,
+                      id AS Id, 
+                      storage_id AS StorageId,
                       longitude AS Longitude,
                       latitude AS Latitude
-                  FROM storagePoints 
-                  WHERE id IN @storageIds 
+                  FROM storage_points 
+                  WHERE storage_id = ANY(@StorageIds)
                   """;
 
         var command = new CommandDefinition(
             sql,
-            new { storageIds },
+            new { StorageIds = storageIdsArray },
             cancellationToken: cancellationToken);
-        
+    
         var daos = await connection.QueryAsync<StoragePointDao>(command);
 
-        var storagePoints = daos.Select(dao => dao.ToDomain());
-        
+        var storagePoints = daos.Select(dao => StoragePoint.Restore(dao.Id, dao.StorageId, dao.Longitude, dao.Latitude));
+    
         return storagePoints;
     }
 
@@ -89,8 +96,8 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  UPDATE storagePoints SET storageId = @storageId, longitude = @longitude, latitude = @latitude
-                  WHERE pointId = @pointId
+                  UPDATE storage_points SET storage_id = @storageId, longitude = @longitude, latitude = @latitude
+                  WHERE id = @pointId
                   """;
 
         var command = new CommandDefinition(
@@ -112,7 +119,7 @@ public class StoragePointRepository(IPostgresConnectionFactory postgresConnectio
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  DELETE FROM storagePoints WHERE pointId = @pointId
+                  DELETE FROM storage_points WHERE id = @id
                   """;
 
         var command = new CommandDefinition(

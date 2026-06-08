@@ -1,3 +1,8 @@
 namespace StorageService.Infrastructure.Models;
 
-public record ProductQuantityDao(Guid ProductId, int Quantity);
+public record ProductQuantityDao
+{
+    public Guid ProductId { get; init; }
+    
+    public int Quantity { get; init; }
+};

@@ -16,7 +16,7 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO pvz (id, address, pointId)
+                  INSERT INTO pvz (id, address, point_id)
                   VALUES (@id, @address, @pointId)
                   """;
         
@@ -41,7 +41,7 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
                   SELECT 
                   id AS Id, 
                       address AS Address,
-                      pointId AS PointId
+                      point_id AS PointId
                   FROM pvz 
                   WHERE id = @id
                   """;
@@ -60,7 +60,7 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         await using var connection = postgresConnectionFactory.GetConnection();
         
         var sql = """
-                  SELECT id, address, pointId FROM pvz
+                  SELECT id, address, point_id FROM pvz
                   """;
 
         var command = new CommandDefinition(
@@ -79,7 +79,7 @@ public class PvzRepository(IPostgresConnectionFactory postgresConnectionFactory)
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  UPDATE pvz SET address = @address, pointId = @pointId WHERE id = @id
+                  UPDATE pvz SET address = @address, point_id = @pointId WHERE id = @id
                   """;
 
         var command = new CommandDefinition(

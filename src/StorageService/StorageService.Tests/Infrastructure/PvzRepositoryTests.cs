@@ -22,7 +22,6 @@ public class PvzRepositoryTests : IClassFixture<PostgresFixture>
         repository = new PvzRepository(connectionFactory);
         var connection = new NpgsqlConnection(fixture.Container.GetConnectionString());
         
-        // Очищаем таблицу перед каждым тестом
         connection.Open();
         connection.Execute("TRUNCATE TABLE pvz CASCADE");
         connection.Close();
@@ -120,7 +119,7 @@ public class PvzRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingPvz = Pvz.Restore(Guid.NewGuid(), "Non Existing", Guid.NewGuid());
 
-        Func<Task> act = async () => await repository.Update(nonExistingPvz, CancellationToken.None);
+        var act = async () => await repository.Update(nonExistingPvz, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -143,7 +142,7 @@ public class PvzRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingId = Guid.NewGuid();
 
-        Func<Task> act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
+        var act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -157,7 +156,7 @@ public class PvzRepositoryTests : IClassFixture<PostgresFixture>
         
         await repository.Add(pvz1, CancellationToken.None);
 
-        Func<Task> act = async () => await repository.Add(pvz2, CancellationToken.None);
+        var act = async () => await repository.Add(pvz2, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }

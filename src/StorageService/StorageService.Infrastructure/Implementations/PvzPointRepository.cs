@@ -14,7 +14,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO pvzPoints (pointId, pvzId, longitude, latitude)
+                  INSERT INTO pvz_points (id, pvz_id, longitude, latitude)
                   VALUES (@pointId, @pvzId, @longitude, @latitude)
                   """;
 
@@ -38,11 +38,11 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         
         var sql = """
                   SELECT
-                  pointId AS Id, 
-                      pvzId AS PvzId,
+                  id AS Id, 
+                      pvz_id AS PvzId,
                       longitude AS Longitude,
                       latitude AS Latitude
-                  FROM pvzPoints 
+                  FROM pvz_points 
                   WHERE id = @id
                   """;
 
@@ -60,8 +60,8 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                    UPDATE pvzPoints SET pvzId = @pvzId, longitude = @longitude, latitude = @latitude
-                    WHERE pointId = @pointId
+                    UPDATE pvz_points SET pvz_id = @pvzId, longitude = @longitude, latitude = @latitude
+                    WHERE id = @pointId
                   """;
 
         var command = new CommandDefinition(
@@ -83,7 +83,7 @@ public class PvzPointRepository(IPostgresConnectionFactory postgresConnectionFac
         await using var connection = postgresConnectionFactory.GetConnection();
         
         var sql = """
-                  DELETE FROM pvzPoints WHERE pointId = @pointId
+                  DELETE FROM pvz_points WHERE id = @id
                   """;
 
         var command = new CommandDefinition(

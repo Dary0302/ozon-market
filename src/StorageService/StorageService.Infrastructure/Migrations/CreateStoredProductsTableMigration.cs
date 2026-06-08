@@ -8,17 +8,17 @@ public class CreateStoredProductsTableMigration : Migration
 {
     public override void Up()
     {
-        Create.Table("StoredProducts")
-            .WithColumn(nameof(StoredProduct.ProductId)).AsGuid().NotNullable()
-            .WithColumn(nameof(StoredProduct.StorageId)).AsGuid().NotNullable().ForeignKey("Storages", "Id")
-            .WithColumn(nameof(StoredProduct.Quantity)).AsInt32().NotNullable();
+        Create.Table("stored_products")
+            .WithColumn("product_id").AsGuid().NotNullable()
+            .WithColumn("storage_id").AsGuid().NotNullable().ForeignKey("storages", "id")
+            .WithColumn("quantity").AsInt32().NotNullable();
     }
 
     public override void Down()
     {
-        if (Schema.Table("StoredProducts").Exists())
+        if (Schema.Table("stored_products").Exists())
         {
-            Delete.Table("StoredProducts");
+            Delete.Table("stored_products");
         }
     }
 }

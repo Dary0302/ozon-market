@@ -42,7 +42,6 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
             pvzPointRepository,
             pvzRepository);
         
-        // Очищаем таблицы перед каждым тестом
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
         connection.Execute("TRUNCATE TABLE stored_products CASCADE");
@@ -215,23 +214,18 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
     [Fact]
     public async Task GetDeliveryDate_WhenPvzFound_ShouldReturnDeliveryDate()
     {
-        // Создаём ПВЗ
         var pvz = Pvz.Restore(Guid.NewGuid(), "Test Pvz Address", Guid.NewGuid());
         await pvzRepository.Add(pvz, CancellationToken.None);
         
-        // Создаём точку ПВЗ, связанную с этим ПВЗ
         var pvzPoint = PvzPoint.Restore(pvz.PointId, pvz.Id, 55.751244, 37.618423);
         await pvzPointRepository.Add(pvzPoint, CancellationToken.None);
         
-        // Создаём склад
         var storage = Storage.Restore(Guid.NewGuid(), "Test Storage Address", Guid.NewGuid());
         await storageRepository.Add(storage, CancellationToken.None);
         
-        // Создаём точку склада, связанную с этим складом
         var storagePoint = StoragePoint.Restore(Guid.NewGuid(), storage.Id, 55.751244, 37.618423);
         await storagePointRepository.Add(storagePoint, CancellationToken.None);
         
-        // Добавляем товар на этот же склад
         var productId = Guid.NewGuid();
         var storedProduct = new StoredProduct(productId, storage.Id, 100);
         await storedProductRepository.Add(storedProduct, CancellationToken.None);
@@ -240,32 +234,25 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
         {
             new ProductQuantity(productId, 10)
         };
-
-        // Проверка 1: Существует ли ПВЗ?
+        
         var foundPvz = await pvzRepository.Get(pvz.Id, CancellationToken.None);
         foundPvz.Should().NotBeNull();
         
-        // Проверка 2: Существует ли точка ПВЗ?
         var foundPvzPoint = await pvzPointRepository.Get(pvz.PointId, CancellationToken.None);
         foundPvzPoint.Should().NotBeNull();
         
-        // Проверка 3: Существует ли товар на складе?
         var foundProducts = await storedProductRepository.GetProductsQuantity(new[] { productId }, CancellationToken.None);
         foundProducts.Should().NotBeEmpty();
         
-        // Проверка 4: Существует ли точка склада?
         var foundStoragePoints = await storagePointRepository.GetStoragePoints(new[] { storage.Id }, CancellationToken.None);
         foundStoragePoints.Should().NotBeEmpty();
         
-        // Проверка 5: Работает ли GetProductsStorages?
         var productsStorages = await service.GetProductsStorages(orderedProducts, CancellationToken.None);
         productsStorages.Should().NotBeEmpty();
         
-        // Проверка 6: Работает ли GetOrderStorages?
         var orderStorages = await service.GetOrderStorages(productsStorages.ToList(), CancellationToken.None);
         orderStorages.Should().NotBeEmpty();
         
-        // Теперь тестируем основной метод
         var result = await service.GetDeliveryDate(pvz.Id, orderedProducts, CancellationToken.None);
         
         if (!result.IsSuccess)

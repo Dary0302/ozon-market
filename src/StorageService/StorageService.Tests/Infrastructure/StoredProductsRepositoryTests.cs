@@ -25,7 +25,6 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
         repository = new StoredProductRepository(connectionFactory);
         storageRepository = new StorageRepository(connectionFactory);
         
-        // Очищаем таблицы перед каждым тестом
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
         connection.Execute("TRUNCATE TABLE stored_products CASCADE");
@@ -88,8 +87,8 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
         var product1 = result.First(p => p.ProductId == productId1);
         var product2 = result.First(p => p.ProductId == productId2);
         
-        product1.Quantity.Should().Be(70); // 100 - 30
-        product2.Quantity.Should().Be(30); // 50 - 20
+        product1.Quantity.Should().Be(70); 
+        product2.Quantity.Should().Be(30); 
     }
 
     [Fact]
@@ -159,7 +158,7 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
 
         result.Should().HaveCount(1);
         result.First().ProductId.Should().Be(productId);
-        result.First().Quantity.Should().Be(150); // 100 + 50
+        result.First().Quantity.Should().Be(150); 
     }
 
     [Fact]
@@ -202,11 +201,10 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
     
         await CreateTestStoredProduct(productId, storage1.Id, 100);
         await CreateTestStoredProduct(productId, storage2.Id, 50);
-    
-        // Запрашиваем количество, которое есть в каждом складе по отдельности
+        
         var orderedProducts = new List<ProductQuantity>
         {
-            new ProductQuantity(productId, 30) // 30 есть на первом складе (100) и на втором (50)
+            new ProductQuantity(productId, 30) 
         };
 
         var result = await repository.GetProductsStorages(orderedProducts, CancellationToken.None);
@@ -225,8 +223,7 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
     
         await CreateTestStoredProduct(productId, storage1.Id, 30);
         await CreateTestStoredProduct(productId, storage2.Id, 100);
-    
-        // Запрашиваем 80 единиц - только второй склад подходит
+        
         var orderedProducts = new List<ProductQuantity>
         {
             new ProductQuantity(productId, 80)
@@ -373,7 +370,7 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
         
         var duplicateProduct = new StoredProduct(productId, storage.Id, 50);
 
-        Func<Task> act = async () => await repository.Add(duplicateProduct, CancellationToken.None);
+        var act = async () => await repository.Add(duplicateProduct, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }
@@ -384,39 +381,31 @@ public class StoredProductRepositoryTests : IClassFixture<PostgresFixture>
         var storage = await CreateTestStorage();
         var productId = Guid.NewGuid();
         
-        // Добавляем продукт
         await CreateTestStoredProduct(productId, storage.Id, 100);
         
-        // Проверяем наличие
         var inStock = await repository.GetAllInStock(CancellationToken.None);
         inStock.Should().HaveCount(1);
         
-        // Уменьшаем количество
         var decreaseList = new List<DecreaseQuantity>
         {
             new DecreaseQuantity(productId, storage.Id, 30)
         };
         await repository.DecreaseCount(decreaseList, CancellationToken.None);
         
-        // Проверяем остаток
         var quantity = await repository.GetProductsQuantity(new List<Guid> { productId }, CancellationToken.None);
         quantity.First().Quantity.Should().Be(70);
         
-        // Увеличиваем количество
         var increaseList = new List<IncreaseQuantity>
         {
             new IncreaseQuantity(productId, storage.Id, 20)
         };
         await repository.IncreaseCount(increaseList, CancellationToken.None);
         
-        // Проверяем итог
         var finalQuantity = await repository.GetProductsQuantity(new List<Guid> { productId }, CancellationToken.None);
         finalQuantity.First().Quantity.Should().Be(90);
         
-        // Удаляем продукт
         await repository.Delete(productId, CancellationToken.None);
         
-        // Проверяем удаление
         var afterDelete = await repository.GetProductsQuantity(new List<Guid> { productId }, CancellationToken.None);
         afterDelete.Should().BeEmpty();
     }

@@ -15,7 +15,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  INSERT INTO storedProducts (productId, storageId, quantity)
+                  INSERT INTO stored_products (product_id, storage_id, quantity)
                   VALUES (@productId, @storageId, @quantity)
                   """;
 
@@ -38,14 +38,14 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
     
         var sql = """
                     SELECT 
-                        sp.productId AS Id, 
-                        sp.storageId AS StorageId,
+                        sp.product_id AS ProductId, 
+                        sp.storage_id AS StorageId,
                         sp.quantity - req.quantity AS Quantity
-                    FROM storedProducts sp
+                    FROM stored_products sp
                     JOIN UNNEST(@ProductIds::uuid[], @StorageIds::uuid[], @Quantities::int[]) 
-                        AS req(productId, storageId, quantity)
-                        ON sp.productId = req.productId 
-                        AND sp.storageId = req.storageId
+                        AS req(product_id, storage_id, quantity)
+                        ON sp.product_id = req.product_id 
+                        AND sp.storage_id = req.storage_id
                   """;
     
         var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
@@ -74,10 +74,10 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  SELECT productId, SUM(quantity) AS quantity
-                  FROM storedProducts
-                  GROUP BY productId
-                  HAVING totalQuantity > 0
+                  SELECT product_id, SUM(quantity) AS quantity
+                  FROM stored_products
+                  GROUP BY product_id
+                  HAVING SUM(quantity) > 0
                   """;
 
         var command = new CommandDefinition(
@@ -93,36 +93,51 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
     
     public async Task<IEnumerable<ProductQuantity>> GetProductsQuantity(IEnumerable<Guid> productIds, CancellationToken cancellationToken)
     {
+        if (productIds is null || !productIds.Any())
+        {
+            return Enumerable.Empty<ProductQuantity>();
+        }
+    
         await using var connection = postgresConnectionFactory.GetConnection();
+    
+        var productIdsArray = productIds.ToArray();
 
         var sql = """
-                  SELECT productId, SUM(quantity) AS quantity
-                  FROM storedProducts
-                  WHERE productId IN @productIds 
-                  GROUP BY productId
+                  SELECT 
+                      product_id AS ProductId, 
+                      SUM(quantity) AS Quantity
+                  FROM stored_products
+                  WHERE product_id = ANY(@ProductIds)
+                  GROUP BY product_id
                   """;
 
         var command = new CommandDefinition(
             sql,
-            new { productIds },
+            new { ProductIds = productIdsArray },
             cancellationToken: cancellationToken);
-        
+    
         var daos = await connection.QueryAsync<ProductQuantityDao>(command);
 
         var storedProducts = daos.Select(dao => dao.ToDomain());
-        
+    
         return storedProducts;
     }
     
     public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var productIds = orderedProducts.Select(product => product.ProductId);
+        if (orderedProducts is null || !orderedProducts.Any())
+        {
+            return Enumerable.Empty<StoredProduct>();
+        }
+        
+        var productIds = orderedProducts.Select(product => product.ProductId).ToArray();;
+        
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  SELECT productId, storageId, quantity
-                  FROM storedProducts
-                  WHERE productId IN @productIds
+                  SELECT product_id, storage_id, quantity
+                  FROM stored_products
+                  WHERE product_id = ANY(@productIds)
                   """;
 
         var command = new CommandDefinition(
@@ -144,12 +159,12 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                    UPDATE storedProducts sp
-                    SET Quantity = sp.Quantity - req.quantity
+                    UPDATE stored_products sp
+                    SET quantity = sp.quantity - req.quantity
                     FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
-                        AS req(productId, quantity)
-                    WHERE sp.Id = req.productId 
-                      AND sp.Quantity >= req.quantity
+                        AS req(product_id, quantity)
+                    WHERE sp.product_id = req.product_id 
+                      AND sp.quantity >= req.quantity
                   """;
         
         var productIds = orderedProducts.Select(x => x.ProductId).ToArray();
@@ -172,11 +187,11 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                    UPDATE storedProducts sp
-                    SET Quantity = sp.Quantity + req.quantity
+                    UPDATE stored_products sp
+                    SET quantity = sp.quantity + req.quantity
                     FROM UNNEST(@ProductIds::uuid[], @Quantities::int[]) 
-                        AS req(productId, quantity)
-                    WHERE sp.Id = req.productId
+                        AS req(product_id, quantity)
+                    WHERE sp.product_id = req.product_id
                   """;
         
         var productIds = arrivedProducts.Select(x => x.ProductId).ToArray();
@@ -199,7 +214,7 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
         await using var connection = postgresConnectionFactory.GetConnection();
 
         var sql = """
-                  DELETE FROM storedProducts WHERE productId = @productId
+                  DELETE FROM stored_products WHERE product_id = @id
                   """;
 
         var command = new CommandDefinition(
@@ -226,7 +241,12 @@ public class StoredProductRepository(IPostgresConnectionFactory postgresConnecti
                     OrderedQuantity = orderedProduct.Quantity
                 })
             .Where(storedProduct => storedProduct.StoredQuantity >= storedProduct.OrderedQuantity)
-            .Select(product => new StoredProductDao(product.ProductId, product.StorageId, product.StoredQuantity));
+            .Select(product => new StoredProductDao
+            {
+                ProductId = product.ProductId,
+                StorageId = product.StorageId,
+                Quantity = product.StoredQuantity
+            });
         
         return suitableStorages;
     }

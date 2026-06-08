@@ -10,17 +10,27 @@ namespace StorageService.Application.Implementations;
 public class StoredProductService(
     IStoredProductRepository storedProductRepository,
     IStoragePointRepository storagePointRepository,
-    IPvzPointRepository pvzPointRepository) : IStoredProductService
+    IPvzPointRepository pvzPointRepository,
+    IPvzRepository pvzRepository) : IStoredProductService
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
     public async Task<Result> AddStoredProduct(AddStoredProductDto addStoredProductDto, CancellationToken cancellationToken)
     {
+        var existingProduct = await storedProductRepository.GetProductsQuantity(
+            new[] { addStoredProductDto.ProductId }, 
+            cancellationToken);
+    
+        if (existingProduct.Any())
+        {
+            return Result.Fail(AppError.UnprocessableContent("Продукт уже существует на этом складе"));
+        }
+    
         var storedProduct = new StoredProduct(addStoredProductDto.ProductId, addStoredProductDto.StorageId,
             addStoredProductDto.Quantity);
-        
+    
         await storedProductRepository.Add(storedProduct, cancellationToken);
-        
+    
         return Result.Ok();
     }
 
@@ -54,17 +64,29 @@ public class StoredProductService(
     
     public async Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var pvzPoint =  await pvzPointRepository.Get(pvzId, cancellationToken);
+        var pvz = await pvzRepository.Get(pvzId, cancellationToken);
 
-        if (pvzPoint is null)
+        if (pvz is null)
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
+        }
+        
+        var pvzPoint =  await pvzPointRepository.Get(pvz.PointId, cancellationToken);
+        
+        if (pvzPoint is null)
+        {
+            return Result.Fail(AppError.NotFound("Точка ПВЗ не найдена"));
         }
         
         var storedProducts = (await GetProductsStorages(orderedProducts, cancellationToken)).ToList();
         var storagePoints = await GetOrderStorages(storedProducts, cancellationToken);
         
         var chosenStorages = ChooseOrderStorages(storedProducts, storagePoints, pvzPoint);
+        
+        if (chosenStorages is null || chosenStorages.Count == 0)
+        {
+            return Result.Fail(AppError.UnprocessableContent("Складов с нужным количеством товара не обнаружено"));
+        }
 
         var farthestStorageDistance = chosenStorages.Max(product => product.Distance);
 
@@ -75,9 +97,9 @@ public class StoredProductService(
 
     public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
-        var pvzPoint =  await pvzPointRepository.Get(pvzId, cancellationToken);
+        var pvz = await pvzRepository.Get(pvzId, cancellationToken);
 
-        if (pvzPoint is null)
+        if (pvz is null)
         {
             return Result.Fail(AppError.NotFound("Пвз не найден"));
         }

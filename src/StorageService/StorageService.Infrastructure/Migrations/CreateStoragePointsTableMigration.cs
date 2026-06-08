@@ -8,18 +8,18 @@ public class CreateStoragePointsTableMigration : Migration
 {
     public override void Up()
     {
-        Create.Table("StoragePoints")
-            .WithColumn(nameof(StoragePoint.Id)).AsGuid().PrimaryKey()
-            .WithColumn(nameof(StoragePoint.StorageId)).AsGuid().NotNullable().ForeignKey("Storages", "Id")
-            .WithColumn(nameof(StoragePoint.Longitude)).AsDouble().NotNullable()
-            .WithColumn(nameof(StoragePoint.Latitude)).AsDouble().NotNullable();
+        Create.Table("storage_points")
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("storage_id").AsGuid().NotNullable().ForeignKey("storages", "id")
+            .WithColumn("longitude").AsDouble().NotNullable()
+            .WithColumn("latitude").AsDouble().NotNullable();
     }
 
     public override void Down()
     {
-        if (Schema.Table("StoragePoints").Exists())
+        if (Schema.Table("storage_points").Exists())
         {
-            Delete.Table("StoragePoints");
+            Delete.Table("storage_points");
         }
     }
 }

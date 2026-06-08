@@ -25,7 +25,6 @@ public class PvzPointRepositoryTests : IClassFixture<PostgresFixture>
         repository = new PvzPointRepository(connectionFactory);
         pvzRepository = new PvzRepository(connectionFactory);
         
-        // Очищаем таблицы перед каждым тестом (сначала points, потом pvz из-за внешнего ключа)
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
         connection.Execute("TRUNCATE TABLE pvz_points CASCADE");
@@ -115,7 +114,7 @@ public class PvzPointRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingPvzPoint = PvzPoint.Restore(Guid.NewGuid(), Guid.NewGuid(), 55.751244, 37.618423);
 
-        Func<Task> act = async () => await repository.Update(nonExistingPvzPoint, CancellationToken.None);
+        var act = async () => await repository.Update(nonExistingPvzPoint, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -139,7 +138,7 @@ public class PvzPointRepositoryTests : IClassFixture<PostgresFixture>
     {
         var nonExistingId = Guid.NewGuid();
 
-        Func<Task> act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
+        var act = async () => await repository.Delete(nonExistingId, CancellationToken.None);
         
         await act.Should().NotThrowAsync();
     }
@@ -154,7 +153,7 @@ public class PvzPointRepositoryTests : IClassFixture<PostgresFixture>
         
         await repository.Add(pvzPoint1, CancellationToken.None);
 
-        Func<Task> act = async () => await repository.Add(pvzPoint2, CancellationToken.None);
+        var act = async () => await repository.Add(pvzPoint2, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }
@@ -238,7 +237,7 @@ public class PvzPointRepositoryTests : IClassFixture<PostgresFixture>
         var nonExistentPvzId = Guid.NewGuid();
         var pvzPoint = PvzPoint.Restore(Guid.NewGuid(), nonExistentPvzId, 55.751244, 37.618423);
 
-        Func<Task> act = async () => await repository.Add(pvzPoint, CancellationToken.None);
+        var act = async () => await repository.Add(pvzPoint, CancellationToken.None);
         
         await act.Should().ThrowAsync<Exception>();
     }

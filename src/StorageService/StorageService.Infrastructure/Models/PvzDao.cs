@@ -1,3 +1,8 @@
 namespace StorageService.Infrastructure.Models;
 
-public record PvzDao(string Address, Guid PointId) : BaseDao;
+public record PvzDao : BaseDao
+{
+    public string Address { get; init; } 
+    
+    public Guid PointId { get; init; }
+};

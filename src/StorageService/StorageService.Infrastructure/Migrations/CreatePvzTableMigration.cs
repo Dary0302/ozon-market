@@ -8,17 +8,17 @@ public class CreatePvzTableMigration : Migration
 {
     public override void Up()
     {
-        Create.Table("Pvz")
-            .WithColumn(nameof(Pvz.Id)).AsGuid().PrimaryKey()
-            .WithColumn(nameof(Pvz.Address)).AsString(255).NotNullable()
-            .WithColumn(nameof(Pvz.PointId)).AsGuid().NotNullable();
+        Create.Table("pvz")
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("address").AsString(255).NotNullable()
+            .WithColumn("point_id").AsGuid().NotNullable();
     }
 
     public override void Down()
     {
-        if (Schema.Table("Pvz").Exists())
+        if (Schema.Table("pvz").Exists())
         {
-            Delete.Table("Pvz");
+            Delete.Table("pvz");
         }
     }
 }
