@@ -1,4 +1,5 @@
 ﻿using Core.Common.DbHelpers.Interfaces;
+using Core.Common.Errors;
 using FluentResults;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Mocks;
@@ -157,25 +158,59 @@ public class OrderManagementService(IOrderRepository orderRepository,
         return Result.Ok();
     }
 
-    public async Task<Result<OrderInfo>> GetInfoById(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<OrderInfoWithPrice>> GetInfoById(Guid id, CancellationToken cancellationToken)
     {
-        var orderTask = orderRepository.GetById(id, cancellationToken);
-        var itemsTask = orderItemRepository.GetAllByOrderId(id, cancellationToken);
-        
-        await Task.WhenAll(orderTask, itemsTask);
-
-        var order = orderTask.Result;
-        
+        var order  = await orderRepository.GetById(id, cancellationToken);
         if (order == null)
             return Result.Fail(OrderErrors.NotFound(id));
         
-        return Result.Ok(new OrderInfo(order, itemsTask.Result));
+        var items = (await orderItemRepository.GetAllByOrderId(id, cancellationToken)).ToList();
+        var productIds = items.Select(item => item.ProductId);
+        
+        //TODO: кафка
+        var request = new ProductPriceRequest(order.CreatedOn, productIds);
+        var prices = await productServiceMock.GetProductsPrice([request]);
+        
+        var priceMap = prices.ToDictionary(p => p.ProductId, p => p.Price);
+        if (!items.All(item => priceMap.ContainsKey(item.ProductId)))
+            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+        
+        var itemsWithPrice = items.Select(item => new OrderItemWithPrice(
+            item.ProductId,
+            item.Quantity,
+            priceMap[item.ProductId]));
+        
+        return Result.Ok(new OrderInfoWithPrice(order, itemsWithPrice));
     }
 
-    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize, 
+    public async Task<Result<PagedResult<OrderInfoWithPrice>>> GetAllInfo(int pageNumber, int pageSize, 
         CancellationToken cancellationToken)
     {
-        var result = await orderInfoRepository.GetAll(pageNumber, pageSize, cancellationToken);
-        return Result.Ok(result);
+        var orderInfos = await orderInfoRepository.GetAll(pageNumber, pageSize, cancellationToken);
+        
+        //TODO: кафка
+        var requests = orderInfos.Items
+            .GroupBy(o => o.Order.CreatedOn.Date)
+            .Select(group => new ProductPriceRequest(
+                group.Key,
+                group.SelectMany(o => o.OrderItems.Select(i => i.ProductId)).Distinct()));
+        var prices = await productServiceMock.GetProductsPrice(requests);
+        
+        var priceMap = prices.ToDictionary(
+            p => (p.ProductId, p.Date.Date),
+            p => p.Price);
+        if (!orderInfos.Items
+                .SelectMany(o => o.OrderItems.Select(item => (item.ProductId, o.Order.CreatedOn.Date)))
+                .All(key => priceMap.ContainsKey(key)))
+            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+
+        var result = orderInfos.Items.Select(orderInfo => new OrderInfoWithPrice(
+            orderInfo.Order,
+            orderInfo.OrderItems.Select(item => new OrderItemWithPrice(
+                item.ProductId,
+                item.Quantity,
+                priceMap[(item.ProductId, orderInfo.Order.CreatedOn.Date)]))));
+
+        return Result.Ok(new PagedResult<OrderInfoWithPrice>(result, orderInfos.TotalCount));
     }
 }

@@ -9,5 +9,5 @@ public record OrderInfoResponseDto : BaseDto
     public required string Status { get; init; }
     public required DateTime DeliveryDate { get; init; }
     public required decimal Amount { get; init; }
-    public required IEnumerable<OrderItem> Products { get; init; }
+    public required IEnumerable<OrderItemResponseDto> Products { get; init; }
 }

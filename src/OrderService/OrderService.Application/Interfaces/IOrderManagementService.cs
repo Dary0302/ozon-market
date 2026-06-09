@@ -17,7 +17,7 @@ public interface IOrderManagementService
     
     Task<Result> Delete(Guid id, CancellationToken cancellationToken);
     
-    Task<Result<OrderInfo>> GetInfoById(Guid id, CancellationToken cancellationToken);
+    Task<Result<OrderInfoWithPrice>> GetInfoById(Guid id, CancellationToken cancellationToken);
     
-    Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<Result<PagedResult<OrderInfoWithPrice>>> GetAllInfo(int pageNumber, int pageSize, CancellationToken cancellationToken);
 }
