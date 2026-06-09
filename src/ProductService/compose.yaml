@@ -1,12 +1,12 @@
 ﻿services:
-  storageservice.api:
-    image: storageservice.api
+  productservice.api:
+    image: productservice.api
     build:
       context: ..
-      dockerfile: StorageService/StorageService.Api/Dockerfile
+      dockerfile: ProductService/ProductService.Api/Dockerfile
     ports:
-      - "8080:5228"
-      - "8081:5229"
+      - "8084:8080"
+      - "8085:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
@@ -14,7 +14,7 @@
       db:
         condition: service_healthy
     networks:
-      - storagenetwork
+      - product-network
 
   db:
     image: postgres:16
@@ -23,7 +23,7 @@
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"  
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -32,10 +32,10 @@
       timeout: 5s
       retries: 5
     networks:
-      - storagenetwork
+      - product-network
 
 networks:
-  storagenetwork:
+  product-network:
     driver: bridge
 
 volumes:
