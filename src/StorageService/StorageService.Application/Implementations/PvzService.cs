@@ -7,7 +7,7 @@ using StorageService.Domain;
 
 namespace StorageService.Application.Implementations;
 
-public class PvzService(IPvzRepository pvzRepository, CancellationToken cancellationToken) : IPvzService
+public class PvzService(IPvzRepository pvzRepository) : IPvzService
 {
     private const string NotFounExceptionMessage = "Пункт выдачи заказов не найден";
     
