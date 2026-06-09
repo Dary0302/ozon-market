@@ -46,7 +46,7 @@ public class PriceController(IPricingService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpPut]
-    public async Task<ActionResult<Product>> Update(
+    public async Task<ActionResult> Update(
         [FromBody] Price newPrice,
         CancellationToken cancellationToken)
     {
