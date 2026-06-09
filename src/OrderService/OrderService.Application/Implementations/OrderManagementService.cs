@@ -171,7 +171,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var request = new ProductPriceRequest(order.CreatedOn, productIds);
         var prices = await productServiceMock.GetProductsPrice([request]);
         
-        var priceMap = prices.ToDictionary(p => p.ProductId, p => p.Price);
+        var priceMap = prices.ToDictionary(product => product.ProductId, product => product.Price);
         if (!items.All(item => priceMap.ContainsKey(item.ProductId)))
             return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
         
@@ -190,17 +190,18 @@ public class OrderManagementService(IOrderRepository orderRepository,
         
         //TODO: кафка
         var requests = orderInfos.Items
-            .GroupBy(o => o.Order.CreatedOn.Date)
+            .GroupBy(orderInfo => orderInfo.Order.CreatedOn.Date)
             .Select(group => new ProductPriceRequest(
                 group.Key,
-                group.SelectMany(o => o.OrderItems.Select(i => i.ProductId)).Distinct()));
+                group.SelectMany(orderInfo => orderInfo.OrderItems.Select(i => i.ProductId)).Distinct()));
         var prices = await productServiceMock.GetProductsPrice(requests);
         
         var priceMap = prices.ToDictionary(
-            p => (p.ProductId, p.Date.Date),
-            p => p.Price);
+            product => (product.ProductId, product.Date.Date),
+            product => product.Price);
         if (!orderInfos.Items
-                .SelectMany(o => o.OrderItems.Select(item => (item.ProductId, o.Order.CreatedOn.Date)))
+                .SelectMany(orderInfo => orderInfo.OrderItems.Select(item 
+                    => (item.ProductId, orderInfo.Order.CreatedOn.Date)))
                 .All(key => priceMap.ContainsKey(key)))
             return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
 

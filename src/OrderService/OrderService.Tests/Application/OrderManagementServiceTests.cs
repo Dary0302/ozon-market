@@ -34,7 +34,7 @@ public class OrderManagementServiceTests
         productServiceMock = new Mock<IProductServiceMock>();
         
         unitOfWorkMock
-            .Setup(u => u.ExecuteInTransaction(It.IsAny<Func<Task>>()))
+            .Setup(uof => uof.ExecuteInTransaction(It.IsAny<Func<Task>>()))
             .Returns<Func<Task>>(fn => fn());
         
         service = new OrderManagementService(
@@ -49,35 +49,35 @@ public class OrderManagementServiceTests
     private void SetupValidDefaultsForCreate(decimal calculatedAmount = 1000m)
     {
         productServiceMock
-            .Setup(p => p.CalculateAmount(It.IsAny<IEnumerable<ProductQuantity>>()))
+            .Setup(serviceMock => serviceMock.CalculateAmount(It.IsAny<IEnumerable<ProductQuantity>>()))
             .ReturnsAsync(calculatedAmount);
 
         storageServiceMock
-            .Setup(s => s.CheckStock(It.IsAny<IEnumerable<ProductQuantity>>()))
+            .Setup(serviceMock => serviceMock.CheckStock(It.IsAny<IEnumerable<ProductQuantity>>()))
             .ReturnsAsync(Enumerable.Empty<StockCheckResult>());
 
         storageServiceMock
-            .Setup(s => s.GetDeliveryDate(
+            .Setup(serviceMock => serviceMock.GetDeliveryDate(
                 It.IsAny<Guid>(), 
                 It.IsAny<IEnumerable<ProductQuantity>>()))
             .ReturnsAsync(DateTime.UtcNow.AddDays(3));
 
         storageServiceMock
-            .Setup(s => s.GetProductStorage(It.IsAny<IEnumerable<ProductQuantity>>()))
+            .Setup(serviceMock => serviceMock.GetProductStorage(It.IsAny<IEnumerable<ProductQuantity>>()))
             .ReturnsAsync(Enumerable.Empty<ProductStorage>());
 
         storageServiceMock
-            .Setup(s => s.ReduceCountOfProducts(It.IsAny<IEnumerable<DecreaseQuantity>>()))
+            .Setup(serviceMock => serviceMock.ReduceCountOfProducts(It.IsAny<IEnumerable<DecreaseQuantity>>()))
             .Returns(Task.CompletedTask);
     }
 
     private void SetupValidDefaultsForUpdateStatus(Order order)
     {
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
+            .Setup(repository => repository.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync(order);
         orderRepositoryMock
-            .Setup(r => r.Save(It.IsAny<Order>(), 
+            .Setup(repository => repository.Save(It.IsAny<Order>(), 
                 It.IsAny<IDbConnection>(),  
                 It.IsAny<IDbTransaction>(),
                 CancellationToken.None))
@@ -87,10 +87,10 @@ public class OrderManagementServiceTests
     private void SetupValidDefaultsForGetInfo(Order order, IEnumerable<OrderItem> items)
     {
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id, CancellationToken.None))
+            .Setup(repository => repository.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
         orderItemRepositoryMock
-            .Setup(r => r.GetAllByOrderId(order.Id, CancellationToken.None))
+            .Setup(repository => repository.GetAllByOrderId(order.Id, CancellationToken.None))
             .ReturnsAsync(items);
     }
     
@@ -99,7 +99,7 @@ public class OrderManagementServiceTests
             .Select(_ => new ProductQuantity(Guid.NewGuid(), 1));
 
     
-    // --- Create ---
+    #region Create
     
     [Fact]
     public async Task Create_ShouldReturnsSuccessWithOrderId()
@@ -130,7 +130,7 @@ public class OrderManagementServiceTests
         
         // Assert
         orderRepositoryMock.Verify(
-            r => r.Create(
+            repository => repository.Create(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
                 It.IsAny<IDbTransaction>(), 
@@ -138,7 +138,7 @@ public class OrderManagementServiceTests
             Times.Once);
 
         orderItemRepositoryMock.Verify(
-            r => r.Add(
+            repository => repository.Add(
                 It.Is<List<OrderItem>>(items => items.Count() == 3),
                 It.IsAny<IDbConnection>(),
                 It.IsAny<IDbTransaction>(), 
@@ -170,7 +170,7 @@ public class OrderManagementServiceTests
         SetupValidDefaultsForCreate();
         var lackingProduct = new LackingProduct(Guid.NewGuid(), 5);
         storageServiceMock
-            .Setup(s => s.CheckStock(It.IsAny<IEnumerable<ProductQuantity>>()))
+            .Setup(serviceMock => serviceMock.CheckStock(It.IsAny<IEnumerable<ProductQuantity>>()))
             .ReturnsAsync(new[] { new StockCheckResult(lackingProduct.ProductId, -5) });
         
         // Act
@@ -200,12 +200,14 @@ public class OrderManagementServiceTests
 
         // Assert 
         productServiceMock.Verify(
-            p => p.CalculateAmount(It.Is<IEnumerable<ProductQuantity>>(
+            serviceMock => serviceMock.CalculateAmount(It.Is<IEnumerable<ProductQuantity>>(
                 list => list.Count() == 1 && list.Single().Quantity == 2)),
             Times.Once);
     }
     
-    // --- GetById ---
+    #endregion
+    
+    #region GetById
     
     [Fact]
     public async Task GetById_ShouldReturnsSuccessWithOrderId()
@@ -213,7 +215,7 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
+            .Setup(repository => repository.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync(order);
         
         // Act
@@ -230,7 +232,7 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(It.IsAny<Guid>(), CancellationToken.None))
+            .Setup(repository => repository.GetById(It.IsAny<Guid>(), CancellationToken.None))
             .ReturnsAsync((Order?)null);
         
         // Act
@@ -241,7 +243,9 @@ public class OrderManagementServiceTests
         result.Errors.Should().ContainSingle(e => e.Message == OrderErrors.NotFound(order.Id).Message);
     }
     
-    // --- GetAll ---
+    #endregion
+    
+    #region GetAll
     
     [Fact]
     public async Task GetAll_ShouldReturnsSuccessWithPagedOrders()
@@ -253,7 +257,7 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<Order>(orders, 3);
         
         orderRepositoryMock
-            .Setup(r => r.GetAll(3, 10, CancellationToken.None))
+            .Setup(repository => repository.GetAll(3, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
         
         // Act
@@ -274,7 +278,7 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<Order>(Enumerable.Empty<Order>(), 0);
         
         orderRepositoryMock
-            .Setup(r => r.GetAll(It.IsAny<int>(), 
+            .Setup(repository => repository.GetAll(It.IsAny<int>(), 
                 It.IsAny<int>(), CancellationToken.None))
             .ReturnsAsync(pagedResult);
         
@@ -287,7 +291,9 @@ public class OrderManagementServiceTests
         result.Value.TotalCount.Should().Be(0);
     }
     
-    // --- UpdateStatus ---
+    #endregion
+    
+    #region UpdateStatus
 
     [Theory]
     [InlineData(Status.Created, Status.Paid)]
@@ -314,7 +320,7 @@ public class OrderManagementServiceTests
         // Arrange
         var orderId = Guid.NewGuid();
         orderRepositoryMock
-            .Setup(r => r.GetById(orderId, CancellationToken.None))
+            .Setup(repository => repository.GetById(orderId, CancellationToken.None))
             .ReturnsAsync((Order?)null);
         
         // Act
@@ -331,7 +337,7 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id, CancellationToken.None))
+            .Setup(repository => repository.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
         
         // Act
@@ -384,7 +390,7 @@ public class OrderManagementServiceTests
         // Arrange
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.GetById(order.Id, CancellationToken.None))
+            .Setup(repository => repository.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(order);
 
         // Act
@@ -392,7 +398,7 @@ public class OrderManagementServiceTests
 
         // Assert
         orderRepositoryMock.Verify(
-            r => r.Save(
+            repository => repository.Save(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
                 It.IsAny<IDbTransaction>(), 
@@ -418,7 +424,7 @@ public class OrderManagementServiceTests
 
         // Assert
         orderRepositoryMock.Verify(
-            r => r.Save(
+            repository => repository.Save(
                 It.IsAny<Order>(),
                 It.IsAny<IDbConnection>(),
                 It.IsAny<IDbTransaction>(), 
@@ -426,7 +432,9 @@ public class OrderManagementServiceTests
             Times.Once);
     }
     
-    // --- Delete ---
+    #endregion
+    
+    #region Delete
 
     [Fact]
     public async Task Delete_ShouldReturnsSuccess()
@@ -434,7 +442,7 @@ public class OrderManagementServiceTests
         // Arrange 
         var order = EntityFactory.MakeOrder();
         orderRepositoryMock
-            .Setup(r => r.Delete(
+            .Setup(repository => repository.Delete(
                 It.IsAny<Guid>(),
                 It.IsAny<IDbConnection>(),
                 It.IsAny<IDbTransaction>(), 
@@ -447,21 +455,35 @@ public class OrderManagementServiceTests
         result.IsSuccess.Should().BeTrue();
     }
     
-    // --- GetInfoById ---
+    #endregion
+    
+    #region GetInfoById
     
     [Fact]
     public async Task GetInfoById_ShouldReturnsSuccess_WithOrderInfo()
     {
         // Arrange
         var orderInfo = EntityFactory.MakeOrderInfo();
+        var productPrices = orderInfo.OrderItems
+            .Select(item => new ProductPrice(item.ProductId, 100m, orderInfo.Order.CreatedOn))
+            .ToList();
+        var expectedOrderInfo = new OrderInfoWithPrice(
+            orderInfo.Order,
+            orderInfo.OrderItems.Select(item => new OrderItemWithPrice(
+                item.ProductId,
+                item.Quantity,
+                100m)));
         SetupValidDefaultsForGetInfo(orderInfo.Order, orderInfo.OrderItems);
+        productServiceMock
+            .Setup(serviceMock => serviceMock.GetProductsPrice(It.IsAny<IEnumerable<ProductPriceRequest>>()))
+            .ReturnsAsync(productPrices);
 
         // Act
         var result = await service.GetInfoById(orderInfo.Order.Id, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEquivalentTo(orderInfo);
+        result.IsSuccess.Should().BeTrue(result.Errors.FirstOrDefault()?.Message);
+        result.Value.Should().BeEquivalentTo(expectedOrderInfo);
     }
     
     [Fact]
@@ -471,10 +493,10 @@ public class OrderManagementServiceTests
         var orderId = Guid.NewGuid();
     
         orderRepositoryMock
-            .Setup(r => r.GetById(orderId, CancellationToken.None))
+            .Setup(repository => repository.GetById(orderId, CancellationToken.None))
             .ReturnsAsync((Order?)null);
         orderItemRepositoryMock
-            .Setup(r => r.GetAllByOrderId(orderId, CancellationToken.None))
+            .Setup(repository => repository.GetAllByOrderId(orderId, CancellationToken.None))
             .ReturnsAsync(Enumerable.Empty<OrderItem>());
 
         // Act
@@ -485,7 +507,9 @@ public class OrderManagementServiceTests
         result.Errors.Should().ContainSingle(e => e.Message == OrderErrors.NotFound(orderId).Message);
     }
     
-    // --- GetAllInfo ---
+    #endregion
+    
+    #region GetAllInfo
     
     [Fact]
     public async Task GetAllInfo_ShouldReturnsSuccess_WithPagedOrderInfos()
@@ -495,10 +519,19 @@ public class OrderManagementServiceTests
             .Select(_ => EntityFactory.MakeOrderInfo())
             .ToList();
         var pagedResult = new PagedResult<OrderInfo>(orderInfos, TotalCount: 3);
+        var productPrices = orderInfos
+            .SelectMany(orderInfo => orderInfo.OrderItems.Select(item => new ProductPrice(
+                item.ProductId,
+                100m,
+                orderInfo.Order.CreatedOn))) 
+            .ToList();
     
         orderInfoRepositoryMock
-            .Setup(r => r.GetAll(1, 10, CancellationToken.None))
+            .Setup(repository => repository.GetAll(1, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
+        productServiceMock
+            .Setup(serviceMock => serviceMock.GetProductsPrice(It.IsAny<IEnumerable<ProductPriceRequest>>()))
+            .ReturnsAsync(productPrices);
 
         // Act
         var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10, CancellationToken.None);
@@ -516,7 +549,7 @@ public class OrderManagementServiceTests
         var pagedResult = new PagedResult<OrderInfo>(Enumerable.Empty<OrderInfo>(), TotalCount: 0);
     
         orderInfoRepositoryMock
-            .Setup(r => r.GetAll(1, 10, CancellationToken.None))
+            .Setup(repository => repository.GetAll(1, 10, CancellationToken.None))
             .ReturnsAsync(pagedResult);
 
         // Act
@@ -527,4 +560,6 @@ public class OrderManagementServiceTests
         result.Value.Items.Should().BeEmpty();
         result.Value.TotalCount.Should().Be(0);
     }
+    
+    #endregion
 }

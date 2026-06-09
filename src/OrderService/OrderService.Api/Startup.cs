@@ -14,7 +14,7 @@ public class Startup(IConfiguration configuration)
         services.AddApplicationServices()
             .AddOpenApi(
                 "OrderService",
-                typeof(OrderService.Api.Startup));
+                typeof(ApplicationConfiguration));
 
         services.AddInfrastructureServices(configuration);
     }

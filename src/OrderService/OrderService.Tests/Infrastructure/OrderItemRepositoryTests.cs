@@ -33,7 +33,7 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
 
     public Task DisposeAsync() => Task.CompletedTask;
     
-    // --- Add ---
+    #region Add
 
     [Fact]
     public async Task Add_ShouldInsertItem_AndReturnOrderId()
@@ -55,7 +55,7 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         Assert.Equal(order.Id, returnedId);
         rows.Should().HaveCount(5);
         rows.Select(row => row.ProductId).Should()
-            .BeEquivalentTo(items.Select(i => i.ProductId));
+            .BeEquivalentTo(items.Select(item => item.ProductId));
     }
     
     [Fact]
@@ -76,7 +76,9 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         await action.Should().ThrowAsync();
     }
     
-    // --- GetAllByOrderId ---
+    #endregion
+    
+    #region GetAllByOrderId
 
     [Fact]
     public async Task GetAllByOrderId_ShouldReturnAllItems()
@@ -100,7 +102,7 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         var rows = await orderItemRepository.GetAllByOrderId(order1.Id, CancellationToken.None);
         rows.Should().HaveCount(5);
         rows.Select(row => row.ProductId).Should()
-            .BeEquivalentTo(items1.Select(i => i.ProductId));
+            .BeEquivalentTo(items1.Select(item => item.ProductId));
     }
     
     [Fact]
@@ -120,4 +122,6 @@ public class OrderItemRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         var rows = await orderItemRepository.GetAllByOrderId(order2.Id, CancellationToken.None);
         rows.Should().BeEmpty();
     }
+    
+    #endregion
 }

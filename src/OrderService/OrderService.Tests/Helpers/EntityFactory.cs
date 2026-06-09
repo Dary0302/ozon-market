@@ -19,12 +19,22 @@ public static class EntityFactory
 
     public static OrderItem MakeOrderItem(Guid orderId)
         => new OrderItem(orderId, Guid.NewGuid(), 100);
+    
+    public static OrderItemWithPrice MakeOrderItemWithPrice()
+        => new OrderItemWithPrice(Guid.NewGuid(), 10, 100);
 
     public static OrderInfo MakeOrderInfo()
     {
         var order = MakeOrder();
-        var items = Enumerable.Range(0, 5).Select(_ => MakeOrderItem(order.Id));
+        var items = Enumerable.Range(0, 5).Select(_ => MakeOrderItem(order.Id)).ToList();
         return new OrderInfo(order, items);
+    }
+    
+    public static OrderInfoWithPrice MakeOrderInfoWithPrice()
+    {
+        var order = MakeOrder();
+        var items = Enumerable.Range(0, 5).Select(_ => MakeOrderItemWithPrice()).ToList();
+        return new OrderInfoWithPrice(order, items);
     }
     
     public static CreateOrderRequestDto MakeOrderRequestDto() 

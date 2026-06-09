@@ -37,7 +37,7 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
 
     public Task DisposeAsync() => Task.CompletedTask;
     
-    // --- GetAll ---
+    #region GetAll
 
     [Fact]
     public async Task GetAll_ShouldReturnAllCorrectInfo()
@@ -63,13 +63,13 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         // Assert
         var info1 = result.Items.First(x => x.Order.Id == order1.Id);
         info1.OrderItems.Should().HaveCount(5);
-        info1.OrderItems.Select(i => i.ProductId).Should()
-            .BeEquivalentTo(items1.Select(i => i.ProductId));
+        info1.OrderItems.Select(item => item.ProductId).Should()
+            .BeEquivalentTo(items1.Select(item => item.ProductId));
 
         var info2 = result.Items.First(x => x.Order.Id == order2.Id);
         info2.OrderItems.Should().HaveCount(5);
         info2.OrderItems.Select(i => i.ProductId).Should()
-            .BeEquivalentTo(items2.Select(i => i.ProductId));
+            .BeEquivalentTo(items2.Select(item => item.ProductId));
     }
     
     [Fact]
@@ -150,4 +150,6 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
         result.Items.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
     }
+    
+    #endregion
 }

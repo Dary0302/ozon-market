@@ -25,7 +25,7 @@ public class OrderControllerTests
         controller = new OrderController(serviceMock.Object);
     }
     
-    // --- CreateOrder ---
+    #region CreateOrder
     
     [Fact]
     public async Task CreateOrder_ShouldReturns200_WhenSuccess()
@@ -35,7 +35,7 @@ public class OrderControllerTests
         var request = EntityFactory.MakeOrderRequestDto();
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount, 
+            .Setup(service => service.Create(request.PvzId, request.ClientAmount, 
                 request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderId));
 
@@ -54,7 +54,7 @@ public class OrderControllerTests
         var request = EntityFactory.MakeOrderRequestDto();
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount,
+            .Setup(service => service.Create(request.PvzId, request.ClientAmount,
                 request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.InvalidAmount()));
 
@@ -74,7 +74,7 @@ public class OrderControllerTests
         var lackingProduct = new LackingProduct(Guid.NewGuid(), 5);
 
         serviceMock
-            .Setup(s => s.Create(request.PvzId, request.ClientAmount, 
+            .Setup(service => service.Create(request.PvzId, request.ClientAmount, 
                 request.Products, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.InsufficientStock(new[] { lackingProduct })));
 
@@ -86,7 +86,9 @@ public class OrderControllerTests
             .Which.StatusCode.Should().Be(409);
     }
     
-    // --- GetOrder ---
+    #endregion
+    
+    #region GetOrder
 
     [Fact]
     public async Task GetOrder_ShouldReturns200_WithOrderDto_WhenSuccess()
@@ -102,7 +104,7 @@ public class OrderControllerTests
             Amount = order.Amount};
 
         serviceMock
-            .Setup(s => s.GetById(order.Id, CancellationToken.None))
+            .Setup(service => service.GetById(order.Id, CancellationToken.None))
             .ReturnsAsync(Result.Ok(order));
 
         // Act
@@ -120,7 +122,7 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.GetById(orderId, CancellationToken.None))
+            .Setup(service => service.GetById(orderId, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
@@ -131,7 +133,7 @@ public class OrderControllerTests
             .Which.StatusCode.Should().Be(404);
     }
     
-    // --- PayOrder ---
+    #endregion
 
     [Fact]
     public async Task PayOrder_ShouldReturns200_WhenSuccess()
@@ -140,7 +142,7 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
+            .Setup(service => service.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderId));
 
         // Act
@@ -158,7 +160,7 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
+            .Setup(service => service.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
@@ -176,7 +178,7 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
+            .Setup(service => service.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.MustBeCreated()));
 
         // Act
@@ -187,13 +189,13 @@ public class OrderControllerTests
             .Which.StatusCode.Should().Be(409);
     }
     
-    // --- GetOrderInfo ---
+    #region GetOrderInfo
     
     [Fact]
     public async Task GetOrderInfo_ShouldReturns200_WithOrderInfoDto_WhenSuccess()
     {
         // Arrange
-        var orderInfo = EntityFactory.MakeOrderInfo();
+        var orderInfo = EntityFactory.MakeOrderInfoWithPrice();
         var expectedDto = new OrderInfoResponseDto
         {
             Id = orderInfo.Order.Id,
@@ -201,11 +203,11 @@ public class OrderControllerTests
             Status = orderInfo.Order.Status.ToString(),
             DeliveryDate = orderInfo.Order.DeliveryDate,
             Amount = orderInfo.Order.Amount,
-            Products = orderInfo.OrderItems
+            Products = orderInfo.OrderItems.Select(item => item.ToHttp())
         };
 
         serviceMock
-            .Setup(s => s.GetInfoById(orderInfo.Order.Id, CancellationToken.None))
+            .Setup(service => service.GetInfoById(orderInfo.Order.Id, CancellationToken.None))
             .ReturnsAsync(Result.Ok(orderInfo));
 
         // Act
@@ -223,7 +225,7 @@ public class OrderControllerTests
         var orderId = Guid.NewGuid();
 
         serviceMock
-            .Setup(s => s.GetInfoById(orderId, CancellationToken.None))
+            .Setup(service => service.GetInfoById(orderId, CancellationToken.None))
             .ReturnsAsync(Result.Fail(OrderErrors.NotFound(orderId)));
 
         // Act
@@ -234,7 +236,9 @@ public class OrderControllerTests
             .Which.StatusCode.Should().Be(404);
     }
     
-    // --- GetAllOrders ---
+    #endregion
+    
+    #region GetAllOrders
 
     [Fact]
     public async Task GetAllOrders_ShouldReturns200_WithPagedDto_WhenSuccess()
@@ -248,7 +252,7 @@ public class OrderControllerTests
         var request = new PagedRequestDto (1, 10);
 
         serviceMock
-            .Setup(s => s.GetAll(request.PageNumber, request.PageSize, CancellationToken.None))
+            .Setup(service => service.GetAll(request.PageNumber, request.PageSize, CancellationToken.None))
             .ReturnsAsync(Result.Ok(pagedResult));
 
         // Act
@@ -259,28 +263,32 @@ public class OrderControllerTests
             .Which.Value.Should().BeEquivalentTo(expectedDto);
     }
     
-    // --- GetAllOrdersInfo ---
+    #endregion
+    
+    #region GetAllOrdersInfo
 
     [Fact]
     public async Task GetAllOrdersInfo_ShouldReturns200_WithPagedDto_WhenSuccess()
     {
         // Arrange
-        var orderInfos = Enumerable.Range(0, 3).Select(_ => EntityFactory.MakeOrderInfo()).ToList();
-        var pagedResult = new PagedResult<OrderInfo>(orderInfos, TotalCount: 3);
+        var orderInfos = Enumerable.Range(0, 3).Select(_ => EntityFactory.MakeOrderInfoWithPrice()).ToList();
+        var pagedResult = new PagedResult<OrderInfoWithPrice>(orderInfos, TotalCount: 3);
         var expectedDto = new PagedResponseDto<OrderInfoResponseDto>(
             orderInfos.Select(o => o.ToHttp()),
             TotalCount: 3);
         var request = new PagedRequestDto (1, 10);
 
         serviceMock
-            .Setup(s => s.GetAllInfo(request.PageNumber, request.PageSize, CancellationToken.None))
+            .Setup(service => service.GetAllInfo(request.PageNumber, request.PageSize, CancellationToken.None))
             .ReturnsAsync(Result.Ok(pagedResult));
 
         // Act
         var result = await controller.GetAllOrdersInfo(request, CancellationToken.None);
 
         // Assert
-        var dto = result.Result.Should().BeOfType<OkObjectResult>()
+        result.Result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeEquivalentTo(expectedDto);
     }
+    
+    #endregion
 }

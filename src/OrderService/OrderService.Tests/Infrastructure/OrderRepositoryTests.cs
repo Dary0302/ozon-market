@@ -33,7 +33,7 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
 
     public Task DisposeAsync() => Task.CompletedTask;
     
-    // --- Create ---
+    #region Create
     
     [Fact]
     public async Task Create_ShouldInsertOrder_AndReturnId()
@@ -74,7 +74,9 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         await action.Should().ThrowAsync();
     }
     
-    // --- GetById ---
+    #endregion
+    
+    #region GetById
     
     [Fact]
     public async Task GetById_ShouldReturnOrder_WhenOrderExists()
@@ -90,8 +92,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Assert
         result.Should().BeEquivalentTo(order,
             options => options
-                .Excluding(x => x.DeliveryDate)
-                .Excluding(x => x.CreatedOn));
+                .Excluding(field => field.DeliveryDate)
+                .Excluding(field => field.CreatedOn));
         result.DeliveryDate.Should().BeCloseTo(order.DeliveryDate, TimeSpan.FromMilliseconds(1));
         result.CreatedOn.Should().BeCloseTo(order.CreatedOn, TimeSpan.FromMilliseconds(1));
     }
@@ -110,7 +112,9 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         result.Should().BeNull();
     }
     
-    // --- GetAll ---
+    #endregion
+    
+    #region GetAll
     
     [Fact]
     public async Task GetAll_ShouldReturnPagedOrders()
@@ -176,7 +180,9 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         result.TotalCount.Should().Be(0);
     }
     
-    // --- Save ---
+    #endregion
+    
+    #region Save
     
     [Fact]
     public async Task Save_ShouldSaveStatus_AndReturnId()
@@ -213,7 +219,9 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         await action.Should().ThrowAsync<KeyNotFoundException>();
     }
     
-    // --- Delete ---
+    #endregion
+    
+    #region Delete
 
     [Fact]
     public async Task Delete_ShouldDeleteOrder()
@@ -246,4 +254,6 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Assert 
         await action.Should().ThrowAsync<KeyNotFoundException>();
     }
+    
+    #endregion
 }
