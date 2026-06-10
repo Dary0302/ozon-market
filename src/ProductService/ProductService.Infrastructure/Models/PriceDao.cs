@@ -1,3 +1,9 @@
 namespace ProductService.Infrastructure.Models;
 
-public record PriceDao(Guid ProductId, DateTime Date, double Cost, int Discount) : BaseEntityDao;
+public record PriceDao : BaseEntityDao
+{
+    public Guid ProductId { get; init; }
+    public DateTime Date { get; init; }
+    public double Cost { get; init; }
+    public int Discount { get; init; }
+}

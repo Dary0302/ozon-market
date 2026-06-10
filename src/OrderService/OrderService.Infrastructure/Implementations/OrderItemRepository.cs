@@ -10,18 +10,21 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) : IOrderItemRepository
 {
-    public async Task<Guid> Add(List<OrderItem> orderItems, IDbConnection dbConnection, IDbTransaction dbTransaction)
+    public async Task<Guid> Add(List<OrderItem> orderItems, IDbConnection dbConnection, 
+        IDbTransaction dbTransaction, CancellationToken cancellationToken)
     {
         var sql = "INSERT INTO order_items (order_id, product_id, quantity) " +
                   "SELECT @orderId, unnest(@productIds), unnest(@quantities) " +
                   "ON CONFLICT (order_id, product_id) DO NOTHING";
 
-        var rows = await dbConnection.ExecuteAsync(sql, new
+        var command = new CommandDefinition(sql, new
         {
-            order_id = orderItems.First().OrderId,
-            product_id = orderItems.Select(item => item.ProductId).ToArray(),
+            orderId = orderItems.First().OrderId,
+            productIds = orderItems.Select(item => item.ProductId).ToArray(),
             quantities = orderItems.Select(item => item.Quantity).ToArray()
-        }, dbTransaction);
+        }, transaction: dbTransaction, cancellationToken: cancellationToken);
+        
+        var rows = await dbConnection.ExecuteAsync(command);
         
         if (rows != orderItems.Count())
             throw new InvalidOperationException($"Заказ содержит дублирующие позиции");
@@ -29,14 +32,16 @@ public class OrderItemRepository(IPostgresConnectionFactory connectionFactory) :
         return orderItems.First().OrderId;
     }
 
-    public async Task<IEnumerable<OrderItem>> GetAllByOrderId(Guid orderId)
+    public async Task<IEnumerable<OrderItem>> GetAllByOrderId(Guid orderId, CancellationToken cancellationToken)
     {
         await using var connection = connectionFactory.GetConnection();
         
         var sql = "SELECT product_id, quantity " +
                   "FROM order_items " +
                   "WHERE order_id = @orderId";
-        var daos = (await connection.QueryAsync<OrderItemDao>(sql, new { orderId }));
+        var command = new CommandDefinition(sql, new { orderId }, cancellationToken: cancellationToken);
+        
+        var daos = (await connection.QueryAsync<OrderItemDao>(command));
         var items = daos.Select(dao => dao.ToDomain());
         return items;
     }

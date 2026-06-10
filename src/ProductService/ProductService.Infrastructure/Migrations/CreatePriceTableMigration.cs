@@ -10,14 +10,15 @@ public class CreatePriceTableMigration : Migration
     public override void Up()
     {
         Create.Table("prices")
-            .WithColumn(nameof(Product.Id)).AsGuid().PrimaryKey()
-            .WithColumn(nameof(Price.ProductId)).AsGuid()
+            .InSchema("public")
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("product_id").AsGuid()
                 .NotNullable()
-                .ForeignKey("products", "Id")
+                .ForeignKey("public", "products", "Id")
                 .OnDelete(Rule.Cascade)
-            .WithColumn(nameof(Price.Date)).AsDateTimeOffset().NotNullable()
-            .WithColumn(nameof(Price.Cost)).AsDouble().NotNullable()
-            .WithColumn(nameof(Price.Discount)).AsDecimal().NotNullable();
+            .WithColumn("date").AsDateTimeOffset().NotNullable()
+            .WithColumn("cost").AsDouble().NotNullable()
+            .WithColumn("discount").AsDecimal().NotNullable();
     }
 
     public override void Down()

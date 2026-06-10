@@ -12,9 +12,9 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 {
     private const string NotFoundExceptionMessage = "Продукт не найден";
 
-    public async Task<Result<Product>> GetProduct(Guid id)
+    public async Task<Result<Product>> GetProduct(Guid id, CancellationToken cancellationToken)
     {
-        var product = await productRepository.Get(id);
+        var product = await productRepository.Get(id, cancellationToken);
 
         if (product is null)
         {
@@ -24,70 +24,78 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         return Result.Ok(product);
     }
     
-    public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter)
+    public async Task<Result<IReadOnlyCollection<Product?>>> GetProducts(ProductFilter filter, CancellationToken cancellationToken)
     {
-        var product = await productRepository.GetProductsByFilter(filter);
+        var products = await productRepository.GetProductsByFilter(filter, cancellationToken);
 
-        return Result.Ok(product);
+        if (products.Count == 0)
+        {
+            return Result.Fail(AppError.NotFound("Нет продуктов по заданному фильтру"));
+        }
+        
+        return Result.Ok(products);
     }
 
-    public async Task<Result<Guid>> AddProduct(CreateProductDto productDto)
+    public async Task<Result<Guid>> AddProduct(CreateProductDto productDto, CancellationToken cancellationToken)
     {
         var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, new());
+            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
         if (addPhotoResult.IsFailed)
         {
             return Result.Fail(AppError.UnprocessableContent());
         }
 
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
-        await productRepository.Add(product);
+        
+        await productRepository.Add(product, cancellationToken);
 
         return Result.Ok(product.Id);
     }
 
-    public async Task<Result> UpdateProduct(Guid id, CreateProductDto productDto)
+    public async Task<Result> UpdateProduct(Guid id, CreateProductDto productDto, CancellationToken cancellationToken)
     {
-        var existingProduct = await productRepository.Get(id);
+        var existingProduct = await productRepository.Get(id, cancellationToken);
         if (existingProduct is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
-
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
-        if (deletePhotoResult.IsFailed)
-        {
-            return Result.Fail(AppError.NotFound("Фото не найдено"));
-        }
-
+        
         var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, new());
+            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
         if (addPhotoResult.IsFailed)
         {
             return Result.Fail(AppError.UnprocessableContent());
         }
-
+        
         var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
-        await productRepository.Update(id, product);
+        await productRepository.Update(id, product, cancellationToken);
 
+        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
+        if (deletePhotoResult.IsFailed)
+        {
+            return Result.Ok()
+                .WithError("Товар успешно обновлён, старое фото для удаления не найдено");
+        }
+        
         return Result.Ok();
     }
 
-    public async Task<Result> DeleteProduct(Guid id)
+    public async Task<Result> DeleteProduct(Guid id, CancellationToken cancellationToken)
     {
-        var existingProduct = await productRepository.Get(id);
+        var existingProduct = await productRepository.Get(id, cancellationToken);
         if (existingProduct is null)
         {
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
+        
+        await productRepository.Delete(id, cancellationToken);
 
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, new());
+        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
         if (deletePhotoResult.IsFailed)
         {
-            return Result.Fail(AppError.NotFound("Фото не найдено"));
+            return Result.Ok()
+                .WithError("Товар успешно удалён, но фото для удаления не найдено");
         }
-
-        await productRepository.Delete(id);
 
         return Result.Ok();
     }

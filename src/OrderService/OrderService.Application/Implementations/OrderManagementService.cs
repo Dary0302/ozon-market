@@ -1,4 +1,5 @@
 ﻿using Core.Common.DbHelpers.Interfaces;
+using Core.Common.Errors;
 using FluentResults;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Mocks;
@@ -15,7 +16,8 @@ public class OrderManagementService(IOrderRepository orderRepository,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderManagementService
 {
-    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, IEnumerable<ProductQuantity> products)
+    public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, 
+        IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {
         //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
@@ -44,12 +46,14 @@ public class OrderManagementService(IOrderRepository orderRepository,
             await orderRepository.Create(
                 order,
                 unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction);
+                unitOfWork.CurrentTransaction,
+                cancellationToken);
 
             await orderItemRepository.Add(
                 items,
                 unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction);
+                unitOfWork.CurrentTransaction,
+                cancellationToken);
         });
         
         //TODO: внести в кафку
@@ -102,25 +106,26 @@ public class OrderManagementService(IOrderRepository orderRepository,
                     product.Quantity));
     }
 
-    public async Task<Result<Order>> GetById(Guid id)
+    public async Task<Result<Order>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await orderRepository.GetById(id);
+        var result = await orderRepository.GetById(id, cancellationToken);
 
         if (result == null)
             return Result.Fail(OrderErrors.NotFound(id));
-            
+        
         return Result.Ok(result);
     }
 
-    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize)
+    public async Task<Result<PagedResult<Order>>> GetAll(int pageNumber, int pageSize, 
+        CancellationToken cancellationToken)
     {
-        var result = await orderRepository.GetAll(pageNumber, pageSize);
+        var result = await orderRepository.GetAll(pageNumber, pageSize, cancellationToken);
         return Result.Ok(result);
     }
 
-    public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus)
+    public async Task<Result<Guid>> UpdateStatus(Guid id, Status newStatus, CancellationToken cancellationToken)
     {
-        var order = await orderRepository.GetById(id);
+        var order = await orderRepository.GetById(id, cancellationToken);
 
         if (order is null)
             return Result.Fail(OrderErrors.NotFound(id));
@@ -139,36 +144,74 @@ public class OrderManagementService(IOrderRepository orderRepository,
             return Result.Fail(result.Errors);
 
         await unitOfWork.ExecuteInTransaction(async () =>
-            await orderRepository.Save(order, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
+            await orderRepository.Save(order, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken));
 
         return Result.Ok(order.Id);
     }
 
-    public async Task<Result> Delete(Guid id)
+    public async Task<Result> Delete(Guid id, CancellationToken cancellationToken)
     {
         await unitOfWork.ExecuteInTransaction(async () =>
-            await orderRepository.Delete(id, unitOfWork.CurrentConnection, unitOfWork.CurrentTransaction));
+            await orderRepository.Delete(id, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken));
         return Result.Ok();
     }
 
-    public async Task<Result<OrderInfo>> GetInfoById(Guid id)
+    public async Task<Result<OrderInfoWithPrice>> GetInfoById(Guid id, CancellationToken cancellationToken)
     {
-        var orderTask = orderRepository.GetById(id);
-        var itemsTask = orderItemRepository.GetAllByOrderId(id);
-        
-        await Task.WhenAll(orderTask, itemsTask);
-
-        var order = orderTask.Result;
-        
+        var order  = await orderRepository.GetById(id, cancellationToken);
         if (order == null)
             return Result.Fail(OrderErrors.NotFound(id));
         
-        return Result.Ok(new OrderInfo(order, itemsTask.Result));
+        var items = (await orderItemRepository.GetAllByOrderId(id, cancellationToken)).ToList();
+        var productIds = items.Select(item => item.ProductId);
+        
+        //TODO: кафка
+        var request = new ProductPriceRequest(order.CreatedOn, productIds);
+        var prices = await productServiceMock.GetProductsPrice([request]);
+        
+        var priceMap = prices.ToDictionary(product => product.ProductId, product => product.Price);
+        if (!items.All(item => priceMap.ContainsKey(item.ProductId)))
+            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+        
+        var itemsWithPrice = items.Select(item => new OrderItemWithPrice(
+            item.ProductId,
+            item.Quantity,
+            priceMap[item.ProductId]));
+        
+        return Result.Ok(new OrderInfoWithPrice(order, itemsWithPrice));
     }
 
-    public async Task<Result<PagedResult<OrderInfo>>> GetAllInfo(int pageNumber, int pageSize)
+    public async Task<Result<PagedResult<OrderInfoWithPrice>>> GetAllInfo(int pageNumber, int pageSize, 
+        CancellationToken cancellationToken)
     {
-        var result = await orderInfoRepository.GetAll(pageNumber, pageSize);
-        return Result.Ok(result);
+        var orderInfos = await orderInfoRepository.GetAll(pageNumber, pageSize, cancellationToken);
+        
+        //TODO: кафка
+        var requests = orderInfos.Items
+            .GroupBy(orderInfo => orderInfo.Order.CreatedOn.Date)
+            .Select(group => new ProductPriceRequest(
+                group.Key,
+                group.SelectMany(orderInfo => orderInfo.OrderItems.Select(i => i.ProductId)).Distinct()));
+        var prices = await productServiceMock.GetProductsPrice(requests);
+        
+        var priceMap = prices.ToDictionary(
+            product => (product.ProductId, product.Date.Date),
+            product => product.Price);
+        if (!orderInfos.Items
+                .SelectMany(orderInfo => orderInfo.OrderItems.Select(item 
+                    => (item.ProductId, orderInfo.Order.CreatedOn.Date)))
+                .All(key => priceMap.ContainsKey(key)))
+            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+
+        var result = orderInfos.Items.Select(orderInfo => new OrderInfoWithPrice(
+            orderInfo.Order,
+            orderInfo.OrderItems.Select(item => new OrderItemWithPrice(
+                item.ProductId,
+                item.Quantity,
+                priceMap[(item.ProductId, orderInfo.Order.CreatedOn.Date)]))));
+
+        return Result.Ok(new PagedResult<OrderInfoWithPrice>(result, orderInfos.TotalCount));
     }
 }

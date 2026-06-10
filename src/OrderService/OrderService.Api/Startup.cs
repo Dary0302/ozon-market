@@ -1,5 +1,5 @@
-﻿using OrderService.Infrastructure;
-using OrderService.Api.Extensions;
+﻿using Core.Common.Extensions;
+using OrderService.Infrastructure;
 using OrderService.Application;
 
 namespace OrderService.Api;
@@ -9,9 +9,12 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
+        services.AddValidation();
 
         services.AddApplicationServices()
-            .AddOpenApi();
+            .AddOpenApi(
+                "OrderService",
+                typeof(Startup));
 
         services.AddInfrastructureServices(configuration);
     }

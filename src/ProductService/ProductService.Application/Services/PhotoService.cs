@@ -27,7 +27,7 @@ public class PhotoService(IS3StorageService s3StorageService) : IPhotoService
 
         return getLinkResult.IsFailed
             ? Result.Fail(AppError.NotFound("Фото не найдено"))
-            : Result.Ok(new GetPhotoLinkDto { DownloadPath = getLinkResult.Value, PhotoId = photoId });
+            : Result.Ok(new GetPhotoLinkDto { DownloadPath = getLinkResult.Value });
     }
 
     public async Task<Result> DeletePhotoByIdAsync(Guid photoId, CancellationToken cancellationToken)

@@ -9,13 +9,13 @@ public static class DaoMapper
     {
         return dao is null
             ? null
-            : new Product(dao.Name, dao.Description, dao.Type, dao.PhotoId);
+            : new Product(dao.Name, dao.Description, dao.Type, dao.PhotoId) { Id = dao.Id };
     }
 
     public static Price? ToDomain(this PriceDao? dao)
     {
         return dao is null
             ? null
-            : new Price(dao.ProductId, dao.Cost, dao.Discount) { Date = dao.Date };
+            : new Price(dao.ProductId, dao.Cost, dao.Discount) { Id = dao.Id, Date = dao.Date };
     }
 }

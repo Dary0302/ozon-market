@@ -9,12 +9,12 @@ public class CreateOrderTableMigration : Migration
     public override void Up()
     {
         Create.Table("orders")
-            .WithColumn(nameof(Order.Id)).AsGuid().PrimaryKey()
-            .WithColumn(nameof(Order.PvzId)).AsGuid().NotNullable()
-            .WithColumn(nameof(Order.CreatedOn)).AsDateTime().NotNullable()
-            .WithColumn(nameof(Order.DeliveryDate)).AsDateTime().NotNullable()
-            .WithColumn(nameof(Order.Status)).AsInt32().NotNullable()
-            .WithColumn(nameof(Order.Amount)).AsDouble().NotNullable();
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("pvz_id").AsGuid().NotNullable()
+            .WithColumn("created_on").AsDateTime().NotNullable()
+            .WithColumn("delivery_date").AsDateTime().NotNullable()
+            .WithColumn("status").AsInt32().NotNullable()
+            .WithColumn("amount").AsDecimal(12, 2).NotNullable();
     }
     
     public override void Down()

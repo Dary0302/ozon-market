@@ -1,17 +1,20 @@
+using System.Reflection;
 using Microsoft.OpenApi;
-using ProductService.Application;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace ProductService.Api;
+namespace Core.Common.Extensions;
 
-public class ExplicitSchemaDocumentFilter : IDocumentFilter
+public class ExplicitSchemaDocumentFilter(Assembly assemblies) : IDocumentFilter
 {
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
-        var additionalTypes = typeof(ApplicationConfiguration).Assembly.GetTypes()
+        var additionalTypes = assemblies
+            .GetTypes()
             .Where(type => type.Name.EndsWith("Dto"));
 
         foreach (var type in additionalTypes)
+        {
             context.SchemaGenerator.GenerateSchema(type, context.SchemaRepository);
+        }
     }
 }
