@@ -19,8 +19,20 @@ public static class ApiMapper
         };
     }
     
-    public static OrderInfoResponseDto ToHttp(this OrderInfo response)
+    public static OrderItemResponseDto ToHttp(this OrderItemWithPrice response)
     {
+        return new OrderItemResponseDto
+        {
+            ProductId = response.ProductId,
+            Quantity = response.Quantity,
+            Price = response.Price
+        };
+    }
+    
+    public static OrderInfoResponseDto ToHttp(this OrderInfoWithPrice response)
+    {
+        var items = response.OrderItems.Select(item => item.ToHttp());
+        
         return new OrderInfoResponseDto
         {
             Id = response.Order.Id,
@@ -28,7 +40,7 @@ public static class ApiMapper
             Status = response.Order.Status.ToString(),
             DeliveryDate = response.Order.DeliveryDate,
             Amount = response.Order.Amount,
-            Products = response.OrderItems
+            Products = items
         };
     }
 
@@ -40,7 +52,7 @@ public static class ApiMapper
             response.TotalCount);
     }
     
-    public static PagedResponseDto<OrderInfoResponseDto> ToHttp(this PagedResult<OrderInfo> response)
+    public static PagedResponseDto<OrderInfoResponseDto> ToHttp(this PagedResult<OrderInfoWithPrice> response)
     {
         return new PagedResponseDto<OrderInfoResponseDto>(
             response.Items

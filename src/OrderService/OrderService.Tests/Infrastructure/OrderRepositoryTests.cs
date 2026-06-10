@@ -33,6 +33,8 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
 
     public Task DisposeAsync() => Task.CompletedTask;
     
+    #region Create
+    
     [Fact]
     public async Task Create_ShouldInsertOrder_AndReturnId()
     {
@@ -41,7 +43,7 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         
         // Act
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        var returnedId = await repository.Create(order, connection, null!);
+        var returnedId = await repository.Create(order, connection, null!, CancellationToken.None);
         
         var sql = "SELECT  * FROM orders WHERE id = @id";
         var row = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id = order.Id });
@@ -62,14 +64,19 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Arrange
         var order = EntityFactory.MakeOrder();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await repository.Create(order, connection, null!);
+        await repository.Create(order, connection, null!, CancellationToken.None);
         
         // Act
-        var action = async () => await repository.Create(order, connection, null!);
+        var action = async () => await repository.Create(
+            order, connection, null!, CancellationToken.None);
         
         // Assert 
         await action.Should().ThrowAsync();
     }
+    
+    #endregion
+    
+    #region GetById
     
     [Fact]
     public async Task GetById_ShouldReturnOrder_WhenOrderExists()
@@ -77,16 +84,16 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Arrange
         var order = EntityFactory.MakeOrder();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await repository.Create(order, connection, null!);
+        await repository.Create(order, connection, null!, CancellationToken.None);
         
         // Act
-        var result = await repository.GetById(order.Id);
+        var result = await repository.GetById(order.Id, CancellationToken.None);
         
         // Assert
         result.Should().BeEquivalentTo(order,
             options => options
-                .Excluding(x => x.DeliveryDate)
-                .Excluding(x => x.CreatedOn));
+                .Excluding(field => field.DeliveryDate)
+                .Excluding(field => field.CreatedOn));
         result.DeliveryDate.Should().BeCloseTo(order.DeliveryDate, TimeSpan.FromMilliseconds(1));
         result.CreatedOn.Should().BeCloseTo(order.CreatedOn, TimeSpan.FromMilliseconds(1));
     }
@@ -99,11 +106,15 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
         
         // Act
-        var result = await repository.GetById(id);
+        var result = await repository.GetById(id, CancellationToken.None);
         
         // Assert
         result.Should().BeNull();
     }
+    
+    #endregion
+    
+    #region GetAll
     
     [Fact]
     public async Task GetAll_ShouldReturnPagedOrders()
@@ -113,10 +124,10 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
     
         var orders = Enumerable.Range(0, 5).Select(_ => EntityFactory.MakeOrder()).ToList();
         foreach (var order in orders)
-            await repository.Create(order, connection, null!);
+            await repository.Create(order, connection, null!, CancellationToken.None);
 
         // Act
-        var result = await repository.GetAll(1, 3);
+        var result = await repository.GetAll(1, 3, CancellationToken.None);
 
         // Assert
         result.Items.Should().HaveCount(3);
@@ -131,10 +142,10 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
     
         var orders = Enumerable.Range(0, 5).Select(_ => EntityFactory.MakeOrder()).ToList();
         foreach (var order in orders)
-            await repository.Create(order, connection, null!);
+            await repository.Create(order, connection, null!, CancellationToken.None);
 
         // Act
-        var result = await repository.GetAll(2, 3);
+        var result = await repository.GetAll(2, 3, CancellationToken.None);
 
         // Assert
         result.Items.Should().HaveCount(2);
@@ -149,10 +160,10 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
     
         var orders = Enumerable.Range(0, 3).Select(_ => EntityFactory.MakeOrder()).ToList();
         foreach (var order in orders)
-            await repository.Create(order, connection, null!);
+            await repository.Create(order, connection, null!, CancellationToken.None);
 
         // Act
-        var result = await repository.GetAll(1, 10);
+        var result = await repository.GetAll(1, 10, CancellationToken.None);
 
         // Assert
         result.Items.Should().BeInDescendingOrder(order => order.CreatedOn);
@@ -162,12 +173,16 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
     public async Task GetAll_ShouldReturnEmptyPage_WhenNoOrders()
     {
         // Act
-        var result = await repository.GetAll(1, 10);
+        var result = await repository.GetAll(1, 10, CancellationToken.None);
 
         // Assert
         result.Items.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
     }
+    
+    #endregion
+    
+    #region Save
     
     [Fact]
     public async Task Save_ShouldSaveStatus_AndReturnId()
@@ -175,11 +190,11 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Arrange
         var order = EntityFactory.MakeOrder();;
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await repository.Create(order, connection, null!);
+        await repository.Create(order, connection, null!, CancellationToken.None);
         
         // Act
         order.Pay();
-        var returnedId = await repository.Save(order, connection, null!);
+        var returnedId = await repository.Save(order, connection, null!, CancellationToken.None);
         var sql = "SELECT  * FROM orders WHERE id = @id";
         var row = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id = order.Id });
 
@@ -197,11 +212,16 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         
         // Act
         order.Pay();
-        var action = async () => await repository.Save(order, connection, null!);
+        var action = async () => await repository.Save(
+            order, connection, null!, CancellationToken.None);
         
         // Assert 
         await action.Should().ThrowAsync<KeyNotFoundException>();
     }
+    
+    #endregion
+    
+    #region Delete
 
     [Fact]
     public async Task Delete_ShouldDeleteOrder()
@@ -209,10 +229,10 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         // Arrange
         var order = EntityFactory.MakeOrder();;
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        var returnedId = await repository.Create(order, connection, null!);
+        var returnedId = await repository.Create(order, connection, null!, CancellationToken.None);
         
         // Act
-        await repository.Delete(order.Id, connection, null!);
+        await repository.Delete(order.Id, connection, null!, CancellationToken.None);
         var sql = "SELECT  * FROM orders WHERE id = @id";
         var row = await connection.QueryFirstOrDefaultAsync<OrderDao>(sql, new { id = order.Id });
         
@@ -228,9 +248,12 @@ public class OrderRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLifeti
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
         
         // Act
-        var action = async () => await repository.Delete(order.Id, connection, null!);
+        var action = async () => await repository.Delete(
+            order.Id, connection, null!, CancellationToken.None);
         
         // Assert 
         await action.Should().ThrowAsync<KeyNotFoundException>();
     }
+    
+    #endregion
 }

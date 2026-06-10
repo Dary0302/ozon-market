@@ -36,6 +36,8 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
+    
+    #region GetAll
 
     [Fact]
     public async Task GetAll_ShouldReturnAllCorrectInfo()
@@ -50,24 +52,24 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             .Select(_ => EntityFactory.MakeOrderItem(order2.Id))
             .ToList();
         await using var connection = new NpgsqlConnection(postgresFixture.Container.GetConnectionString());
-        await orderRepository.Create(order1, connection, null!);
-        await orderItemRepository.Add(items1,  connection, null!);
-        await orderRepository.Create(order2, connection, null!);
-        await orderItemRepository.Add(items2,  connection, null!);
+        await orderRepository.Create(order1, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items1,  connection, null!, CancellationToken.None);
+        await orderRepository.Create(order2, connection, null!, CancellationToken.None);
+        await orderItemRepository.Add(items2,  connection, null!, CancellationToken.None);
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
         
         // Assert
         var info1 = result.Items.First(x => x.Order.Id == order1.Id);
         info1.OrderItems.Should().HaveCount(5);
-        info1.OrderItems.Select(i => i.ProductId).Should()
-            .BeEquivalentTo(items1.Select(i => i.ProductId));
+        info1.OrderItems.Select(item => item.ProductId).Should()
+            .BeEquivalentTo(items1.Select(item => item.ProductId));
 
         var info2 = result.Items.First(x => x.Order.Id == order2.Id);
         info2.OrderItems.Should().HaveCount(5);
         info2.OrderItems.Select(i => i.ProductId).Should()
-            .BeEquivalentTo(items2.Select(i => i.ProductId));
+            .BeEquivalentTo(items2.Select(item => item.ProductId));
     }
     
     [Fact]
@@ -81,12 +83,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 3);
+        var result = await orderInfoRepository.GetAll(1, 3, CancellationToken.None);
         
         // Assert
         result.Items.Should().HaveCount(3);
@@ -104,12 +106,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(2, 3);
+        var result = await orderInfoRepository.GetAll(2, 3, CancellationToken.None);
         
         // Assert
         result.Items.Should().HaveCount(2);
@@ -127,12 +129,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
             var items = Enumerable.Range(0, 3)
                 .Select(_ => EntityFactory.MakeOrderItem(order.Id))
                 .ToList();
-            await orderRepository.Create(order, connection, null!);
-            await orderItemRepository.Add(items, connection, null!);
+            await orderRepository.Create(order, connection, null!, CancellationToken.None);
+            await orderItemRepository.Add(items, connection, null!, CancellationToken.None);
         }
         
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
         
         // Assert
         result.Items.Should().BeInDescendingOrder(orderInfo => orderInfo.Order.CreatedOn);
@@ -142,10 +144,12 @@ public class OrderInfoRepositoryTests : IClassFixture<PostgresFixture>, IAsyncLi
     public async Task GetAll_ShouldReturnEmptyPage_WhenNoOrders()
     {
         // Act
-        var result = await orderInfoRepository.GetAll(1, 10);
+        var result = await orderInfoRepository.GetAll(1, 10, CancellationToken.None);
 
         // Assert
         result.Items.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
     }
+    
+    #endregion
 }

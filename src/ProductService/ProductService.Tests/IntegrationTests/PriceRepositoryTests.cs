@@ -5,7 +5,6 @@ using Npgsql;
 using NUnit.Framework;
 using ProductService.Domain;
 using ProductService.Infrastructure.Repositories;
-using ProductService.Tests.IntegrationTests.LocalDb;
 
 namespace ProductService.Tests.IntegrationTests;
 
@@ -20,7 +19,7 @@ public class PriceRepositoryTests
     {
         await using var connection =
             new NpgsqlConnection(PostgresFixture.Container.GetConnectionString());
-
+        
         await connection.ExecuteAsync("""
                                       DELETE FROM prices;
                                       DELETE FROM products;
@@ -40,13 +39,13 @@ public class PriceRepositoryTests
             ProductType.Table,
             Guid.NewGuid());
 
-        await productRepository.Add(product);
+        await productRepository.Add(product, CancellationToken.None);
 
         var price = new Price(product.Id, 100, 10) { Date = DateTime.UtcNow };
 
-        await priceRepository.SetPrice(price);
+        await priceRepository.SetPrice(price, CancellationToken.None);
 
-        var result = await priceRepository.GetPrice(product.Id);
+        var result = await priceRepository.GetPrice(product.Id, CancellationToken.None);
 
         result.Should().NotBeNull();
         result.Id.Should().Be(price.Id);
@@ -58,7 +57,7 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrice_ShouldReturnNull_WhenPriceDoesNotExist()
     {
-        var result = await priceRepository.GetPrice(Guid.NewGuid());
+        var result = await priceRepository.GetPrice(Guid.NewGuid(), CancellationToken.None);
 
         result.Should().BeNull();
     }
@@ -71,16 +70,15 @@ public class PriceRepositoryTests
             ProductType.Table,
             Guid.NewGuid());
 
-        await productRepository.Add(product);
+        await productRepository.Add(product, CancellationToken.None);
 
         var oldPrice = new Price(product.Id, 100, 0) { Date = DateTime.UtcNow.AddDays(-1) };
+        var newPrice = new Price(product.Id, 200, 15) { Date = DateTime.UtcNow.AddDays(1) };
 
-        var newPrice = new Price(product.Id, 200, 15) { Date = DateTime.UtcNow };
+        await priceRepository.SetPrice(oldPrice, CancellationToken.None);
+        await priceRepository.SetPrice(newPrice, CancellationToken.None);
 
-        await priceRepository.SetPrice(oldPrice);
-        await priceRepository.SetPrice(newPrice);
-
-        var result = await priceRepository.GetPrice(product.Id);
+        var result = await priceRepository.GetPrice(product.Id, CancellationToken.None);
 
         result.Should().NotBeNull();
         result.Id.Should().Be(newPrice.Id);
@@ -91,7 +89,7 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrices_ShouldReturnEmptyCollection_WhenProductsHaveNoPrices()
     {
-        var result = await priceRepository.GetPrices([Guid.NewGuid(), Guid.NewGuid()]);
+        var result = await priceRepository.GetPrices([Guid.NewGuid(), Guid.NewGuid()], CancellationToken.None);
 
         result.Should().BeEmpty();
     }
@@ -109,28 +107,28 @@ public class PriceRepositoryTests
             ProductType.Phone,
             Guid.NewGuid());
 
-        await productRepository.Add(product1);
-        await productRepository.Add(product2);
+        await productRepository.Add(product1, CancellationToken.None);
+        await productRepository.Add(product2, CancellationToken.None);
 
         var price1 = new Price(product1.Id, 100, 5) { Date = DateTime.UtcNow };
 
         var price2 = new Price(product2.Id, 200, 15) { Date = DateTime.UtcNow };
 
-        await priceRepository.SetPrice(price1);
-        await priceRepository.SetPrice(price2);
+        await priceRepository.SetPrice(price1, CancellationToken.None);
+        await priceRepository.SetPrice(price2, CancellationToken.None);
 
-        var result = (await priceRepository.GetPrices([product1.Id, product2.Id]))
+        var result = (await priceRepository.GetPrices([product1.Id, product2.Id], CancellationToken.None))
             .ToList();
 
         result.Should().HaveCount(2);
 
-        result.Should().Contain(x =>
-            x!.ProductId == product1.Id &&
-            x.Cost == 100);
+        result.Should().Contain(price =>
+            price!.ProductId == product1.Id &&
+            price.Cost == 100);
 
-        result.Should().Contain(x =>
-            x!.ProductId == product2.Id &&
-            x.Cost == 200);
+        result.Should().Contain(price =>
+            price!.ProductId == product2.Id &&
+            price.Cost == 200);
     }
 
     [Test]
@@ -141,20 +139,20 @@ public class PriceRepositoryTests
             ProductType.Table,
             Guid.NewGuid());
 
-        await productRepository.Add(product);
+        await productRepository.Add(product, CancellationToken.None);
 
         var oldPrice = new Price(product.Id, 100, 0) { Date = DateTime.UtcNow.AddDays(-1) };
 
         var latestPrice = new Price(product.Id, 300, 20) { Date = DateTime.UtcNow };
 
-        await priceRepository.SetPrice(oldPrice);
-        await priceRepository.SetPrice(latestPrice);
+        await priceRepository.SetPrice(oldPrice, CancellationToken.None);
+        await priceRepository.SetPrice(latestPrice, CancellationToken.None);
 
-        var result = (await priceRepository.GetPrices([product.Id]))
+        var result = (await priceRepository.GetPrices([product.Id], CancellationToken.None))
             .Single();
 
         result.Should().NotBeNull();
-        result!.Id.Should().Be(latestPrice.Id);
+        result.Id.Should().Be(latestPrice.Id);
         result.Cost.Should().Be(300);
         result.Discount.Should().Be(20);
     }

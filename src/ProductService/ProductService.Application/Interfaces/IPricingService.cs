@@ -5,9 +5,9 @@ namespace ProductService.Application.Interfaces;
 
 public interface IPricingService
 {
-    Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products);
+    Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products, CancellationToken cancellationToken);
 
-    Task<Result<decimal>> GetActualPrice(Guid productId);
+    Task<Result<decimal>> GetActualPrice(Guid productId, CancellationToken cancellationToken);
 
-    Task<Result> SetPrice(Price newPrice);
+    Task<Result> SetPrice(Price newPrice, CancellationToken cancellationToken);
 }
