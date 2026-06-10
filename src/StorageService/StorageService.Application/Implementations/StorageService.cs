@@ -11,15 +11,8 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
 {
     private const string NotFoundExceptionMessage = "Склад не найден";
     
-    public async Task<Result<Guid>> AddStorage(AddStorageDto addStorageDto, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> AddStorage(Storage storage, CancellationToken cancellationToken)
     {
-        var storage = new Storage
-        {
-            Id = addStorageDto.Id,
-            Address = addStorageDto.Address,
-            PointId = addStorageDto.PointId,
-        };
-        
         await storageRepository.Add(storage, cancellationToken);
         
         return Result.Ok(storage.Id);
@@ -37,7 +30,7 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
         return Result.Ok(existingStorage);
     }
 
-    public async Task<Result> UpdateStorage(Guid id, AddStorageDto addStorageDto, CancellationToken cancellationToken)
+    public async Task<Result> UpdateStorage(Guid id, Storage storage, CancellationToken cancellationToken)
     {
         var existingStorage = await storageRepository.Get(id, cancellationToken);
         
@@ -46,13 +39,6 @@ public class StorageService(IStorageRepository storageRepository) : IStorageServ
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        var storage = new Storage
-        {
-            Id = addStorageDto.Id,
-            Address = addStorageDto.Address,
-            PointId = addStorageDto.PointId,
-        };
-
         await storageRepository.Update(storage, cancellationToken);
         
         return Result.Ok();

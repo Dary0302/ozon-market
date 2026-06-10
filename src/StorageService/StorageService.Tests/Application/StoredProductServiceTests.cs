@@ -83,26 +83,21 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
     public async Task AddStoredProduct_ValidDto_ShouldSaveToDatabase()
     {
         var storage = await CreateTestStorage();
-        var dto = new AddStoredProductDto
-        {
-            ProductId = Guid.NewGuid(),
-            StorageId = storage.Id,
-            Quantity = 100
-        };
+        var storedProduct = new StoredProduct(Guid.NewGuid(), storage.Id, 100);
 
-        var result = await service.AddStoredProduct(dto, CancellationToken.None);
+        var result = await service.AddStoredProduct(storedProduct, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         
         using var connection = new NpgsqlConnection(connectionString);
         var savedProduct = await connection.QueryFirstOrDefaultAsync<StoredProductDao>(
             "SELECT product_id, storage_id, quantity FROM stored_products WHERE product_id = @productId AND storage_id = @storageId",
-            new { productId = dto.ProductId, storageId = dto.StorageId });
+            new { productId = storedProduct.ProductId, storageId = storedProduct.StorageId });
         
         savedProduct.Should().NotBeNull();
-        savedProduct.ProductId.Should().Be(dto.ProductId);
-        savedProduct.StorageId.Should().Be(dto.StorageId);
-        savedProduct.Quantity.Should().Be(dto.Quantity);
+        savedProduct.ProductId.Should().Be(storedProduct.ProductId);
+        savedProduct.StorageId.Should().Be(storedProduct.StorageId);
+        savedProduct.Quantity.Should().Be(storedProduct.Quantity);
     }
 
     [Fact]
@@ -392,14 +387,9 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
         var storage = await CreateTestStorage();
         var productId = Guid.NewGuid();
         
-        var addDto = new AddStoredProductDto
-        {
-            ProductId = productId,
-            StorageId = storage.Id,
-            Quantity = 100
-        };
+        var storedProduct = new StoredProduct(productId, storage.Id, 100);
         
-        await service.AddStoredProduct(addDto, CancellationToken.None);
+        await service.AddStoredProduct(storedProduct, CancellationToken.None);
         
         var inStock = await service.GetStoredProductsInStock(CancellationToken.None);
         inStock.Value.Should().Contain(p => p.ProductId == productId && p.Quantity == 100);

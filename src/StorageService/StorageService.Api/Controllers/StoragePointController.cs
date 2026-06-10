@@ -21,7 +21,8 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateStoragePoint([FromBody] AddStoragePointDto addStoragePoint, CancellationToken cancellationToken)
     {
-        var result = await service.AddStoragePoint(addStoragePoint, cancellationToken);
+        var storagePoint = addStoragePoint.ToService();
+        var result = await service.AddStoragePoint(storagePoint, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -50,7 +51,8 @@ public class StoragePointController(IStoragePointService service) : ControllerBa
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdateStoragePoint(Guid id, [FromBody] AddStoragePointDto addStoragePoint, CancellationToken cancellationToken)
     {
-        var result = await service.UpdateStoragePoint(id, addStoragePoint, cancellationToken);
+        var storagePoint = addStoragePoint.ToService();
+        var result = await service.UpdateStoragePoint(id, storagePoint, cancellationToken);
         return result.ToActionResult();
     }
 

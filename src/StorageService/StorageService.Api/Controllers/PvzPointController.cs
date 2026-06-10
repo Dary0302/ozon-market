@@ -21,7 +21,8 @@ public class PvzPointController(IPvzPointService service) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> AddPvzPoint([FromBody] AddPvzPointDto addPvzPoint, CancellationToken cancellationToken)
     {
-        var result = await service.AddPvzPoint(addPvzPoint, cancellationToken);
+        var pvzPoint = addPvzPoint.ToService();
+        var result = await service.AddPvzPoint(pvzPoint, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -50,7 +51,8 @@ public class PvzPointController(IPvzPointService service) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdatePvzPoint(Guid id, [FromBody] AddPvzPointDto addPvzPoint, CancellationToken cancellationToken)
     {
-        var result = await service.UpdatePvzPoint(id, addPvzPoint, cancellationToken);
+        var pvzPoint = addPvzPoint.ToService();
+        var result = await service.UpdatePvzPoint(id, pvzPoint, cancellationToken);
         return result.ToActionResult();
     }
 
