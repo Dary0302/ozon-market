@@ -10,7 +10,7 @@ namespace OrderService.Infrastructure.Implementations;
 
 public class OrderInfoRepository(IPostgresConnectionFactory connectionFactory) : IOrderInfoRepository
 {
-    public async Task<PagedResult<OrderInfo>> GetAll(int pageNumber, int pageSize)
+    public async Task<PagedResult<OrderInfo>> GetAll(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         await using var connection = connectionFactory.GetConnection();
 
@@ -30,7 +30,8 @@ public class OrderInfoRepository(IPostgresConnectionFactory connectionFactory) :
             "FROM orders;";
         
         var skip = (pageNumber - 1) * pageSize;
-        await using var multiple = await connection.QueryMultipleAsync(sql, new {skip, pageSize});
+        var command = new CommandDefinition(sql, new {skip, pageSize}, cancellationToken: cancellationToken);
+        await using var multiple = await connection.QueryMultipleAsync(command);
         
         var daos = (await multiple.ReadAsync<OrderInfoRowDao>());
         var items = daos.ToDomain();

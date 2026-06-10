@@ -11,15 +11,8 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
 {
     private const string NotFoundExceptionMessage = "Местоположение пункта выдачи заказов не найдено";
     
-    public async Task<Result<Guid>> AddPvzPoint(AddPvzPointDto addPvzPointDto, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> AddPvzPoint(PvzPoint pvzPoint, CancellationToken cancellationToken)
     {
-        var pvzPoint = new PvzPoint {
-            Id = addPvzPointDto.Id, 
-            PvzId = addPvzPointDto.PvzId, 
-            Longitude = addPvzPointDto.Longitude, 
-            Latitude = addPvzPointDto.Latitude
-        };
-        
         await pvzPointRepository.Add(pvzPoint, cancellationToken);
         
         return Result.Ok(pvzPoint.Id);
@@ -37,7 +30,7 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
         return Result.Ok(existingPvzPoint);
     }
 
-    public async Task<Result> UpdatePvzPoint(Guid id, AddPvzPointDto addPvzPointDto, CancellationToken cancellationToken)
+    public async Task<Result> UpdatePvzPoint(Guid id, PvzPoint pvzPoint, CancellationToken cancellationToken)
     {
         var existingStoragePoint = await pvzPointRepository.Get(id, cancellationToken);
         
@@ -46,13 +39,6 @@ public class PvzPointService(IPvzPointRepository pvzPointRepository) : IPvzPoint
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        var pvzPoint = new PvzPoint {
-            Id = addPvzPointDto.Id, 
-            PvzId = addPvzPointDto.PvzId, 
-            Longitude = addPvzPointDto.Longitude, 
-            Latitude = addPvzPointDto.Latitude
-        };
-
         await pvzPointRepository.Update(pvzPoint, cancellationToken);
         
         return Result.Ok();

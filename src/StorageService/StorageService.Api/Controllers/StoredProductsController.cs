@@ -20,7 +20,8 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     [HttpPost]
     public async Task<ActionResult> CreateStoredProduct([FromBody] AddStoredProductDto addStoredProduct, CancellationToken cancellationToken)
     {
-        await service.AddStoredProduct(addStoredProduct, cancellationToken);
+        var storedProduct = addStoredProduct.ToService();
+        await service.AddStoredProduct(storedProduct, cancellationToken);
         return Ok();
     }
 

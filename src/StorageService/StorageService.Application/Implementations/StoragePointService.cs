@@ -11,16 +11,8 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
 {
     private const string NotFoundExceptionMessage = "Местоположение склада не найдено";
     
-    public async Task<Result<Guid>> AddStoragePoint(AddStoragePointDto addStoragePointDto, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> AddStoragePoint(StoragePoint storagePoint, CancellationToken cancellationToken)
     {
-        var storagePoint = new StoragePoint
-        {
-            Id = addStoragePointDto.Id,
-            StorageId =  addStoragePointDto.StorageId,
-            Longitude = addStoragePointDto.Longitude,
-            Latitude = addStoragePointDto.Latitude,
-        };
-        
         await storagePointRepository.Add(storagePoint, cancellationToken);
         
         return Result.Ok(storagePoint.Id);
@@ -38,7 +30,7 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
         return Result.Ok(existingStoragePoint);
     }
 
-    public async Task<Result> UpdateStoragePoint(Guid id, AddStoragePointDto addStoragePointDto, CancellationToken cancellationToken)
+    public async Task<Result> UpdateStoragePoint(Guid id, StoragePoint storagePoint, CancellationToken cancellationToken)
     {
         var existingStoragePoint = await storagePointRepository.Get(id, cancellationToken);
         
@@ -47,14 +39,6 @@ public class StoragePointService(IStoragePointRepository storagePointRepository)
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        var storagePoint = new StoragePoint
-        {
-            Id = addStoragePointDto.Id,
-            StorageId =  addStoragePointDto.StorageId,
-            Longitude = addStoragePointDto.Longitude,
-            Latitude = addStoragePointDto.Latitude,
-        };
-
         await storagePointRepository.Update(storagePoint, cancellationToken);
         
         return Result.Ok();

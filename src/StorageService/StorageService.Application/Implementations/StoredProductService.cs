@@ -15,19 +15,16 @@ public class StoredProductService(
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
-    public async Task<Result> AddStoredProduct(AddStoredProductDto addStoredProductDto, CancellationToken cancellationToken)
+    public async Task<Result> AddStoredProduct(StoredProduct storedProduct, CancellationToken cancellationToken)
     {
         var existingProduct = await storedProductRepository.GetProductsQuantity(
-            new[] { addStoredProductDto.ProductId }, 
+            new[] { storedProduct.ProductId }, 
             cancellationToken);
     
         if (existingProduct.Any())
         {
             return Result.Fail(AppError.UnprocessableContent("Продукт уже существует на этом складе"));
         }
-    
-        var storedProduct = new StoredProduct(addStoredProductDto.ProductId, addStoredProductDto.StorageId,
-            addStoredProductDto.Quantity);
     
         await storedProductRepository.Add(storedProduct, cancellationToken);
     

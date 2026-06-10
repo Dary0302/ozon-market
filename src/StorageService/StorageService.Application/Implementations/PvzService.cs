@@ -11,15 +11,8 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
 {
     private const string NotFounExceptionMessage = "Пункт выдачи заказов не найден";
     
-    public async Task<Result<Guid>> AddPvz(AddPvzDto addPvzDto, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> AddPvz(Pvz pvz, CancellationToken cancellationToken)
     {
-        var pvz = new Pvz
-        {
-            Id = addPvzDto.Id,
-            Address = addPvzDto.Address,
-            PointId = addPvzDto.PointId,
-        };
-        
         await pvzRepository.Add(pvz, cancellationToken);
         
         return Result.Ok(pvz.Id);
@@ -44,7 +37,7 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         return Result.Ok(allPvz);
     }
 
-    public async Task<Result> UpdatePvz(Guid id, AddPvzDto addPvzDto, CancellationToken cancellationToken)
+    public async Task<Result> UpdatePvz(Guid id, Pvz pvz, CancellationToken cancellationToken)
     {
         var existingPvz = await pvzRepository.Get(id, cancellationToken);
         
@@ -52,13 +45,6 @@ public class PvzService(IPvzRepository pvzRepository) : IPvzService
         {
             return Result.Fail(AppError.NotFound(NotFounExceptionMessage));
         }
-        
-        var pvz = new Pvz
-        {
-            Id = addPvzDto.Id,
-            Address = addPvzDto.Address,
-            PointId = addPvzDto.PointId,
-        };
 
         await pvzRepository.Update(pvz, cancellationToken);
         

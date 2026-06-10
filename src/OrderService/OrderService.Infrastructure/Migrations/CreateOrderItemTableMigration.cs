@@ -10,14 +10,14 @@ public class CreateOrderItemTableMigration : Migration
     public override void Up()
     {
         Create.Table("order_items")
-            .WithColumn(nameof(OrderItem.OrderId)).AsGuid().NotNullable()
+            .WithColumn("order_id").AsGuid().NotNullable()
                 .ForeignKey("orders", "id").OnDelete(Rule.Cascade)
-            .WithColumn(nameof(OrderItem.ProductId)).AsGuid().NotNullable()
-            .WithColumn(nameof(OrderItem.Quantity)).AsInt32().NotNullable();
+            .WithColumn("product_id").AsGuid().NotNullable()
+            .WithColumn("quantity").AsInt32().NotNullable();
         
         Create.PrimaryKey("PK_order_items")
             .OnTable("order_items")
-            .Columns(nameof(OrderItem.OrderId), nameof(OrderItem.ProductId));
+            .Columns("order_id", "product_id");
     }
 
     public override void Down()

@@ -48,7 +48,8 @@ public class PvzController(IPvzService service) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> AddPvz([FromBody] AddPvzDto addPvz, CancellationToken cancellationToken)
     {
-        var result = await service.AddPvz(addPvz, cancellationToken);
+        var pvz = addPvz.ToService();
+        var result = await service.AddPvz(pvz, cancellationToken);
         return result.ToActionResult();
     }
 
@@ -63,7 +64,8 @@ public class PvzController(IPvzService service) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> UpdatePvz(Guid id, [FromBody] AddPvzDto addPvz, CancellationToken cancellationToken)
     {
-        var result = await service.UpdatePvz(id, addPvz, cancellationToken);
+        var pvz = addPvz.ToService();
+        var result = await service.UpdatePvz(id, pvz, cancellationToken);
         return result.ToActionResult();
     }
 

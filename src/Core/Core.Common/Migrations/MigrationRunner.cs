@@ -19,6 +19,8 @@ public static class MigrationRunner
         var serviceContext = CreateService(connectionString, migrationsAssembly);
         using var scope = serviceContext.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+        
+        runner.Processor.Execute("CREATE SCHEMA IF NOT EXISTS public");
         runner.MigrateUp();
 
         return host;

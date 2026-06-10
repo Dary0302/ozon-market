@@ -3,7 +3,7 @@ using Npgsql;
 using NUnit.Framework;
 using Testcontainers.PostgreSql;
 
-namespace ProductService.Tests.IntegrationTests.LocalDb;
+namespace ProductService.Tests.IntegrationTests;
 
 [SetUpFixture]
 public class PostgresFixture
@@ -26,6 +26,7 @@ public class PostgresFixture
             id        UUID         NOT NULL,
             name      VARCHAR(255) NOT NULL,
             type      INTEGER      NOT NULL,
+            description TEXT NOT NULL,
             photo_id  UUID,
 
             CONSTRAINT pk_products PRIMARY KEY (id)

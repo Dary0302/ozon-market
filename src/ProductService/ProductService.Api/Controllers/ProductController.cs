@@ -1,5 +1,6 @@
 using Core.Common.Errors;
 using Microsoft.AspNetCore.Mvc;
+using ProductService.Api.Mappers;
 using ProductService.Application.Dto;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
@@ -17,12 +18,12 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{product-id:guid}")]
-    public async Task<ActionResult<Product>> Get(
+    public async Task<ActionResult<UpdateProductDto>> Get(
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.GetProduct(productId);
-        return productResult.ToActionResult();
+        var productResult = await service.GetProduct(productId, cancellationToken);
+        return productResult.ToActionResult(product => product.ToHttp())!;
     }
 
     /// <summary>
@@ -32,12 +33,15 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpPost]
-    public async Task<ActionResult<IReadOnlyCollection<Product?>>> GetProducts(
+    public async Task<ActionResult<IEnumerable<UpdateProductDto?>>> GetProducts(
         [FromBody] ProductFilter filter,
         CancellationToken cancellationToken)
     {
-        var productsResult = await service.GetProducts(filter);
-        return productsResult.ToActionResult();
+        var productsResult = await service.GetProducts(filter, cancellationToken);
+        return productsResult
+            .ToActionResult(products => 
+                products.Select(product => 
+                    product.ToHttp()));
     }
 
     /// <summary>
@@ -51,7 +55,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
         [FromBody] CreateProductDto product,
         CancellationToken cancellationToken)
     {
-        var addProductResult = await service.AddProduct(product);
+        var addProductResult = await service.AddProduct(product, cancellationToken);
         return addProductResult.ToActionResult();
     }
 
@@ -63,12 +67,12 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpPut("{product-id:guid}")]
-    public async Task<ActionResult<Product>> Update(
+    public async Task<ActionResult> Update(
         [FromRoute(Name = "product-id")] Guid productId,
         [FromBody] CreateProductDto newProduct,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.UpdateProduct(productId, newProduct);
+        var productResult = await service.UpdateProduct(productId, newProduct, cancellationToken);
         return productResult.ToActionResult();
     }
 
@@ -79,11 +83,11 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpDelete("{product-id:guid}")]
-    public async Task<ActionResult<Product>> Delete(
+    public async Task<ActionResult> Delete(
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.DeleteProduct(productId);
+        var productResult = await service.DeleteProduct(productId, cancellationToken);
         return productResult.ToActionResult();
     }
 }

@@ -6,7 +6,7 @@ namespace StorageService.Application.Interfaces.Services;
 
 public interface IStoredProductService
 {
-    Task<Result> AddStoredProduct(AddStoredProductDto addStoredProductDto, CancellationToken cancellationToken);
+    Task<Result> AddStoredProduct(StoredProduct storedProduct, CancellationToken cancellationToken);
     
     Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock(CancellationToken cancellationToken);
     

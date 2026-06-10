@@ -20,7 +20,7 @@ public class PriceController(IPricingService service) : ControllerBase
         [FromBody] IEnumerable<ProductQuantity> productQuantities,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.CalculateAmount(productQuantities);
+        var productResult = await service.CalculateAmount(productQuantities, cancellationToken);
         return productResult.ToActionResult();
     }  
     
@@ -35,7 +35,7 @@ public class PriceController(IPricingService service) : ControllerBase
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.GetActualPrice(productId);
+        var productResult = await service.GetActualPrice(productId, cancellationToken);
         return productResult.ToActionResult();
     }
     
@@ -46,11 +46,11 @@ public class PriceController(IPricingService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpPut]
-    public async Task<ActionResult<Product>> Update(
+    public async Task<ActionResult> Update(
         [FromBody] Price newPrice,
         CancellationToken cancellationToken)
     {
-        var productResult = await service.SetPrice(newPrice);
+        var productResult = await service.SetPrice(newPrice, cancellationToken);
         return productResult.ToActionResult();
     }
 }
