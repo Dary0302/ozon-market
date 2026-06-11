@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Dapper;
 using Core.Common.DbHelpers.Interfaces;
+using FluentResults;
 using Npgsql;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Models;
@@ -91,7 +92,7 @@ public class OrderRepository(IPostgresConnectionFactory connectionFactory) : IOr
         return order.Id;
     }
 
-    public async Task Delete(Guid id, IDbConnection dbConnection, 
+    public async Task Delete(Guid id, IDbConnection dbConnection,
         IDbTransaction dbTransaction, CancellationToken cancellationToken)
     {
         var sql = "DELETE FROM orders WHERE id = @id";

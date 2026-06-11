@@ -1,0 +1,184 @@
+version: '3.9'
+
+networks:
+  microservices-net:
+    driver: bridge
+
+services:
+
+  # KAFKA
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    networks:
+      - microservices-net
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    command: >
+      bash -c "
+        kafka-storage format --ignore-formatted -t $${CLUSTER_ID} -c /etc/kafka/kraft/server.properties &&
+        /etc/confluent/docker/run
+      "
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: on-failure
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    networks:
+      - microservices-net
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: on-failure
+
+  # ORDER SERVICE
+  order-db-postgres:
+    image: postgres:16
+    container_name: order-db-postgres
+    networks:
+      - microservices-net
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${ORDER_POSTGRES_DB}
+      POSTGRES_USER: ${ORDER_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ORDER_POSTGRES_PASSWORD}
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORDER_POSTGRES_USER} -d ${ORDER_POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  order-service:
+    build:
+      context: ..
+      dockerfile: OrderService/OrderService.Api/Dockerfile
+    container_name: order-service
+    networks:
+      - microservices-net
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: Host=order-db-postgres;Port=5432;Database=${ORDER_POSTGRES_DB};Username=${ORDER_POSTGRES_USER};Password=${ORDER_POSTGRES_PASSWORD}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+    depends_on:
+      order-db-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # STORAGE SERVICE
+  storage-db-postgres:
+    image: postgres:16
+    container_name: storage-db-postgres
+    networks:
+      - microservices-net
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: ${STORAGE_POSTGRES_DB}
+      POSTGRES_USER: ${STORAGE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${STORAGE_POSTGRES_PASSWORD}
+    volumes:
+      - storage-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${STORAGE_POSTGRES_USER} -d ${STORAGE_POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  storage-service:
+    build:
+      context: ..
+      dockerfile: StorageService/StorageService.Api/Dockerfile
+    container_name: storage-service
+    networks:
+      - microservices-net
+    ports:
+      - "5002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: Host=storage-db-postgres;Port=5432;Database=${STORAGE_POSTGRES_DB};Username=${STORAGE_POSTGRES_USER};Password=${STORAGE_POSTGRES_PASSWORD}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+    depends_on:
+      storage-db-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # PRODUCT SERVICE
+  product-db-postgres:
+    image: postgres:16
+    container_name: product-db-postgres
+    networks:
+      - microservices-net
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: ${PRODUCT_POSTGRES_DB}
+      POSTGRES_USER: ${PRODUCT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PRODUCT_POSTGRES_PASSWORD}
+    volumes:
+      - product-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_POSTGRES_USER} -d ${PRODUCT_POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  product-service:
+    build:
+      context: ..
+      dockerfile: ProductService/ProductService.Api/Dockerfile
+    container_name: product-service
+    networks:
+      - microservices-net
+    ports:
+      - "5003:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ConnectionStrings__DefaultConnection: Host=product-db-postgres;Port=5432;Database=${PRODUCT_POSTGRES_DB};Username=${PRODUCT_POSTGRES_USER};Password=${PRODUCT_POSTGRES_PASSWORD}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+    depends_on:
+      product-db-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+volumes:
+  kafka-data:
+  order-db-data:
+  storage-db-data:
+  product-db-data:
