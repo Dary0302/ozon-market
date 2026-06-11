@@ -59,4 +59,9 @@ public static class ApiMapper
                 .Select(item => item.ToHttp()), 
             response.TotalCount);
     }
+
+    public static Status ToHttp(this StatusDto status)
+    {
+        return (Status)status.Status;
+    }
 }

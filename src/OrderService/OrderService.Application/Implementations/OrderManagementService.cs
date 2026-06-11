@@ -136,12 +136,12 @@ public class OrderManagementService(IOrderRepository orderRepository,
             Status.InAssembly => order.Collect(),
             Status.TransferredForDelivery => order.TransferForDelivery(),
             Status.Delivered => order.Complete(),
-            Status.Canceled => order.Cancel(),
             _ => Result.Fail(OrderErrors.InvalidStatusTransition())
         };
 
         if (result.IsFailed)
             return Result.Fail(result.Errors);
+
 
         await unitOfWork.ExecuteInTransaction(async () =>
             await orderRepository.Save(order, unitOfWork.CurrentConnection, 
@@ -213,5 +213,26 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 priceMap[(item.ProductId, orderInfo.Order.CreatedOn.Date)]))));
 
         return Result.Ok(new PagedResult<OrderInfoWithPrice>(result, orderInfos.TotalCount));
+    }
+
+    public async Task<Result> Cancel(Guid id, CancellationToken cancellationToken)
+    {
+        var order = await orderRepository.GetById(id, cancellationToken);
+        if (order is null)
+            return Result.Fail(OrderErrors.NotFound(id));
+        
+        order.Cancel();
+        
+        await unitOfWork.ExecuteInTransaction(async () =>
+            await orderRepository.Save(order, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken));
+        var items = await orderItemRepository.GetAllByOrderId(id, cancellationToken);
+        var productQuantities = items
+            .Select(item => new ProductQuantity(item.ProductId, item.Quantity));
+        
+        //TODO: кафка
+        await storageServiceMock.ReturnProductsToStorage(productQuantities);
+
+        return Result.Ok();
     }
 }

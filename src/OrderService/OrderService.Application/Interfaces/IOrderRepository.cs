@@ -17,5 +17,6 @@ public interface IOrderRepository
     Task<Guid> Save(Order order, IDbConnection dbConnection, 
         IDbTransaction dbTransaction, CancellationToken cancellationToken);
     
-    Task Delete(Guid id, IDbConnection dbConnection, IDbTransaction dbTransaction, CancellationToken cancellationToken);
+    Task Delete(Guid id, IDbConnection dbConnection, IDbTransaction dbTransaction, 
+        CancellationToken cancellationToken);
 }

@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using OrderService.Api.Dto;
 using OrderService.Api.Mappers;
 using OrderService.Application.Interfaces;
+using OrderService.Application.Mocks;
+using OrderService.Application.Simulation;
 using OrderService.Domain;
 
 namespace OrderService.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
-public class OrderController(IOrderManagementService service) : ControllerBase
+public class OrderController(IOrderManagementService service, IBackgroundSimulation simulation) : ControllerBase
 {
     /// <summary>
     /// Создание заказа
@@ -50,6 +52,45 @@ public class OrderController(IOrderManagementService service) : ControllerBase
     public async Task<ActionResult<Guid>> PayOrder(Guid id, CancellationToken cancellationToken)
     {
         var result = await service.UpdateStatus(id, Status.Paid, cancellationToken);
+        
+        //Симуляция доставки
+        if (result.IsSuccess)
+        {
+            simulation.Enqueue((serviceProvider, token) =>
+            {
+                var simulationService = serviceProvider.GetRequiredService<ISimulationService>();
+                return simulationService.RunDeliverySimulation(id, token);
+            });
+        }
+        return result.ToActionResult();
+    }
+    
+    /// <summary>
+    /// Отмена заказа
+    /// </summary>
+    /// <param name="id">id заказа</param>
+    /// <returns></returns>
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [HttpPatch("{id:guid}/cancel")]
+    public async Task<ActionResult<Guid>> CancelOrder(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await service.Cancel(id, cancellationToken);
+        return result.ToActionResult();
+    }
+    
+    /// <summary>
+    /// Смена статуса заказа
+    /// </summary>
+    /// <param name="id">id заказа, новый статус</param>
+    /// <returns></returns>
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [HttpPatch("{id:guid}")]
+    public async Task<ActionResult<Guid>> ChangeOrderStatus(Guid id, 
+        [FromBody] StatusDto newStatus, CancellationToken cancellationToken)
+    {
+        var result = await service.UpdateStatus(id, newStatus.ToHttp(), cancellationToken);
         return result.ToActionResult();
     }
     
