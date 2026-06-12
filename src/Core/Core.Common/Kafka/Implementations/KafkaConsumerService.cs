@@ -33,5 +33,5 @@ public abstract class KafkaConsumerService<T> : BackgroundService
         }
     }
 
-    protected abstract Task HandleAsync(T message, CancellationToken ct);
+    protected abstract Task HandleAsync(T message, CancellationToken token);
 }
