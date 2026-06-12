@@ -3,8 +3,4 @@ using Core.Common.Kafka.Interfaces;
 
 namespace Core.Common.Kafka.Contracts.Dto;
 
-public record CalculateAmountRequest : IHasCorrelationId
-{
-    public Guid CorrelationId { get; init; }
-    public IEnumerable<ProductQuantity> Items { get; init; }
-}
+public record CalculateAmountRequest(Guid CorrelationId, IEnumerable<ProductQuantity> Items) : IHasCorrelationId;

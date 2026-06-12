@@ -3,5 +3,5 @@
 public record CheckStockPayload
 {
     public bool IsAvailable { get; init; }
-    public IEnumerable<StockCheckResult> Result { get; init; }
+    public IEnumerable<StockCheckResult> Items { get; init; }
 }

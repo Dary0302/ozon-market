@@ -12,11 +12,9 @@ public static class KafkaTopics
     public const string ProductStorageRequests = "order.product-storage.requests";
     public const string ProductStorageResponses = "order.product-storage.responses";
     
-    public const string ReduceStockRequests = "order.reduce-stock.requests";
-    public const string ReduceStockResponses = "order.reduce-stock.responses";
+    public const string ReduceStockCommand = "order.reduce-stock.command";
     
-    public const string ReturnProductsRequests = "order.return-products.requests";
-    public const string ReturnProductsResponses = "order.return-products.responses";
+    public const string ReturnProductsCommand= "order.return-products.command";
 
     // OrderService -> ProductService
     public const string CalculateAmountRequests = "order.calculate-amount.requests";

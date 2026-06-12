@@ -3,5 +3,5 @@
 public record GetProductStoragePayload
 {
     public bool IsAvailable { get; init; }
-    public IEnumerable<ProductStorage> Result { get; init; }
+    public IEnumerable<ProductStorage> Items { get; init; }
 }
