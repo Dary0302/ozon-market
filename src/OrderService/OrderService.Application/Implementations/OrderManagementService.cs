@@ -1,5 +1,8 @@
 ﻿using Core.Common.DbHelpers.Interfaces;
 using Core.Common.Errors;
+using Core.Common.Kafka.Contracts.Dto;
+using Core.Common.Kafka.Contracts.Models;
+using Core.Common.Kafka.Interfaces;
 using FluentResults;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Mocks;
@@ -16,14 +19,19 @@ public class OrderManagementService(IOrderRepository orderRepository,
     IStorageServiceMock storageServiceMock,
     IProductServiceMock productServiceMock) : IOrderManagementService
 {
+    private readonly IKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>> stockClient;
+    private readonly IKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>> getDateClient;
+    private readonly IKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>> getDateClient;
+    
     public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, 
         IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {
-        //TODO: перевести на реальное общение между сервисами
         var normalizedProducts = NormalizeProducts(products);
 
-        var stockTask = storageServiceMock.CheckStock(normalizedProducts);
-        var deliveryDateTask = storageServiceMock.GetDeliveryDate(pvzId, normalizedProducts);
+        var correlationId = Guid.NewGuid();
+        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, normalizedProducts));
+        var deliveryDateTask = getDateClient.RequestAsync(
+            new GetDeliveryDateRequest(correlationId, pvzId, normalizedProducts));
         var storageTask = storageServiceMock.GetProductStorage(normalizedProducts);
         var amountTask = productServiceMock.CalculateAmount(normalizedProducts);
         await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);

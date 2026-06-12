@@ -1,8 +1,10 @@
 ﻿using System.Data;
 using Core.Common.DbHelpers.Interfaces;
+using Core.Common.Kafka.Contracts.Models;
 using OrderService.Application;
 using OrderService.Domain;
 using FluentAssertions;
+using FluentResults;
 using Xunit;
 using Moq;
 using OrderService.Application.Implementations;
@@ -68,7 +70,7 @@ public class OrderManagementServiceTests
 
         storageServiceMock
             .Setup(serviceMock => serviceMock.ReduceCountOfProducts(It.IsAny<IEnumerable<DecreaseQuantity>>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(Result.Ok());
     }
 
     private void SetupValidDefaultsForUpdateStatus(Order order)

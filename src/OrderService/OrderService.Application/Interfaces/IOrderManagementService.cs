@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using Core.Common.Kafka.Contracts.Models;
+using FluentResults;
 using OrderService.Application.Models;
 using OrderService.Domain;
 

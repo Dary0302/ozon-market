@@ -26,6 +26,12 @@ bld/
 # Settings
 **/appsettings.Development.json
 
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json

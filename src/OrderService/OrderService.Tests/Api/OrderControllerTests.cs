@@ -7,6 +7,7 @@ using OrderService.Api.Dto;
 using OrderService.Api.Mappers;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Models;
+using OrderService.Application.Simulation;
 using OrderService.Domain;
 using OrderService.Domain.Exseptions;
 using OrderService.Tests.Helpers;
@@ -17,12 +18,14 @@ namespace OrderService.Tests.Api;
 public class OrderControllerTests
 {
     private readonly Mock<IOrderManagementService> serviceMock;
+    private readonly Mock<IBackgroundSimulation> simulationBackgroundMock;
     private readonly OrderController controller;
 
     public OrderControllerTests()
     {
         serviceMock = new Mock<IOrderManagementService>();
-        controller = new OrderController(serviceMock.Object);
+        simulationBackgroundMock = new Mock<IBackgroundSimulation>();
+        controller = new OrderController(serviceMock.Object, simulationBackgroundMock.Object);
     }
     
     #region CreateOrder
