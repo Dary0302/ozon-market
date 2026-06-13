@@ -4,22 +4,22 @@ using Core.Common.Kafka.Implementations;
 using Core.Common.Kafka.Contracts.Models;
 using Microsoft.Extensions.Options;
 
-namespace OrderService.Application.Consumers;
+namespace OrderService.Application.Kafka.Consumers;
 
-public class DeliveryDateResponseConsumer  
-    : KafkaConsumerService<KafkaResponse<GetDeliveryDatePayload>>
+public class GetProductStorageResponseConsumer  
+    : KafkaConsumerService<KafkaResponse<GetProductStoragePayload>>
 {
     private readonly PendingRequestRegistry registry;
 
-    public DeliveryDateResponseConsumer(
+    public GetProductStorageResponseConsumer(
         IOptions<KafkaSettings> settings, 
         PendingRequestRegistry registry)
-        : base(settings, KafkaTopics.DeliveryDateResponses, "order-service") 
+        : base(settings, KafkaTopics.ProductStorageResponses, "order-service") 
     {
         this.registry = registry;
     }
 
-    protected override Task HandleAsync(KafkaResponse<GetDeliveryDatePayload> message, CancellationToken token)
+    protected override Task HandleAsync(KafkaResponse<GetProductStoragePayload> message, CancellationToken token)
     {
         registry.Complete(message.CorrelationId, message);
         return Task.CompletedTask;

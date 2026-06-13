@@ -1,13 +1,9 @@
 ﻿using Core.Common.DbHelpers.Interfaces;
 using Core.Common.Errors;
-using Core.Common.Kafka;
-using Core.Common.Kafka.Contracts;
-using Core.Common.Kafka.Contracts.Dto;
 using Core.Common.Kafka.Contracts.Models;
-using Core.Common.Kafka.Interfaces;
 using FluentResults;
 using OrderService.Application.Interfaces;
-using OrderService.Application.Mocks;
+using OrderService.Application.Kafka.Interfaces;
 using OrderService.Application.Models;
 using OrderService.Domain;
 using OrderService.Domain.Exseptions;
@@ -18,44 +14,31 @@ public class OrderManagementService(IOrderRepository orderRepository,
     IOrderItemRepository orderItemRepository, 
     IOrderInfoRepository orderInfoRepository,
     IUnitOfWork unitOfWork,
-    IStorageServiceMock storageServiceMock,
-    IProductServiceMock productServiceMock) : IOrderManagementService
+    IOrderDataService dataService,
+    IStockMutationService stockMutationService) : IOrderManagementService
 {
-    private readonly IKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>> stockClient;
-    private readonly IKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>> getDateClient;
-    private readonly IKafkaRequestClient<GetProductsStorageRequest, KafkaResponse<GetProductStoragePayload>> getStorageClient;
-    private readonly IKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>> calculateAmountClient;
-    private readonly IKafkaRequestClient<GetProductsPriceRequest, KafkaResponse<GetProductsPricePayload>> getPricesClient;
-    
-    private readonly IKafkaProducer<ReduceCountOfProductsCommand> reduceProductsProducer;
-    private readonly IKafkaProducer<ReturnProductsToStorageCommand> returnProductsProducer;
-    
     public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, 
         IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {
         var normalizedProducts = NormalizeProducts(products);
 
-        var correlationId = Guid.NewGuid();
-        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, normalizedProducts));
-        var deliveryDateTask = getDateClient.RequestAsync(
-            new GetDeliveryDateRequest(correlationId, pvzId, normalizedProducts));
-        var storageTask = getStorageClient.RequestAsync(
-            new GetProductsStorageRequest(correlationId, normalizedProducts));
-        var amountTask = calculateAmountClient.RequestAsync(new CalculateAmountRequest(correlationId, normalizedProducts));
-        await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);
+        var enrichResult = await dataService.GetData(pvzId, normalizedProducts, cancellationToken);
+        if (enrichResult.IsFailed)
+            return Result.Fail(enrichResult.Errors);
 
-        var calculatedAmount = amountTask.Result.Payload.Amount;
-        if (!IsAmountValid(calculatedAmount, clientAmount))
+        var data = enrichResult.Value;
+
+        if (!IsAmountValid(data.Amount, clientAmount))
             return Result.Fail(OrderErrors.InvalidAmount());
 
-        var lackingProducts = GetLackingProducts(stockTask.Result.Payload.Items);
+        var lackingProducts = GetLackingProducts(data.StockItems);
         if (lackingProducts.Any())
             return Result.Fail(OrderErrors.InsufficientStock(lackingProducts));
 
-        var order = new Order(calculatedAmount, pvzId, deliveryDateTask.Result.Payload.Date);
+        var order = new Order(data.Amount, pvzId, data.DeliveryDate);
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
-        var productStock = PrepareProductStock(storageTask.Result.Payload.Items, normalizedProducts);
+        var productStock = PrepareProductStock(data.ProductStorages, normalizedProducts);
 
         await unitOfWork.ExecuteInTransaction(async () =>
         {
@@ -72,8 +55,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 cancellationToken);
         });
         
-        await reduceProductsProducer.ProduceAsync(KafkaTopics.ReduceStockCommand, 
-            new ReduceCountOfProductsCommand(productStock));
+        await stockMutationService.ReduceStock(productStock);
         
         return Result.Ok(order.Id);
     }
@@ -183,10 +165,8 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var items = (await orderItemRepository.GetAllByOrderId(id, cancellationToken)).ToList();
         var productIds = items.Select(item => item.ProductId);
         
-        var correlationId = Guid.NewGuid();
         var request = new ProductPriceRequest(order.CreatedOn, productIds);
-        var prices = (await getPricesClient.RequestAsync(
-            new GetProductsPriceRequest(correlationId, [request]))).Payload.ProductPrices;
+        var prices = (await dataService.GetPriceInfo([request],  cancellationToken)).Value;
         
         var priceMap = prices.ToDictionary(
             product => product.ProductId, product => product.Price);
@@ -211,9 +191,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
             .Select(group => new ProductPriceRequest(
                 group.Key,
                 group.SelectMany(orderInfo => orderInfo.OrderItems.Select(i => i.ProductId)).Distinct()));
-        var correlationId = Guid.NewGuid();
-        var prices = (await getPricesClient.RequestAsync(
-            new GetProductsPriceRequest(correlationId, requests))).Payload.ProductPrices;
+        var prices = (await dataService.GetPriceInfo(requests,  cancellationToken)).Value;
         
         var priceMap = prices.ToDictionary(
             product => (product.ProductId, product.Date.Date),
@@ -249,8 +227,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var productQuantities = items
             .Select(item => new ProductQuantity(item.ProductId, item.Quantity));
         
-        await returnProductsProducer.ProduceAsync(KafkaTopics.ReturnProductsCommand, 
-            new ReturnProductsToStorageCommand(productQuantities));
+        await stockMutationService.ReturnStock(productQuantities);
 
         return Result.Ok();
     }

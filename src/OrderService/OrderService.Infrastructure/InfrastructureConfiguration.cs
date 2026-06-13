@@ -1,9 +1,14 @@
 ﻿using Core.Common.DbHelpers;
 using Core.Common.DbHelpers.Interfaces;
+using Core.Common.Extensions;
+using Core.Common.Kafka.Contracts;
+using Core.Common.Kafka.Contracts.Dto;
+using Core.Common.Kafka.Contracts.Models;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrderService.Application.Interfaces;
+using OrderService.Application.Kafka.Consumers;
 using OrderService.Infrastructure.Implementations;
 
 namespace OrderService.Infrastructure;
@@ -22,7 +27,27 @@ public static class InfrastructureConfiguration
         services.AddSingleton<IOrderItemRepository, OrderItemRepository>();
         services.AddSingleton<IOrderInfoRepository, OrderInfoRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddKafkaServices(configuration);
     
+        return services;
+    }
+    
+    private static IServiceCollection AddKafkaServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddKafkaCore(configuration);
+
+        services.AddKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>>();
+        services.AddKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>>();
+        services.AddKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>>();
+        services.AddKafkaRequestClient<GetProductsStorageRequest, KafkaResponse<GetProductStoragePayload>>();
+
+        services.AddHostedService<CheckStockResponseConsumer>();
+        services.AddHostedService<CalculateAmountResponseConsumer>();
+        services.AddHostedService<DeliveryDateResponseConsumer>();
+        services.AddHostedService<GetProductStorageResponseConsumer>();
+        services.AddHostedService<GetProductsPriceResponseConsumer>();
+
         return services;
     }
 }
