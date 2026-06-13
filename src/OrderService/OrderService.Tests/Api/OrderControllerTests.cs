@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using FluentResults;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using OrderService.Api.Controllers;
@@ -138,6 +139,7 @@ public class OrderControllerTests
     
     #endregion
 
+    #region PayOrder
     [Fact]
     public async Task PayOrder_ShouldReturns200_WhenSuccess()
     {
@@ -191,6 +193,8 @@ public class OrderControllerTests
         result.Result.Should().BeOfType<ObjectResult>()
             .Which.StatusCode.Should().Be(409);
     }
+    
+    #endregion
     
     #region GetOrderInfo
     
@@ -293,5 +297,85 @@ public class OrderControllerTests
             .Which.Value.Should().BeEquivalentTo(expectedDto);
     }
     
+    #endregion
+    
+    #region CancelOrder
+    
+    [Fact]
+    public async Task CancelOrder_ShouldReturnsOk_WhenSuccess()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        serviceMock
+            .Setup(s => s.Cancel(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(id));
+
+        // Act
+        var result = await controller.CancelOrder(id, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(id);
+    }
+
+    [Fact]
+    public async Task CancelOrder_ShouldReturnsConflict_WhenInvalidState()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        serviceMock
+            .Setup(s => s.Cancel(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(OrderErrors.InvalidStateForCancel("Created")));
+
+        // Act
+        var result = await controller.CancelOrder(id, CancellationToken.None);
+
+        // Assert
+        var objectResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+    }
+    
+    #endregion
+    
+    #region ChangeOrderStatus
+
+    [Fact]
+    public async Task ChangeOrderStatus_ShouldReturnsOk_WhenSuccess()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var newStatus = new StatusDto { Status = (int)Status.InAssembly };
+
+        serviceMock
+            .Setup(s => s.UpdateStatus(id, It.IsAny<Status>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(id));
+
+        // Act
+        var result = await controller.ChangeOrderStatus(id, newStatus, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<OkObjectResult>();
+        (result.Result as OkObjectResult)!.Value.Should().Be(id);
+    }
+
+    [Fact]
+    public async Task ChangeOrderStatus_ShouldReturnsUnprocessableEntity_WhenFail()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var newStatus = new StatusDto { Status = (int)Status.InAssembly };
+
+        serviceMock
+            .Setup(s => s.UpdateStatus(id, It.IsAny<Status>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(OrderErrors.InvalidStatusTransition()));
+
+        // Act
+        var result = await controller.ChangeOrderStatus(id, newStatus, CancellationToken.None);
+
+        // Assert
+        var objectResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+    }
+        
     #endregion
 }

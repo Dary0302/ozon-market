@@ -22,5 +22,5 @@ public interface IOrderManagementService
     
     Task<Result<PagedResult<OrderInfoWithPrice>>> GetAllInfo(int pageNumber, int pageSize, CancellationToken cancellationToken);
     
-    Task<Result> Cancel(Guid id, CancellationToken cancellationToken);
+    Task<Result<Guid>> Cancel(Guid id, CancellationToken cancellationToken);
 }

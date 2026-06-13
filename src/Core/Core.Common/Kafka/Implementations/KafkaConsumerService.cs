@@ -17,7 +17,8 @@ public abstract class KafkaConsumerService<T> : BackgroundService
         {
             BootstrapServers = settings.Value.BootstrapServers,
             GroupId = groupId,
-            AutoOffsetReset  = AutoOffsetReset.Earliest
+            AutoOffsetReset  = AutoOffsetReset.Earliest,
+            EnableAutoCommit = false
         };
         consumer = new ConsumerBuilder<string, string>(config).Build();
     }
@@ -34,4 +35,11 @@ public abstract class KafkaConsumerService<T> : BackgroundService
     }
 
     protected abstract Task HandleAsync(T message, CancellationToken token);
+    
+    public override void Dispose()
+    {
+        consumer.Close();
+        consumer.Dispose();
+        base.Dispose();
+    }
 }

@@ -3,4 +3,6 @@ using Core.Common.Kafka.Interfaces;
 
 namespace Core.Common.Kafka.Contracts.Dto;
 
-public record CheckStockRequest(Guid CorrelationId, IEnumerable<ProductQuantity> Items) : IHasCorrelationId;
+public record CheckStockRequest(Guid CorrelationId, 
+    IEnumerable<ProductQuantity> Items, 
+    CancellationToken CancellationToken) : IHasCorrelationId;
