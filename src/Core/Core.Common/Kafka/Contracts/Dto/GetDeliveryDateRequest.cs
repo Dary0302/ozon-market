@@ -5,4 +5,5 @@ namespace Core.Common.Kafka.Contracts.Dto;
 
 public record GetDeliveryDateRequest(Guid CorrelationId, 
     Guid PvzId, 
-    IEnumerable<ProductQuantity> Products) : IHasCorrelationId;
+    IEnumerable<ProductQuantity> Products, 
+    CancellationToken CancellationToken) : IHasCorrelationId;

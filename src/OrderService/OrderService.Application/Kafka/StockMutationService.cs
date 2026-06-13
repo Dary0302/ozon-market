@@ -11,9 +11,9 @@ public class StockMutationService(
     IKafkaProducer<ReturnProductsToStorageCommand> returnProducer)
     : IStockMutationService
 {
-    public Task ReduceStock(IEnumerable<DecreaseQuantity> productStock) =>
-        reduceProducer.ProduceAsync(KafkaTopics.ReduceStockCommand, new ReduceCountOfProductsCommand(productStock));
+    public Task ReduceStock(IEnumerable<DecreaseQuantity> productStock, CancellationToken cancellationToken) =>
+        reduceProducer.ProduceAsync(KafkaTopics.ReduceStockCommand, new ReduceCountOfProductsCommand(productStock, cancellationToken));
 
-    public Task ReturnStock(IEnumerable<ProductQuantity> products) =>
-        returnProducer.ProduceAsync(KafkaTopics.ReturnProductsCommand, new ReturnProductsToStorageCommand(products));
+    public Task ReturnStock(IEnumerable<ProductQuantity> products, CancellationToken cancellationToken) =>
+        returnProducer.ProduceAsync(KafkaTopics.ReturnProductsCommand, new ReturnProductsToStorageCommand(products, cancellationToken));
 }

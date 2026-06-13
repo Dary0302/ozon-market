@@ -57,7 +57,7 @@ public class OrderManagementServiceTests
             calculatedAmount,
             DateTime.UtcNow.AddDays(3),
             Enumerable.Empty<StockCheckResult>(),
-            Enumerable.Empty<ProductStorage>());
+            Enumerable.Empty<DecreaseQuantity>());
 
         dataServiceMock
             .Setup(s => s.GetData(
@@ -67,7 +67,7 @@ public class OrderManagementServiceTests
             .ReturnsAsync(Result.Ok(data));
 
         stockMutationServiceMock
-            .Setup(s => s.ReduceStock(It.IsAny<IEnumerable<DecreaseQuantity>>()))
+            .Setup(s => s.ReduceStock(It.IsAny<IEnumerable<DecreaseQuantity>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
     }
 
@@ -172,7 +172,7 @@ public class OrderManagementServiceTests
         var data = new OrderData(1000m, 
             DateTime.UtcNow.AddDays(3), 
             new[] { new StockCheckResult(lackingProduct.ProductId, -5) },
-            Enumerable.Empty<ProductStorage>());
+            Enumerable.Empty<DecreaseQuantity>());
 
         dataServiceMock
             .Setup(s => s.GetData(It.IsAny<Guid>(), It.IsAny<IEnumerable<ProductQuantity>>(), It.IsAny<CancellationToken>()))
@@ -355,42 +355,6 @@ public class OrderManagementServiceTests
         result.Errors.Should().ContainSingle(e => e.Message == OrderErrors.MustBePaid().Message);
     }
     
-    [Theory]
-    [InlineData(Status.InAssembly)]
-    [InlineData(Status.TransferredForDelivery)]
-    public async Task UpdateStatus_ShouldReturnsSuccess_WhenCancel(Status initialStatus)
-    {
-        // Arrange
-        var order =  EntityFactory.MakeOrder(initialStatus);
-        SetupValidDefaultsForUpdateStatus(order);
-
-        // Act
-        var result = await service.UpdateStatus(order.Id, Status.Canceled, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(order.Id);
-    }
-
-    [Theory]
-    [InlineData(Status.Created)]
-    [InlineData(Status.Delivered)]
-    [InlineData(Status.Canceled)]
-    public async Task UpdateStatus_ShouldReturnsSuccess_WhenCancelFromInvalidStatus(Status initialStatus)
-    {
-        // Arrange
-        var order =  EntityFactory.MakeOrder(initialStatus);
-        var expectedMessage = OrderErrors.InvalidStateForCancel(order.Status.ToString()).Message;
-        SetupValidDefaultsForUpdateStatus(order);
-
-        // Act
-        var result = await service.UpdateStatus(order.Id, Status.Canceled, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle(e => e.Message == expectedMessage);
-    }
-    
     [Fact]
     public async Task UpdateStatus_ShouldNotSaveOrder_WhenTransitionIsInvalid()
     {
@@ -418,8 +382,6 @@ public class OrderManagementServiceTests
     [InlineData(Status.Paid, Status.InAssembly)]
     [InlineData(Status.InAssembly, Status.TransferredForDelivery)]
     [InlineData(Status.TransferredForDelivery, Status.Delivered)]
-    [InlineData(Status.InAssembly, Status.Canceled)]
-    [InlineData(Status.TransferredForDelivery, Status.Canceled)]
     public async Task UpdateStatus_ShouldSaveOrder_WhenTransitionIsValid(Status initialStatus, Status newStatus)
     {
         // Arrange
@@ -572,6 +534,116 @@ public class OrderManagementServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().BeEmpty();
         result.Value.TotalCount.Should().Be(0);
+    }
+    
+    #endregion
+    
+    #region Cancel
+    [Theory]
+    [InlineData(Status.InAssembly)]
+    [InlineData(Status.TransferredForDelivery)]
+    public async Task Cancel_ShouldReturnsSuccess(Status initialStatus)
+    {
+        // Arrange
+        var order = EntityFactory.MakeOrder(initialStatus);
+        var items = new List<OrderItem> { EntityFactory.MakeOrderItem(order.Id) };
+
+        orderRepositoryMock
+            .Setup(r => r.GetById(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        orderItemRepositoryMock
+            .Setup(r => r.GetAllByOrderId(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+
+        stockMutationServiceMock
+            .Setup(s => s.ReturnStock(It.IsAny<IEnumerable<ProductQuantity>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.Cancel(order.Id, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        stockMutationServiceMock.Verify(
+            s => s.ReturnStock(It.Is<IEnumerable<ProductQuantity>>(
+                list => list.Count() == 1 && list.Single().ProductId == items[0].ProductId), 
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+    
+    [Theory]
+    [InlineData(Status.Created)]
+    [InlineData(Status.Delivered)]
+    [InlineData(Status.Canceled)]
+    public async Task Cancel_ShouldReturnsFail_WhenStatusIsInvalid(Status initialStatus)
+    {
+        // Arrange
+        var order = EntityFactory.MakeOrder(initialStatus);
+        var expectedMessage = OrderErrors.InvalidStateForCancel(order.Status.ToString()).Message;
+
+        orderRepositoryMock
+            .Setup(repository => repository.GetById(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        // Act
+        var result = await service.Cancel(order.Id, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle(e => e.Message == expectedMessage);
+
+        orderRepositoryMock.Verify(
+            repository => repository.Save(
+                It.IsAny<Order>(), It.IsAny<IDbConnection>(), It.IsAny<IDbTransaction>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        stockMutationServiceMock.Verify(s => s.ReturnStock(It.IsAny<IEnumerable<ProductQuantity>>(), 
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+    
+    [Theory]
+    [InlineData(Status.InAssembly)]
+    [InlineData(Status.TransferredForDelivery)]
+    public async Task Cancel_ShouldSaveOrderAndReturnStock_WhenStatusIsValid(Status initialStatus)
+    {
+        // Arrange
+        var order = EntityFactory.MakeOrder(initialStatus);
+        var items = new List<OrderItem> { EntityFactory.MakeOrderItem(order.Id) };
+
+        orderRepositoryMock
+            .Setup(repository => repository.GetById(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        orderItemRepositoryMock
+            .Setup(repository => repository.GetAllByOrderId(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+
+        stockMutationServiceMock
+            .Setup(s => s.ReturnStock(It.IsAny<IEnumerable<ProductQuantity>>(), 
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await service.Cancel(order.Id, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        orderRepositoryMock.Verify(
+            repository => repository.Save(
+                It.IsAny<Order>(),
+                It.IsAny<IDbConnection>(),
+                It.IsAny<IDbTransaction>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        stockMutationServiceMock.Verify(
+            s => s.ReturnStock(It.Is<IEnumerable<ProductQuantity>>(
+                list => list.Count() == 1 && list.Single().ProductId == items[0].ProductId), 
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
     
     #endregion

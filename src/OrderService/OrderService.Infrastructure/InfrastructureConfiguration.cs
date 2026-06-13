@@ -40,7 +40,7 @@ public static class InfrastructureConfiguration
         services.AddKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>>();
         services.AddKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>>();
         services.AddKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>>();
-        services.AddKafkaRequestClient<GetProductsStorageRequest, KafkaResponse<GetProductStoragePayload>>();
+        services.AddKafkaRequestClient<GetOrderStorageRecordsRequest, KafkaResponse<GetOrderStorageRecordsPayload>>();
 
         services.AddHostedService<CheckStockResponseConsumer>();
         services.AddHostedService<CalculateAmountResponseConsumer>();

@@ -6,4 +6,4 @@ public record OrderData(
     decimal Amount,
     DateTime DeliveryDate,
     IEnumerable<StockCheckResult> StockItems,
-    IEnumerable<ProductStorage> ProductStorages);
+    IEnumerable<DecreaseQuantity> ProductStorages);

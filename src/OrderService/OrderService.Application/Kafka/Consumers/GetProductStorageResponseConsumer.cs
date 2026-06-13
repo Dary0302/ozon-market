@@ -7,19 +7,19 @@ using Microsoft.Extensions.Options;
 namespace OrderService.Application.Kafka.Consumers;
 
 public class GetProductStorageResponseConsumer  
-    : KafkaConsumerService<KafkaResponse<GetProductStoragePayload>>
+    : KafkaConsumerService<KafkaResponse<GetOrderStorageRecordsPayload>>
 {
     private readonly PendingRequestRegistry registry;
 
     public GetProductStorageResponseConsumer(
         IOptions<KafkaSettings> settings, 
         PendingRequestRegistry registry)
-        : base(settings, KafkaTopics.ProductStorageResponses, "order-service") 
+        : base(settings, KafkaTopics.OrderStorageRecordsResponses, "order-service") 
     {
         this.registry = registry;
     }
 
-    protected override Task HandleAsync(KafkaResponse<GetProductStoragePayload> message, CancellationToken token)
+    protected override Task HandleAsync(KafkaResponse<GetOrderStorageRecordsPayload> message, CancellationToken token)
     {
         registry.Complete(message.CorrelationId, message);
         return Task.CompletedTask;

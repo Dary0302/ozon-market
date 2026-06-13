@@ -38,7 +38,6 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var order = new Order(data.Amount, pvzId, data.DeliveryDate);
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
-        var productStock = PrepareProductStock(data.ProductStorages, normalizedProducts);
 
         await unitOfWork.ExecuteInTransaction(async () =>
         {
@@ -55,7 +54,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 cancellationToken);
         });
         
-        await stockMutationService.ReduceStock(productStock);
+        await stockMutationService.ReduceStock(data.ProductStorages, cancellationToken);
         
         return Result.Ok(order.Id);
     }
@@ -88,20 +87,6 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 stockCheck.ProductId,
                 Math.Abs(stockCheck.Difference)))
             .ToList();
-    }
-
-    private IEnumerable<DecreaseQuantity> PrepareProductStock(IEnumerable<ProductStorage> productsStorage, 
-        IEnumerable<ProductQuantity> productsStock)
-    {
-        return productsStock
-            .Join(
-                productsStorage,
-                product => product.ProductId,
-                storage => storage.ProductId,
-                (product, storage) => new DecreaseQuantity(
-                    product.ProductId,
-                    storage.StorageId,
-                    product.Quantity));
     }
 
     public async Task<Result<Order>> GetById(Guid id, CancellationToken cancellationToken)
@@ -212,13 +197,15 @@ public class OrderManagementService(IOrderRepository orderRepository,
         return Result.Ok(new PagedResult<OrderInfoWithPrice>(result, orderInfos.TotalCount));
     }
 
-    public async Task<Result> Cancel(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Cancel(Guid id, CancellationToken cancellationToken)
     {
         var order = await orderRepository.GetById(id, cancellationToken);
         if (order is null)
             return Result.Fail(OrderErrors.NotFound(id));
         
-        order.Cancel();
+        var cancelResult = order.Cancel();
+        if (cancelResult.IsFailed)
+            return Result.Fail(cancelResult.Errors);
         
         await unitOfWork.ExecuteInTransaction(async () =>
             await orderRepository.Save(order, unitOfWork.CurrentConnection, 
@@ -227,8 +214,8 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var productQuantities = items
             .Select(item => new ProductQuantity(item.ProductId, item.Quantity));
         
-        await stockMutationService.ReturnStock(productQuantities);
+        await stockMutationService.ReturnStock(productQuantities, cancellationToken);
 
-        return Result.Ok();
+        return Result.Ok(id);
     }
 }

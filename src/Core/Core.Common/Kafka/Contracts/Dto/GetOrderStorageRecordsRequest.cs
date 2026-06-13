@@ -3,6 +3,7 @@ using Core.Common.Kafka.Interfaces;
 
 namespace Core.Common.Kafka.Contracts.Dto;
 
-public record GetProductsPriceRequest(Guid CorrelationId, 
-    IEnumerable<ProductPriceRequest> Requests, 
+public record GetOrderStorageRecordsRequest(Guid CorrelationId, 
+    Guid PvzId, 
+    IEnumerable<ProductQuantity> Products, 
     CancellationToken CancellationToken) : IHasCorrelationId;

@@ -9,8 +9,8 @@ public static class KafkaTopics
     public const string DeliveryDateRequests = "order.delivery-date.requests";
     public const string DeliveryDateResponses = "order.delivery-date.responses";
 
-    public const string ProductStorageRequests = "order.product-storage.requests";
-    public const string ProductStorageResponses = "order.product-storage.responses";
+    public const string OrderStorageRecordsRequests = "order.order-storage.requests";
+    public const string OrderStorageRecordsResponses = "order.order-storage.responses";
     
     public const string ReduceStockCommand = "order.reduce-stock.command";
     

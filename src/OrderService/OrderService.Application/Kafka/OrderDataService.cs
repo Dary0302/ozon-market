@@ -11,7 +11,7 @@ namespace OrderService.Application.Kafka;
 public class OrderDataService(
     IKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>> stockClient,
     IKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>> getDateClient,
-    IKafkaRequestClient<GetProductsStorageRequest, KafkaResponse<GetProductStoragePayload>> getStorageClient,
+    IKafkaRequestClient<GetOrderStorageRecordsRequest, KafkaResponse<GetOrderStorageRecordsPayload>> getStorageClient,
     IKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>> calculateAmountClient,
     IKafkaRequestClient<GetProductsPriceRequest, KafkaResponse<GetProductsPricePayload>> getPricesClient)
     : IOrderDataService
@@ -21,10 +21,10 @@ public class OrderDataService(
     {
         var correlationId = Guid.NewGuid();
 
-        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, products));
-        var deliveryDateTask = getDateClient.RequestAsync(new GetDeliveryDateRequest(correlationId, pvzId, products));
-        var storageTask = getStorageClient.RequestAsync(new GetProductsStorageRequest(correlationId, products));
-        var amountTask = calculateAmountClient.RequestAsync(new CalculateAmountRequest(correlationId, products));
+        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, products, cancellationToken));
+        var deliveryDateTask = getDateClient.RequestAsync(new GetDeliveryDateRequest(correlationId, pvzId, products, cancellationToken));
+        var storageTask = getStorageClient.RequestAsync(new GetOrderStorageRecordsRequest(correlationId, pvzId, products, cancellationToken));
+        var amountTask = calculateAmountClient.RequestAsync(new CalculateAmountRequest(correlationId, products, cancellationToken));
 
         await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);
 
@@ -49,7 +49,7 @@ public class OrderDataService(
     {
         var correlationId = Guid.NewGuid();
         var prices = await getPricesClient.RequestAsync(
-            new GetProductsPriceRequest(correlationId, requests));
+            new GetProductsPriceRequest(correlationId, requests, cancellationToken));
         if (!prices.IsSuccess)
             return Result.Fail(prices.Errors.Select(e => e.Message));
         return Result.Ok(prices.Payload.ProductPrices);
