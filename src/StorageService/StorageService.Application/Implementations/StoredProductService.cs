@@ -39,7 +39,7 @@ public class StoredProductService(
         return Result.Ok(storedProducts);
     }
 
-    public async Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         
@@ -93,7 +93,8 @@ public class StoredProductService(
         return Result.Ok(deliveryTime);
     }
 
-    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, 
+        CancellationToken cancellationToken)
     {
         var pvz = await pvzRepository.Get(pvzId, cancellationToken);
 
@@ -194,7 +195,7 @@ public class StoredProductService(
     /// <summary>
     /// Возвращает коллекцию с разницей товаров на складах и заказанных товаров
     /// </summary>
-    private List<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
+    private IEnumerable<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
     {
         var stockCheckResults = storedProducts.Join(orderedProducts,
             storedProduct => storedProduct.ProductId,
@@ -202,7 +203,7 @@ public class StoredProductService(
             (storedProduct, orderedProduct) => new StockCheckResult {
                 ProductId = storedProduct.ProductId,
                 Difference = storedProduct.Quantity - orderedProduct.Quantity,
-            }).ToList();
+            });
 
         return stockCheckResults;
     }
