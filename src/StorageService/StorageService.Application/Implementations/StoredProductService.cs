@@ -11,7 +11,8 @@ public class StoredProductService(
     IStoredProductRepository storedProductRepository,
     IStoragePointRepository storagePointRepository,
     IPvzPointRepository pvzPointRepository,
-    IPvzRepository pvzRepository) : IStoredProductService
+    IPvzRepository pvzRepository,
+    IStorageRepository storageRepository) : IStoredProductService
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
@@ -132,7 +133,19 @@ public class StoredProductService(
         
         return Result.Ok();
     }
-    
+
+    public async Task<Result> ReturnProducts(IEnumerable<ProductQuantity> returnedProducts, CancellationToken cancellationToken)
+    {
+        var storages = (await storageRepository.GetAll(cancellationToken)).ToList();
+        
+        var closestStorage = storages[Random.Shared.Next(storages.Count)];
+
+        var products = returnedProducts.Select(product => new IncreaseQuantity(product.ProductId, closestStorage.Id, product.Quantity));
+
+        await storedProductRepository.IncreaseCount(products, cancellationToken);
+        
+        return Result.Ok();
+    }
     
     public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {

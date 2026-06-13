@@ -40,7 +40,8 @@ public class StoredProductServiceTests : IClassFixture<PostgresFixture>
             storedProductRepository,
             storagePointRepository,
             pvzPointRepository,
-            pvzRepository);
+            pvzRepository,
+            storageRepository);
         
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
