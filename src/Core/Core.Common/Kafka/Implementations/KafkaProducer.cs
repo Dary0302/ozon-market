@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Core.Common.Kafka.Implementations;
 
-public class KafkaProducer<T> : IKafkaProducer<T>, IDisposable
+public class KafkaProducer : IKafkaProducer, IDisposable
 {
     private readonly IProducer<string, string> producer;
 
@@ -15,14 +15,21 @@ public class KafkaProducer<T> : IKafkaProducer<T>, IDisposable
         producer = new ProducerBuilder<string, string>(config).Build();
     }
 
-    public async Task ProduceAsync(string topic, T message, string? key = null)
+    public async Task ProduceAsync<T>(
+        string topic,
+        T message,
+        string? key = null)
     {
-        var json = JsonSerializer.Serialize(message);
-        await producer.ProduceAsync(topic, new Message<string, string>
-        {
-            Key = key ?? Guid.NewGuid().ToString(),
-            Value = json
-        });
+        var json =
+            JsonSerializer.Serialize(message);
+
+        await producer.ProduceAsync(
+            topic,
+            new Message<string, string>
+            {
+                Key = key ?? Guid.NewGuid().ToString(),
+                Value = json
+            });
     }
 
     public void Dispose()

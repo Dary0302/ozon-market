@@ -1,4 +1,5 @@
 using Core.Common.Errors;
+using Core.Common.Kafka.Contracts.Models;
 using FluentResults;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
@@ -6,7 +7,7 @@ using ProductService.Domain.Interfaces;
 
 namespace ProductService.Application.Services;
 
-public class PricingService(IPriceRepository priceRepository) : IPricingService
+public class PriceService(IPriceRepository priceRepository) : IPriceService
 {
     public async Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {

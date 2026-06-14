@@ -1,9 +1,10 @@
+using Core.Common.Kafka.Contracts.Models;
 using FluentResults;
 using ProductService.Domain;
 
 namespace ProductService.Application.Interfaces;
 
-public interface IPricingService
+public interface IPriceService
 {
     Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products, CancellationToken cancellationToken);
 

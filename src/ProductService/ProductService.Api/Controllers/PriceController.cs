@@ -1,4 +1,5 @@
 using Core.Common.Errors;
+using Core.Common.Kafka.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Interfaces;
 using ProductService.Domain;
@@ -7,7 +8,7 @@ namespace ProductService.Api.Controllers;
 
 [ApiController]
 [Route("api/products/prices")]
-public class PriceController(IPricingService service) : ControllerBase
+public class PriceController(IPriceService service) : ControllerBase
 {
     /// <summary>
     /// Получение суммы цен по списку продуктов
