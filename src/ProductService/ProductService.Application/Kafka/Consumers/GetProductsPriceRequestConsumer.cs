@@ -19,7 +19,7 @@ public class GetProductsPriceRequestConsumer
         IOptions<KafkaSettings> settings,
         IPriceService service,
         IKafkaProducer producer)
-        : base(settings, KafkaTopics.CalculateAmountResponses, "product-service")
+        : base(settings, KafkaTopics.GetProductsPriceResponses, "product-service")
     {
         this.service = service;
         this.producer = producer;

@@ -11,14 +11,14 @@ namespace OrderService.Application.Kafka;
 public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
 {
     public async Task<IEnumerable<ProductPrice>> GetPrices(
-        IEnumerable<ProductPriceRequest> requests,
+        ProductPriceRequest request,
         CancellationToken ct)
     {
         var response =
             await rpc.RequestAsync<GetProductsPriceRequest, KafkaResponse<GetProductsPricePayload>>(KafkaTopics
                     .GetProductsPriceRequests,
                 new GetProductsPriceRequest(Guid.NewGuid(),
-                    requests,
+                    request,
                     ct));
 
         if (!response.IsSuccess)
@@ -26,15 +26,17 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
                 .Select(error => error.Message).ToString());
 
         return response
-            .Payload
+            .Payload!
             .ProductPrices;
     }
 
-    public async Task<IEnumerable<ProductPrice>> GetAmount(IEnumerable<ProductQuantity> productQuantities, CancellationToken ct)
+    public async Task<decimal> GetAmount(IEnumerable<ProductQuantity> productQuantities, CancellationToken ct)
     {
         var response =
-            await rpc.RequestAsync<CalculateAmountRequest, KafkaResponse<GetProductsPricePayload>>(KafkaTopics
-                    .GetProductsPriceRequests,
+            await rpc.RequestAsync<
+                CalculateAmountRequest,
+                KafkaResponse<CalculateAmountPayload>>(KafkaTopics
+                    .CalculateAmountRequests,
                 new CalculateAmountRequest(Guid.NewGuid(),
                     productQuantities,
                     ct));
@@ -43,8 +45,6 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
             throw new BusinessException(response.Errors
                 .Select(error => error.Message).ToString());
 
-        return response
-            .Payload
-            .ProductPrices;
+        return response.Payload!.Amount;
     }
 }

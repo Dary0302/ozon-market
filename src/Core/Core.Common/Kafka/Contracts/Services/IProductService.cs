@@ -4,6 +4,6 @@ namespace Core.Common.Kafka.Contracts.Services;
 
 public interface IProductService
 {
-    Task<IEnumerable<ProductPrice>> GetPrices(IEnumerable<ProductPriceRequest> requests, CancellationToken ct);
-    Task<IEnumerable<ProductPrice>> GetAmount(IEnumerable<ProductQuantity> productQuantities, CancellationToken ct);
+    Task<IEnumerable<ProductPrice>> GetPrices(ProductPriceRequest request, CancellationToken ct);
+    Task<decimal> GetAmount(IEnumerable<ProductQuantity> productQuantities, CancellationToken ct);
 }
