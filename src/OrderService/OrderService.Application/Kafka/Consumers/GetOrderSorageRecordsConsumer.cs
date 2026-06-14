@@ -6,12 +6,12 @@ using Microsoft.Extensions.Options;
 
 namespace OrderService.Application.Kafka.Consumers;
 
-public class GetProductStorageResponseConsumer  
+public class GetOrderSorageRecordsConsumer  
     : KafkaConsumerService<KafkaResponse<GetOrderStorageRecordsPayload>>
 {
     private readonly PendingRequestRegistry registry;
 
-    public GetProductStorageResponseConsumer(
+    public GetOrderSorageRecordsConsumer(
         IOptions<KafkaSettings> settings, 
         PendingRequestRegistry registry)
         : base(settings, KafkaTopics.OrderStorageRecordsResponses, "order-service") 

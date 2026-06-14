@@ -3,5 +3,4 @@ using Core.Common.Kafka.Interfaces;
 
 namespace Core.Common.Kafka.Contracts.Dto;
 
-public record ReturnProductsToStorageCommand(IEnumerable<ProductQuantity> Products, 
-    CancellationToken CancellationToken);
+public record ReturnProductsToStorageCommand(IEnumerable<ProductQuantity> Products);

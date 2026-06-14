@@ -15,21 +15,17 @@ public class KafkaProducer : IKafkaProducer, IDisposable
         producer = new ProducerBuilder<string, string>(config).Build();
     }
 
-    public async Task ProduceAsync<T>(
-        string topic,
-        T message,
-        string? key = null)
+    public async Task ProduceAsync<T>(string topic, T message, CancellationToken ct = default, string? key = null)
     {
-        var json =
-            JsonSerializer.Serialize(message);
-
+        var json = JsonSerializer.Serialize(message);
         await producer.ProduceAsync(
             topic,
             new Message<string, string>
             {
                 Key = key ?? Guid.NewGuid().ToString(),
                 Value = json
-            });
+            },
+            ct);
     }
 
     public void Dispose()

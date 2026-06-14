@@ -1,16 +1,13 @@
 ﻿using Core.Common.DbHelpers;
 using Core.Common.DbHelpers.Interfaces;
 using Core.Common.Extensions;
-using Core.Common.Kafka.Contracts;
-using Core.Common.Kafka.Contracts.Dto;
-using Core.Common.Kafka.Contracts.Models;
 using Core.Common.Kafka.Contracts.Services;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrderService.Application.Interfaces;
-using OrderService.Application.Kafka;
 using OrderService.Application.Kafka.Consumers;
+using OrderService.Application.Kafka.Services;
 using OrderService.Infrastructure.Implementations;
 
 namespace OrderService.Infrastructure;
@@ -40,11 +37,12 @@ public static class InfrastructureConfiguration
         services.AddKafkaCore(configuration);
 
         services.AddScoped<IProductService, KafkaProductService>();
+        services.AddScoped<IStorageService, KafkaStorageService>();
 
         services.AddHostedService<CheckStockResponseConsumer>();
         services.AddHostedService<CalculateAmountResponseConsumer>();
         services.AddHostedService<DeliveryDateResponseConsumer>();
-        services.AddHostedService<GetProductStorageResponseConsumer>();
+        services.AddHostedService<GetOrderSorageRecordsConsumer>();
         services.AddHostedService<GetProductsPriceResponseConsumer>();
 
         return services;

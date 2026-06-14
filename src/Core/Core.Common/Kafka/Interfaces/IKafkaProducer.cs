@@ -3,7 +3,8 @@
 public interface IKafkaProducer
 {
     Task ProduceAsync<T>(
-        string topic,
-        T message,
+        string topic, 
+        T message, 
+        CancellationToken ct = default, 
         string? key = null);
 }

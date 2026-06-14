@@ -15,37 +15,32 @@ public class KafkaRpcClient : IKafkaRpcClient
         this.registry = registry;
     }
 
-    public async Task<TResponse>
-        RequestAsync<TRequest, TResponse>(
-            string topic,
-            TRequest request,
-            TimeSpan? timeout = null)
+    public async Task<TResponse> RequestAsync<TRequest, TResponse>(
+        string topic,
+        TRequest request,
+        CancellationToken ct = default,
+        TimeSpan? timeout = null)
         where TRequest : class, IHasCorrelationId
         where TResponse : class, IHasCorrelationId
     {
         var tcs = new TaskCompletionSource<TResponse>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        registry.Register(
-            request.CorrelationId,
-            tcs);
+        registry.Register(request.CorrelationId, tcs);
 
         try
         {
-            await producer.ProduceAsync(
-                topic,
-                request);
+            await producer.ProduceAsync(topic, request, ct); 
 
-            using var cts = new CancellationTokenSource(
-                timeout ?? TimeSpan.FromSeconds(30));
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct); 
+            cts.CancelAfter(timeout ?? TimeSpan.FromSeconds(30));
 
             await using var _ = cts.Token.Register(() =>
             {
                 registry.Remove(request.CorrelationId);
-
-                tcs.TrySetException(
-                    new TimeoutException(
-                        $"No response for {request.CorrelationId}"));
+                tcs.TrySetException(ct.IsCancellationRequested
+                    ? new OperationCanceledException(ct) 
+                    : new TimeoutException($"No response for {request.CorrelationId}"));
             });
 
             return await tcs.Task;

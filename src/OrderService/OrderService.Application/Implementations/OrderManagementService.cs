@@ -1,9 +1,9 @@
 ﻿using Core.Common.DbHelpers.Interfaces;
 using Core.Common.Errors;
 using Core.Common.Kafka.Contracts.Models;
+using Core.Common.Kafka.Contracts.Services;
 using FluentResults;
 using OrderService.Application.Interfaces;
-using OrderService.Application.Kafka.Interfaces;
 using OrderService.Application.Models;
 using OrderService.Domain;
 using OrderService.Domain.Exseptions;
@@ -14,48 +14,47 @@ public class OrderManagementService(IOrderRepository orderRepository,
     IOrderItemRepository orderItemRepository, 
     IOrderInfoRepository orderInfoRepository,
     IUnitOfWork unitOfWork,
-    IOrderDataService dataService,
-    IStockMutationService stockMutationService) : IOrderManagementService
+    IStorageService storageService,
+    IProductService productService) : IOrderManagementService
 {
     public async Task<Result<Guid>> Create(Guid pvzId, decimal clientAmount, 
         IEnumerable<ProductQuantity> products, CancellationToken cancellationToken)
     {
         var normalizedProducts = NormalizeProducts(products);
+        
+        var stockTask = storageService.CheckStock(normalizedProducts, cancellationToken);
+        var deliveryDateTask = storageService.GetDeliveryDate(pvzId, normalizedProducts, cancellationToken);
+        var storageRecordsTask = storageService.GetOrderStorageRecords(pvzId, normalizedProducts, cancellationToken);
+        var amountTask = productService.GetAmount(normalizedProducts, cancellationToken);
 
-        var enrichResult = await dataService.GetData(pvzId, normalizedProducts, cancellationToken);
-        if (enrichResult.IsFailed)
-            return Result.Fail(enrichResult.Errors);
+        await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageRecordsTask);
 
-        var data = enrichResult.Value;
+        var amount = await amountTask;
+        var stock = await stockTask;
+        var deliveryDate = await deliveryDateTask;
+        var storageRecords = await storageRecordsTask;
 
-        if (!IsAmountValid(data.Amount, clientAmount))
+        if (!IsAmountValid(amount, clientAmount))
             return Result.Fail(OrderErrors.InvalidAmount());
 
-        var lackingProducts = GetLackingProducts(data.StockItems);
+        var lackingProducts = GetLackingProducts(stock);
         if (lackingProducts.Any())
             return Result.Fail(OrderErrors.InsufficientStock(lackingProducts));
 
-        var order = new Order(data.Amount, pvzId, data.DeliveryDate);
+        var order = new Order(amount, pvzId, deliveryDate);
         var items = normalizedProducts
             .Select(product => new OrderItem(order.Id, product.ProductId, product.Quantity)).ToList();
 
         await unitOfWork.ExecuteInTransaction(async () =>
         {
-            await orderRepository.Create(
-                order,
-                unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction,
-                cancellationToken);
-
-            await orderItemRepository.Add(
-                items,
-                unitOfWork.CurrentConnection,
-                unitOfWork.CurrentTransaction,
-                cancellationToken);
+            await orderRepository.Create(order, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken);
+            await orderItemRepository.Add(items, unitOfWork.CurrentConnection, 
+                unitOfWork.CurrentTransaction, cancellationToken);
         });
-        
-        await stockMutationService.ReduceStock(data.ProductStorages, cancellationToken);
-        
+
+        await storageService.ReduceCountOfProducts(storageRecords, cancellationToken);
+
         return Result.Ok(order.Id);
     }
     
@@ -151,7 +150,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var productIds = items.Select(item => item.ProductId);
         
         var request = new ProductPriceRequest(order.CreatedOn, productIds);
-        var prices = (await dataService.GetPriceInfo([request],  cancellationToken)).Value;
+        var prices = await productService.GetPrices(request, cancellationToken);
         
         var priceMap = prices.ToDictionary(
             product => product.ProductId, product => product.Price);
@@ -170,29 +169,31 @@ public class OrderManagementService(IOrderRepository orderRepository,
         CancellationToken cancellationToken)
     {
         var orderInfos = await orderInfoRepository.GetAll(pageNumber, pageSize, cancellationToken);
-        
-        var requests = orderInfos.Items
-            .GroupBy(orderInfo => orderInfo.Order.CreatedOn.Date)
-            .Select(group => new ProductPriceRequest(
-                group.Key,
-                group.SelectMany(orderInfo => orderInfo.OrderItems.Select(i => i.ProductId)).Distinct()));
-        var prices = (await dataService.GetPriceInfo(requests,  cancellationToken)).Value;
-        
-        var priceMap = prices.ToDictionary(
-            product => (product.ProductId, product.Date.Date),
-            product => product.Price);
-        if (!orderInfos.Items
-                .SelectMany(orderInfo => orderInfo.OrderItems.Select(item 
-                    => (item.ProductId, orderInfo.Order.CreatedOn.Date)))
-                .All(key => priceMap.ContainsKey(key)))
-            return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
 
-        var result = orderInfos.Items.Select(orderInfo => new OrderInfoWithPrice(
-            orderInfo.Order,
-            orderInfo.OrderItems.Select(item => new OrderItemWithPrice(
-                item.ProductId,
-                item.Quantity,
-                priceMap[(item.ProductId, orderInfo.Order.CreatedOn.Date)]))));
+        if (!orderInfos.Items.Any())
+            return Result.Ok(new PagedResult<OrderInfoWithPrice>(
+                Enumerable.Empty<OrderInfoWithPrice>(), orderInfos.TotalCount));
+
+        var result = new List<OrderInfoWithPrice>();
+
+        foreach (var orderInfo in orderInfos.Items)
+        {
+            var request = new ProductPriceRequest(
+                orderInfo.Order.CreatedOn.Date,
+                orderInfo.OrderItems.Select(i => i.ProductId).Distinct());
+            var prices = await productService.GetPrices(request, cancellationToken);
+            var priceMap = prices.ToDictionary(p => p.ProductId, p => p.Price);
+
+            if (!orderInfo.OrderItems.All(item => priceMap.ContainsKey(item.ProductId)))
+                return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+
+            result.Add(new OrderInfoWithPrice(
+                orderInfo.Order,
+                orderInfo.OrderItems.Select(item => new OrderItemWithPrice(
+                    item.ProductId,
+                    item.Quantity,
+                    priceMap[item.ProductId]))));
+        }
 
         return Result.Ok(new PagedResult<OrderInfoWithPrice>(result, orderInfos.TotalCount));
     }
@@ -214,7 +215,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var productQuantities = items
             .Select(item => new ProductQuantity(item.ProductId, item.Quantity));
         
-        await stockMutationService.ReturnStock(productQuantities, cancellationToken);
+        await storageService.ReturnProductsToStorage(productQuantities, cancellationToken);
 
         return Result.Ok(id);
     }

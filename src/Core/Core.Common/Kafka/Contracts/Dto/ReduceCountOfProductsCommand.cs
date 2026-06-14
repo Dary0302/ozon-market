@@ -3,5 +3,4 @@ using Core.Common.Kafka.Interfaces;
 
 namespace Core.Common.Kafka.Contracts.Dto;
 
-public record ReduceCountOfProductsCommand(IEnumerable<DecreaseQuantity> Items, 
-    CancellationToken CancellationToken);
+public record ReduceCountOfProductsCommand(IEnumerable<DecreaseQuantity> Items);

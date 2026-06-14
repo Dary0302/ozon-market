@@ -6,7 +6,7 @@ using Core.Common.Kafka.Contracts.Services;
 using Core.Common.Kafka.Interfaces;
 using Volo.Abp;
 
-namespace OrderService.Application.Kafka;
+namespace OrderService.Application.Kafka.Services;
 
 public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
 {
@@ -18,8 +18,7 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
             await rpc.RequestAsync<GetProductsPriceRequest, KafkaResponse<GetProductsPricePayload>>(KafkaTopics
                     .GetProductsPriceRequests,
                 new GetProductsPriceRequest(Guid.NewGuid(),
-                    request,
-                    ct));
+                    request));
 
         if (!response.IsSuccess)
             throw new BusinessException(response.Errors
@@ -38,8 +37,7 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
                 KafkaResponse<CalculateAmountPayload>>(KafkaTopics
                     .CalculateAmountRequests,
                 new CalculateAmountRequest(Guid.NewGuid(),
-                    productQuantities,
-                    ct));
+                    productQuantities));
 
         if (!response.IsSuccess)
             throw new BusinessException(response.Errors

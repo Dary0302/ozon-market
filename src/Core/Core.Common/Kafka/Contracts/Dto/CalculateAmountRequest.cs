@@ -4,5 +4,4 @@ using Core.Common.Kafka.Interfaces;
 namespace Core.Common.Kafka.Contracts.Dto;
 
 public record CalculateAmountRequest(Guid CorrelationId, 
-    IEnumerable<ProductQuantity> Items, 
-    CancellationToken CancellationToken) : IHasCorrelationId;
+    IEnumerable<ProductQuantity> Items) : IHasCorrelationId;

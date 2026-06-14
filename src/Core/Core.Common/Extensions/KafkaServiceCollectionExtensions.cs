@@ -13,6 +13,7 @@ public static class KafkaServiceCollectionExtensions
         services.Configure<KafkaSettings>(configuration.GetSection("Kafka"));
         services.AddSingleton<PendingRequestRegistry>();
         services.AddSingleton<IKafkaProducer, KafkaProducer>();
+        services.AddSingleton<IKafkaRpcClient, KafkaRpcClient>();
         return services;
     }
 }
