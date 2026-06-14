@@ -28,14 +28,16 @@ public class PriceController(IPricingService service) : ControllerBase
     /// Получение цены по id продукта
     /// </summary>
     /// <param name="productId">Id продукта</param>
+    /// <param name="priceDate">Дата за которую нужна цена</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{product-id:guid}")]
     public async Task<ActionResult<decimal>> Get(
         [FromRoute(Name = "product-id")] Guid productId,
-        CancellationToken cancellationToken)
+        [FromQuery(Name = "price-date")] DateTime? priceDate = null,
+        CancellationToken cancellationToken = default)
     {
-        var productResult = await service.GetActualPrice(productId, cancellationToken);
+        var productResult = await service.GetActualPrice(productId, priceDate, cancellationToken);
         return productResult.ToActionResult();
     }
     

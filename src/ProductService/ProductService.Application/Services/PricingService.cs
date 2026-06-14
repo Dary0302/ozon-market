@@ -35,9 +35,9 @@ public class PricingService(IPriceRepository priceRepository) : IPricingService
         return Result.Ok(sum);
     }
 
-    public async Task<Result<decimal>> GetActualPrice(Guid productId, CancellationToken cancellationToken)
+    public async Task<Result<decimal>> GetActualPrice(Guid productId, DateTime? priceDate, CancellationToken cancellationToken)
     {
-        var price = await priceRepository.GetPrice(productId, cancellationToken);
+        var price = await priceRepository.GetPrice(productId, priceDate, cancellationToken);
 
         if (price is null)
         {

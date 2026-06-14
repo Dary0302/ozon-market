@@ -49,6 +49,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
     public async Task<Price?> GetPrice(
         Guid productId,
+        DateTime? priceDate,
         CancellationToken cancellationToken)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
@@ -62,6 +63,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                       discount
                   FROM prices
                   WHERE product_id = @productId
+                    AND (@priceDate IS NULL OR date <= @priceDate)
                   ORDER BY date DESC
                   LIMIT 1
                   """;
