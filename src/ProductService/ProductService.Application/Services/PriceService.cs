@@ -17,7 +17,7 @@ public class PriceService(IPriceRepository priceRepository) : IPriceService
             .Select(x => x.ProductId)
             .ToList();
 
-        var prices = (await priceRepository.GetPrices(productIds, cancellationToken)).ToList();
+        var prices = (await priceRepository.GetPrices(productIds, null, cancellationToken)).ToList();
 
         if (prices.Count != productIds.Count)
         {
@@ -46,6 +46,15 @@ public class PriceService(IPriceRepository priceRepository) : IPriceService
         }
 
         var actualPrice = GetCostWithDiscount(price);
+
+        return Result.Ok(actualPrice);
+    }
+
+    public async Task<Result<IEnumerable<ProductPrice>>> GetActualPrices(List<Guid> productIds, DateTime? priceDate, CancellationToken cancellationToken)
+    {
+        var prices = await priceRepository.GetPrices(productIds, priceDate, cancellationToken);
+
+        var actualPrice = prices.Select(price => new ProductPrice(price.ProductId, GetCostWithDiscount(price), price.Date));
 
         return Result.Ok(actualPrice);
     }

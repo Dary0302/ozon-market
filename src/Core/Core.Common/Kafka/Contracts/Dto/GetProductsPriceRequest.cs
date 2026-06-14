@@ -4,5 +4,5 @@ using Core.Common.Kafka.Interfaces;
 namespace Core.Common.Kafka.Contracts.Dto;
 
 public record GetProductsPriceRequest(Guid CorrelationId, 
-    IEnumerable<ProductPriceRequest> Requests, 
+    ProductPriceRequest Request, 
     CancellationToken CancellationToken) : IHasCorrelationId;

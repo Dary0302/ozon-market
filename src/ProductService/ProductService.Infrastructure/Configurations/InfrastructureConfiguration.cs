@@ -7,6 +7,7 @@ using Core.Common.Kafka.Contracts.Models;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProductService.Application.Kafka.Consumers;
 using ProductService.Domain.Interfaces;
 using ProductService.Infrastructure.Repositories;
 
@@ -33,17 +34,8 @@ public static class InfrastructureConfiguration
     private static IServiceCollection AddKafkaServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddKafkaCore(configuration);
-
-        services.AddKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>>();
-        services.AddKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>>();
-        services.AddKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>>();
-        services.AddKafkaRequestClient<GetOrderStorageRecordsRequest, KafkaResponse<GetOrderStorageRecordsPayload>>();
-
-        services.AddHostedService<CheckStockResponseConsumer>();
-        services.AddHostedService<CalculateAmountResponseConsumer>();
-        services.AddHostedService<DeliveryDateResponseConsumer>();
-        services.AddHostedService<GetProductStorageResponseConsumer>();
-        services.AddHostedService<GetProductsPriceResponseConsumer>();
+        
+        services.AddHostedService<GetProductsPriceRequestConsumer>();
 
         return services;
     }
