@@ -4,10 +4,12 @@ using Core.Common.Extensions;
 using Core.Common.Kafka.Contracts;
 using Core.Common.Kafka.Contracts.Dto;
 using Core.Common.Kafka.Contracts.Models;
+using Core.Common.Kafka.Contracts.Services;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrderService.Application.Interfaces;
+using OrderService.Application.Kafka;
 using OrderService.Application.Kafka.Consumers;
 using OrderService.Infrastructure.Implementations;
 
@@ -37,10 +39,7 @@ public static class InfrastructureConfiguration
     {
         services.AddKafkaCore(configuration);
 
-        services.AddKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>>();
-        services.AddKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>>();
-        services.AddKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>>();
-        services.AddKafkaRequestClient<GetOrderStorageRecordsRequest, KafkaResponse<GetOrderStorageRecordsPayload>>();
+        services.AddScoped<IProductService, KafkaProductService>();
 
         services.AddHostedService<CheckStockResponseConsumer>();
         services.AddHostedService<CalculateAmountResponseConsumer>();

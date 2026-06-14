@@ -1,10 +1,10 @@
 ﻿using Core.Common.Kafka.Contracts;
 using Core.Common.Kafka.Contracts.Dto;
 using Core.Common.Kafka.Contracts.Models;
+using Core.Common.Kafka.Contracts.Services;
 using Core.Common.Kafka.Interfaces;
 using FluentResults;
 using OrderService.Application.Kafka.Interfaces;
-using OrderService.Domain;
 
 namespace OrderService.Application.Kafka;
 
@@ -12,8 +12,7 @@ public class OrderDataService(
     IKafkaRequestClient<CheckStockRequest, KafkaResponse<CheckStockPayload>> stockClient,
     IKafkaRequestClient<GetDeliveryDateRequest, KafkaResponse<GetDeliveryDatePayload>> getDateClient,
     IKafkaRequestClient<GetOrderStorageRecordsRequest, KafkaResponse<GetOrderStorageRecordsPayload>> getStorageClient,
-    IKafkaRequestClient<CalculateAmountRequest, KafkaResponse<CalculateAmountPayload>> calculateAmountClient,
-    IKafkaRequestClient<GetProductsPriceRequest, KafkaResponse<GetProductsPricePayload>> getPricesClient)
+    IProductService productService)
     : IOrderDataService
 {
     public async Task<Result<OrderData>> GetData(
@@ -21,10 +20,11 @@ public class OrderDataService(
     {
         var correlationId = Guid.NewGuid();
 
-        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, products, cancellationToken));
-        var deliveryDateTask = getDateClient.RequestAsync(new GetDeliveryDateRequest(correlationId, pvzId, products, cancellationToken));
-        var storageTask = getStorageClient.RequestAsync(new GetOrderStorageRecordsRequest(correlationId, pvzId, products, cancellationToken));
-        var amountTask = calculateAmountClient.RequestAsync(new CalculateAmountRequest(correlationId, products, cancellationToken));
+        var productQuantities = products.ToArray();
+        var stockTask = stockClient.RequestAsync(new CheckStockRequest(correlationId, productQuantities, cancellationToken));
+        var deliveryDateTask = getDateClient.RequestAsync(new GetDeliveryDateRequest(correlationId, pvzId, productQuantities, cancellationToken));
+        var storageTask = getStorageClient.RequestAsync(new GetOrderStorageRecordsRequest(correlationId, pvzId, productQuantities, cancellationToken));
+        var amountTask = productService.GetAmount(productQuantities, cancellationToken);
 
         await Task.WhenAll(stockTask, deliveryDateTask, amountTask, storageTask);
 
@@ -47,11 +47,9 @@ public class OrderDataService(
     public async Task<Result<IEnumerable<ProductPrice>>> GetPriceInfo(IEnumerable<ProductPriceRequest> requests, 
         CancellationToken cancellationToken)
     {
-        var correlationId = Guid.NewGuid();
-        var prices = await getPricesClient.RequestAsync(
-            new GetProductsPriceRequest(correlationId, requests, cancellationToken));
-        if (!prices.IsSuccess)
-            return Result.Fail(prices.Errors.Select(e => e.Message));
-        return Result.Ok(prices.Payload.ProductPrices);
+        var prices = await productService.GetPrices(requests, cancellationToken);
+        /*if (!prices.IsSuccess)
+            return Result.Fail(prices.Errors.Select(e => e.Message));*/
+        return Result.Ok(prices);
     }
 }

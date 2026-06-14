@@ -45,7 +45,7 @@ public class PriceRepositoryTests
 
         await priceRepository.SetPrice(price, CancellationToken.None);
 
-        var result = await priceRepository.GetPrice(product.Id, CancellationToken.None);
+        var result = await priceRepository.GetPrice(product.Id);
 
         result.Should().NotBeNull();
         result.Id.Should().Be(price.Id);
@@ -57,7 +57,7 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrice_ShouldReturnNull_WhenPriceDoesNotExist()
     {
-        var result = await priceRepository.GetPrice(Guid.NewGuid(), CancellationToken.None);
+        var result = await priceRepository.GetPrice(Guid.NewGuid());
 
         result.Should().BeNull();
     }
@@ -78,7 +78,7 @@ public class PriceRepositoryTests
         await priceRepository.SetPrice(oldPrice, CancellationToken.None);
         await priceRepository.SetPrice(newPrice, CancellationToken.None);
 
-        var result = await priceRepository.GetPrice(product.Id, CancellationToken.None);
+        var result = await priceRepository.GetPrice(product.Id);
 
         result.Should().NotBeNull();
         result.Id.Should().Be(newPrice.Id);
@@ -89,7 +89,7 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrices_ShouldReturnEmptyCollection_WhenProductsHaveNoPrices()
     {
-        var result = await priceRepository.GetPrices([Guid.NewGuid(), Guid.NewGuid()], CancellationToken.None);
+        var result = await priceRepository.GetPrices([Guid.NewGuid(), Guid.NewGuid()]);
 
         result.Should().BeEmpty();
     }
@@ -117,7 +117,7 @@ public class PriceRepositoryTests
         await priceRepository.SetPrice(price1, CancellationToken.None);
         await priceRepository.SetPrice(price2, CancellationToken.None);
 
-        var result = (await priceRepository.GetPrices([product1.Id, product2.Id], CancellationToken.None))
+        var result = (await priceRepository.GetPrices([product1.Id, product2.Id]))
             .ToList();
 
         result.Should().HaveCount(2);
@@ -148,7 +148,7 @@ public class PriceRepositoryTests
         await priceRepository.SetPrice(oldPrice, CancellationToken.None);
         await priceRepository.SetPrice(latestPrice, CancellationToken.None);
 
-        var result = (await priceRepository.GetPrices([product.Id], CancellationToken.None))
+        var result = (await priceRepository.GetPrices([product.Id]))
             .Single();
 
         result.Should().NotBeNull();
