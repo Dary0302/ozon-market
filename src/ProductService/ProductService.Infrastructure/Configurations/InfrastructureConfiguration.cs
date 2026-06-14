@@ -36,6 +36,7 @@ public static class InfrastructureConfiguration
         services.AddKafkaCore(configuration);
         
         services.AddHostedService<GetProductsPriceRequestConsumer>();
+        services.AddHostedService<CalculateAmountRequestConsumer>();
 
         return services;
     }
