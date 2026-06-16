@@ -1,6 +1,5 @@
 using System.Data;
 using FluentMigrator;
-using ProductService.Domain;
 
 namespace ProductService.Infrastructure.Migrations;
 
