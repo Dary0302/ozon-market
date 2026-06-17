@@ -4,26 +4,44 @@ using Core.Common.Kafka.Contracts;
 using Core.Common.Kafka.Contracts.Models;
 using Core.Common.Kafka.Implementations;
 using Core.Common.Kafka.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StorageService.Application.Interfaces.Services;
 using ProductQuantity = StorageService.Domain.ProductQuantity;
 
 namespace StorageService.Application.Kafka.Consumers;
 
-public class CheckStockRequestConsumer(
-    IOptions<KafkaSettings> settings,
-    IKafkaProducer producer,
-    IStoredProductService storedProductService)
-    : KafkaConsumerService<CheckStockRequest>(settings, KafkaTopics.CheckStockRequests, "storage-service")
+public class CheckStockRequestConsumer
+    : KafkaConsumerService<CheckStockRequest>
 {
+    private readonly IServiceScopeFactory scopeFactory;
+    private readonly IKafkaProducer producer;
+    
+    public CheckStockRequestConsumer(
+        IOptions<KafkaSettings> settings,
+        IServiceScopeFactory scopeFactory,
+        IKafkaProducer producer)
+        : base(settings, KafkaTopics.CheckStockRequests, "storage-service")
+    {
+        this.scopeFactory = scopeFactory;
+        this.producer = producer;
+    }
+    
+    
     protected override async Task HandleAsync(CheckStockRequest message, CancellationToken token)
     {
+        using var scope = scopeFactory.CreateScope();
+
+        var service =
+            scope.ServiceProvider
+                .GetRequiredService<IStoredProductService>();
+        
         var products =
             message.Items
                 .Select(product => new ProductQuantity(product.ProductId, product.Quantity))
                 .ToList();
 
-        var result = await storedProductService.CheckStock(products, token);
+        var result = await service.CheckStock(products, token);
 
         var items = result.Value.Select(item => new StockCheckResult(item.ProductId, item.Difference));
 
