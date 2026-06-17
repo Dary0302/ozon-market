@@ -1,5 +1,4 @@
 using FluentMigrator;
-using ProductService.Domain;
 
 namespace ProductService.Infrastructure.Migrations;
 
@@ -14,7 +13,7 @@ public class CreateProductTableMigration : Migration
             .WithColumn("name").AsString().NotNullable()
             .WithColumn("description").AsString().NotNullable()
             .WithColumn("type").AsInt32().NotNullable()
-            .WithColumn("photo_id").AsGuid();
+            .WithColumn("photo_id").AsGuid().Nullable();
     }
 
     public override void Down()
