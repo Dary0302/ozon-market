@@ -43,7 +43,8 @@ public class StoredProductsControllerTests : IClassFixture<PostgresFixture>
             storedProductRepository,
             storagePointRepository,
             pvzPointRepository,
-            pvzRepository);
+            pvzRepository,
+            storageRepository);
         
         controller = new StoredProductsController(service);
         

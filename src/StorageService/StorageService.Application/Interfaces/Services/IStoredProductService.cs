@@ -10,7 +10,7 @@ public interface IStoredProductService
     
     Task<Result<IEnumerable<ProductQuantity>>> GetStoredProductsInStock(CancellationToken cancellationToken);
     
-    Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken);
 
     Task<Result<DateTime>> GetDeliveryDate(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken);
 
@@ -19,4 +19,6 @@ public interface IStoredProductService
     Task<Result> DecreaseStoredProductQuantity(List<DecreaseQuantity> orderedProducts, CancellationToken cancellationToken);
     
     Task<Result> IncreaseStoredProductQuantity(List<IncreaseQuantity> arrivedProducts, CancellationToken cancellationToken);
+
+    Task<Result> ReturnProducts(IEnumerable<ProductQuantity> returnedProducts, CancellationToken cancellationToken);
 }

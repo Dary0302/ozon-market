@@ -11,7 +11,8 @@ public class StoredProductService(
     IStoredProductRepository storedProductRepository,
     IStoragePointRepository storagePointRepository,
     IPvzPointRepository pvzPointRepository,
-    IPvzRepository pvzRepository) : IStoredProductService
+    IPvzRepository pvzRepository,
+    IStorageRepository storageRepository) : IStoredProductService
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
@@ -38,7 +39,7 @@ public class StoredProductService(
         return Result.Ok(storedProducts);
     }
 
-    public async Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         
@@ -92,7 +93,8 @@ public class StoredProductService(
         return Result.Ok(deliveryTime);
     }
 
-    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, 
+        CancellationToken cancellationToken)
     {
         var pvz = await pvzRepository.Get(pvzId, cancellationToken);
 
@@ -132,7 +134,19 @@ public class StoredProductService(
         
         return Result.Ok();
     }
-    
+
+    public async Task<Result> ReturnProducts(IEnumerable<ProductQuantity> returnedProducts, CancellationToken cancellationToken)
+    {
+        var storages = (await storageRepository.GetAll(cancellationToken)).ToList();
+        
+        var closestStorage = storages[Random.Shared.Next(storages.Count)];
+
+        var products = returnedProducts.Select(product => new IncreaseQuantity(product.ProductId, closestStorage.Id, product.Quantity));
+
+        await storedProductRepository.IncreaseCount(products, cancellationToken);
+        
+        return Result.Ok();
+    }
     
     public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
@@ -181,7 +195,7 @@ public class StoredProductService(
     /// <summary>
     /// Возвращает коллекцию с разницей товаров на складах и заказанных товаров
     /// </summary>
-    private List<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
+    private IEnumerable<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
     {
         var stockCheckResults = storedProducts.Join(orderedProducts,
             storedProduct => storedProduct.ProductId,
@@ -189,7 +203,7 @@ public class StoredProductService(
             (storedProduct, orderedProduct) => new StockCheckResult {
                 ProductId = storedProduct.ProductId,
                 Difference = storedProduct.Quantity - orderedProduct.Quantity,
-            }).ToList();
+            });
 
         return stockCheckResults;
     }
