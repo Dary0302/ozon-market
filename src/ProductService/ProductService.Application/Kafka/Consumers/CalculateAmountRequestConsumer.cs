@@ -4,6 +4,7 @@ using Core.Common.Kafka.Contracts.Dto;
 using Core.Common.Kafka.Contracts.Models;
 using Core.Common.Kafka.Implementations;
 using Core.Common.Kafka.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ProductService.Application.Interfaces;
 
@@ -12,16 +13,16 @@ namespace ProductService.Application.Kafka.Consumers;
 public class CalculateAmountRequestConsumer
     : KafkaConsumerService<CalculateAmountRequest>
 {
-    private readonly IPriceService service;
+    private readonly IServiceScopeFactory scopeFactory;
     private readonly IKafkaProducer producer;
     
     public CalculateAmountRequestConsumer(
         IOptions<KafkaSettings> settings,
-        IPriceService service,
+        IServiceScopeFactory scopeFactory,
         IKafkaProducer producer)
-        : base(settings, KafkaTopics.GetProductsPriceResponses, "product-service")
+        : base(settings, KafkaTopics.CalculateAmountRequests, "product-service")
     {
-        this.service = service;
+        this.scopeFactory = scopeFactory;
         this.producer = producer;
     }
 
@@ -29,6 +30,12 @@ public class CalculateAmountRequestConsumer
         CalculateAmountRequest request,
         CancellationToken ct)
     {
+        using var scope = scopeFactory.CreateScope();
+
+        var service =
+            scope.ServiceProvider
+                .GetRequiredService<IPriceService>();
+
         var result =
             await service.CalculateAmount(
                 request.Items,
@@ -38,7 +45,10 @@ public class CalculateAmountRequestConsumer
             KafkaResponse<CalculateAmountPayload>
                 .Success(
                     request.CorrelationId,
-                    new CalculateAmountPayload{ Amount = result.Value });
+                    new CalculateAmountPayload
+                    {
+                        Amount = result.Value
+                    });
 
         await producer.ProduceAsync(
             KafkaTopics.CalculateAmountResponses,

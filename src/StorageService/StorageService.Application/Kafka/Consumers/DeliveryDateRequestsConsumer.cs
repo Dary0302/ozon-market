@@ -12,7 +12,7 @@ namespace StorageService.Application.Kafka.Consumers;
 
 public class DeliveryDateRequestConsumer(
     IOptions<KafkaSettings> settings,
-    IKafkaProducer<KafkaResponse<GetDeliveryDatePayload>> producer,
+    IKafkaProducer producer,
     IStoredProductService storedProductService)
     : KafkaConsumerService<GetDeliveryDateRequest>(settings, KafkaTopics.DeliveryDateRequests, "storage-service")
 {

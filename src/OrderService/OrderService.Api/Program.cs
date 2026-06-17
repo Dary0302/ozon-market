@@ -9,6 +9,10 @@ var host = Host
     .ConfigureServices((_, services) =>
     {
         services.AddCore(Host.CreateDefaultBuilder(args));
+        services.Configure<HostOptions>(options =>
+        {
+            options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+        });
     })
     .ConfigureWebHostDefaults(builder =>
         builder.UseStartup<Startup>())

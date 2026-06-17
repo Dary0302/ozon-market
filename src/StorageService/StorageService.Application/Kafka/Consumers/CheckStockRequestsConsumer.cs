@@ -12,7 +12,7 @@ namespace StorageService.Application.Kafka.Consumers;
 
 public class CheckStockRequestConsumer(
     IOptions<KafkaSettings> settings,
-    IKafkaProducer<KafkaResponse<CheckStockPayload>> producer,
+    IKafkaProducer producer,
     IStoredProductService storedProductService)
     : KafkaConsumerService<CheckStockRequest>(settings, KafkaTopics.CheckStockRequests, "storage-service")
 {

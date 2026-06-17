@@ -12,7 +12,7 @@ namespace StorageService.Application.Kafka.Consumers;
 
 public class ProductStorageRequestConsumer(
     IOptions<KafkaSettings> settings,
-    IKafkaProducer<KafkaResponse<GetOrderStorageRecordsPayload>> producer,
+    IKafkaProducer producer,
     IStoredProductService storedProductService)
     : KafkaConsumerService<GetOrderStorageRecordsRequest>(settings, KafkaTopics.OrderStorageRecordsRequests, "storage-service")
 {
