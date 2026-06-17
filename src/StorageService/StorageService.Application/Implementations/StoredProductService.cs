@@ -11,7 +11,8 @@ public class StoredProductService(
     IStoredProductRepository storedProductRepository,
     IStoragePointRepository storagePointRepository,
     IPvzPointRepository pvzPointRepository,
-    IPvzRepository pvzRepository) : IStoredProductService
+    IPvzRepository pvzRepository,
+    IStorageRepository storageRepository) : IStoredProductService
 {
     private const string NotEnoughProductExceptionMessage = "Не хватает товара на складе";
     
@@ -38,7 +39,7 @@ public class StoredProductService(
         return Result.Ok(storedProducts);
     }
 
-    public async Task<Result<List<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<StockCheckResult>>> CheckStock(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var productIds = orderedProducts.Select(product => product.ProductId);
         
@@ -92,7 +93,8 @@ public class StoredProductService(
         return Result.Ok(deliveryTime);
     }
 
-    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
+    public async Task<Result<List<DecreaseQuantity>>> GetOrderStoragesRecords(Guid pvzId, List<ProductQuantity> orderedProducts, 
+        CancellationToken cancellationToken)
     {
         var pvz = await pvzRepository.Get(pvzId, cancellationToken);
 
@@ -132,7 +134,19 @@ public class StoredProductService(
         
         return Result.Ok();
     }
-    
+
+    public async Task<Result> ReturnProducts(IEnumerable<ProductQuantity> returnedProducts, CancellationToken cancellationToken)
+    {
+        var storages = (await storageRepository.GetAll(cancellationToken)).ToList();
+        
+        var closestStorage = storages[Random.Shared.Next(storages.Count)];
+
+        var products = returnedProducts.Select(product => new IncreaseQuantity(product.ProductId, closestStorage.Id, product.Quantity));
+
+        await storedProductRepository.IncreaseCount(products, cancellationToken);
+        
+        return Result.Ok();
+    }
     
     public async Task<IEnumerable<StoredProduct>> GetProductsStorages(List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
@@ -162,26 +176,41 @@ public class StoredProductService(
     /// <remarks>
     /// <b>Константы расчета:</b>
     /// <code>
-    /// scale = 100           // масштаб в км/координатам
     /// shiftDuration = 12      // длительность смены водителя
     /// averageSpeed = 70        // средняя скорость в км/ч
     /// </code>
     /// </remarks>
     private static DateTime CalculateDeliveryTime(double farthestStorageDistance)
     {
-        const double scale = 100;
         const double shiftDuration = 12;
         const double averageSpeed = 70;
 
-        var travelTime = farthestStorageDistance * scale / (averageSpeed * shiftDuration);
+        var travelTime = farthestStorageDistance / (averageSpeed * shiftDuration);
         var deliveryTime = DateTime.Now.AddHours(travelTime);
         return deliveryTime;
     }
 
+    public static double Haversine(StoragePoint storagePoint, PvzPoint pvzPoint)
+    {
+        const double earthRadiusKm = 6371.0;
+        double phi1 = ToRadians(storagePoint.Latitude);
+        double phi2 = ToRadians(pvzPoint.Latitude);
+        double dPhi = ToRadians(pvzPoint.Latitude - storagePoint.Latitude);
+        double dLambda = ToRadians(pvzPoint.Longitude - storagePoint.Longitude);
+
+        double a = Math.Sin(dPhi / 2) * Math.Sin(dPhi / 2)
+                   + Math.Cos(phi1) * Math.Cos(phi2)
+                                    * Math.Sin(dLambda / 2) * Math.Sin(dLambda / 2);
+
+        return 2 * earthRadiusKm * Math.Asin(Math.Sqrt(a));
+    }
+
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
+
     /// <summary>
     /// Возвращает коллекцию с разницей товаров на складах и заказанных товаров
     /// </summary>
-    private List<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
+    private IEnumerable<StockCheckResult> CheckStock(List<ProductQuantity> storedProducts,  List<ProductQuantity> orderedProducts)
     {
         var stockCheckResults = storedProducts.Join(orderedProducts,
             storedProduct => storedProduct.ProductId,
@@ -189,7 +218,7 @@ public class StoredProductService(
             (storedProduct, orderedProduct) => new StockCheckResult {
                 ProductId = storedProduct.ProductId,
                 Difference = storedProduct.Quantity - orderedProduct.Quantity,
-            }).ToList();
+            });
 
         return stockCheckResults;
     }
@@ -209,8 +238,7 @@ public class StoredProductService(
                 (
                     product.ProductId,
                     storagePoint.StorageId,
-                    Math.Sqrt(Math.Pow(storagePoint.Longitude - pvzPoint.Longitude, 2) + 
-                                      Math.Pow(storagePoint.Latitude - pvzPoint.Latitude, 2))
+                    Haversine(storagePoint, pvzPoint)
                 ))
             .GroupBy(storage => storage.ProductId)
             .Select(group => group.OrderBy(storage => storage.Distance).First()) 

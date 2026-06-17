@@ -47,9 +47,10 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
         await connection.ExecuteAsync(command);
     }
 
-    public async Task<Price?> GetPrice(
+    public async Task<Price> GetPrice(
         Guid productId,
-        CancellationToken cancellationToken)
+        DateTime? priceDate = null,
+        CancellationToken cancellationToken = default)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -62,6 +63,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                       discount
                   FROM prices
                   WHERE product_id = @productId
+                    AND (@priceDate IS NULL OR date <= @priceDate)
                   ORDER BY date DESC
                   LIMIT 1
                   """;
@@ -73,12 +75,13 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
         var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(command);
 
-        return dao?.ToDomain();
+        return dao?.ToDomain()!;
     }
 
-    public async Task<IEnumerable<Price?>> GetPrices(
+    public async Task<IEnumerable<Price>> GetPrices(
         List<Guid> productIds,
-        CancellationToken cancellationToken)
+        DateTime? priceDate = null,
+        CancellationToken cancellationToken = default)
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
@@ -91,6 +94,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                          discount
                   FROM prices
                   WHERE product_id = ANY(@productIds)
+                    AND (@priceDate IS NULL OR date <= @priceDate)
                   ORDER BY product_id, date DESC
                   """;
 
@@ -101,6 +105,6 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
         var daos = await connection.QueryAsync<PriceDao>(command);
 
-        return daos.Select(dao => dao.ToDomain());
+        return daos.Select(dao => dao.ToDomain()!);
     }
 }

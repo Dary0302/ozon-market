@@ -7,16 +7,16 @@ using ProductService.Domain.Interfaces;
 
 namespace ProductService.Tests.UnitTests;
 
-public class PricingServiceTests
+public class PriceServiceTests
 {
     private Mock<IPriceRepository> repositoryMock = null!;
-    private PricingService service = null!;
+    private PriceService service = null!;
 
     [SetUp]
     public void SetUp()
     {
         repositoryMock = new Mock<IPriceRepository>();
-        service = new PricingService(repositoryMock.Object);
+        service = new PriceService(repositoryMock.Object);
     }
 
     [Test]

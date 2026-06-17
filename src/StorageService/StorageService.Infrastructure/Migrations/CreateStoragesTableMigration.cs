@@ -11,7 +11,7 @@ public class CreateStoragesTableMigration : Migration
         Create.Table("storages")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("address").AsString(255).NotNullable()
-            .WithColumn("point_id").AsString(255).NotNullable();
+            .WithColumn("point_id").AsGuid().NotNullable();
     }
 
     public override void Down()

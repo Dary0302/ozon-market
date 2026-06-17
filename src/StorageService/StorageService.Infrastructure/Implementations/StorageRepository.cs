@@ -54,6 +54,25 @@ public class StorageRepository(IPostgresConnectionFactory postgresConnectionFact
         
         return dao?.ToDomain();
     }
+    
+    public async Task<IEnumerable<Storage>> GetAll(CancellationToken cancellationToken)
+    {
+        await using var connection = postgresConnectionFactory.GetConnection();
+        
+        var sql = """
+                  SELECT id, address, point_id FROM storages
+                  """;
+
+        var command = new CommandDefinition(
+            sql,
+            cancellationToken: cancellationToken);
+        
+        var daos = await connection.QueryAsync<StorageDao>(command);
+        
+        var allPvz = daos.Select(dao => dao.ToDomain());
+
+        return allPvz;
+    }
 
     public async Task Update(Storage storage, CancellationToken cancellationToken)
     {

@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using Core.Common.Kafka.Contracts.Models;
+using FluentResults;
 using OrderService.Application.Models;
 using OrderService.Domain;
 
@@ -8,8 +9,8 @@ public interface IStorageServiceMock
 {
     Task<IEnumerable<StockCheckResult>> CheckStock(IEnumerable<ProductQuantity> items);
     Task<DateTime> GetDeliveryDate(Guid pvzId, IEnumerable<ProductQuantity> products);
-    Task ReduceCountOfProducts(IEnumerable<DecreaseQuantity> items);
-    Task<IEnumerable<ProductStorage>> GetProductStorage(IEnumerable<ProductQuantity> products);
+    Task<Result> ReduceCountOfProducts(IEnumerable<DecreaseQuantity> items);
+    Task<IEnumerable<DecreaseQuantity>> GetOrderStorageRecords(Guid pvzId, IEnumerable<ProductQuantity> products);
     Task<Result> ReturnProductsToStorage(IEnumerable<ProductQuantity> products);
 }
 
@@ -19,9 +20,9 @@ public class StorageServiceMock : IStorageServiceMock
         => Task.FromResult(new List<StockCheckResult>().AsEnumerable());
     public Task<DateTime> GetDeliveryDate(Guid pvzId, IEnumerable<ProductQuantity> productId) 
         => Task.FromResult(DateTime.Now);
-    public Task ReduceCountOfProducts(IEnumerable<DecreaseQuantity> items) => Task.CompletedTask;
-    public Task<IEnumerable<ProductStorage>> GetProductStorage(IEnumerable<ProductQuantity> products) 
-        => Task.FromResult(new List<ProductStorage>().AsEnumerable());
+    public async Task<Result> ReduceCountOfProducts(IEnumerable<DecreaseQuantity> items) => Result.Ok();
+    public Task<IEnumerable<DecreaseQuantity>> GetOrderStorageRecords(Guid pvzId, IEnumerable<ProductQuantity> products) 
+        => Task.FromResult(new List<DecreaseQuantity>().AsEnumerable());
 
     public async Task<Result> ReturnProductsToStorage(IEnumerable<ProductQuantity> products) => Result.Ok();
 }

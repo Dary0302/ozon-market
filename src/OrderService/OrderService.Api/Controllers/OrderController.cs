@@ -47,7 +47,8 @@ public class OrderController(IOrderManagementService service, IBackgroundSimulat
     /// <param name="id">id заказа</param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPatch("{id:guid}/pay")]
     public async Task<ActionResult<Guid>> PayOrder(Guid id, CancellationToken cancellationToken)
     {
@@ -71,7 +72,7 @@ public class OrderController(IOrderManagementService service, IBackgroundSimulat
     /// <param name="id">id заказа</param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPatch("{id:guid}/cancel")]
     public async Task<ActionResult<Guid>> CancelOrder(Guid id, CancellationToken cancellationToken)
     {
@@ -85,7 +86,7 @@ public class OrderController(IOrderManagementService service, IBackgroundSimulat
     /// <param name="id">id заказа, новый статус</param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPatch("{id:guid}")]
     public async Task<ActionResult<Guid>> ChangeOrderStatus(Guid id, 
         [FromBody] StatusDto newStatus, CancellationToken cancellationToken)

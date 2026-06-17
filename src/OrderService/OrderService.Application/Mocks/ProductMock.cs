@@ -1,4 +1,5 @@
-﻿using OrderService.Application.Models;
+﻿using Core.Common.Kafka.Contracts.Models;
+using OrderService.Application.Models;
 using OrderService.Domain;
 
 namespace OrderService.Application.Mocks;

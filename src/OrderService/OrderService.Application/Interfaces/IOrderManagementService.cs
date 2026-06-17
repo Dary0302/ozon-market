@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using Core.Common.Kafka.Contracts.Models;
+using FluentResults;
 using OrderService.Application.Models;
 using OrderService.Domain;
 
@@ -21,5 +22,5 @@ public interface IOrderManagementService
     
     Task<Result<PagedResult<OrderInfoWithPrice>>> GetAllInfo(int pageNumber, int pageSize, CancellationToken cancellationToken);
     
-    Task<Result> Cancel(Guid id, CancellationToken cancellationToken);
+    Task<Result<Guid>> Cancel(Guid id, CancellationToken cancellationToken);
 }

@@ -14,9 +14,6 @@ public static class ApplicationConfiguration
         
         services.AddScoped<ISimulationService, SimulationService>();
         services.AddSingleton<IBackgroundSimulation, BackgroundSimulation>();
-
-        services.AddScoped<IStorageServiceMock, StorageServiceMock>();
-        services.AddScoped<IProductServiceMock, ProductServiceMock>();
         
         return services;
     }

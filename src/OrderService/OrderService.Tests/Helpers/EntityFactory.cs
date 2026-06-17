@@ -1,4 +1,5 @@
-﻿using OrderService.Api.Dto;
+﻿using Core.Common.Kafka.Contracts.Models;
+using OrderService.Api.Dto;
 using OrderService.Application.Models;
 using OrderService.Domain;
 
