@@ -1,3 +1,4 @@
+using Core.Common.Kafka.Contracts.Models;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
@@ -25,10 +26,10 @@ public class PriceServiceTests
         var productId = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrice(productId, CancellationToken.None))
+            .Setup(repository => repository.GetPrice(productId, DateTime.Now + TimeSpan.FromDays(1), CancellationToken.None))
             .ReturnsAsync(new Price(productId, 100, 20));
 
-        var result = await service.GetActualPrice(productId, CancellationToken.None);
+        var result = await service.GetActualPrice(productId, DateTime.Now + TimeSpan.FromDays(1), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(80);
@@ -38,10 +39,11 @@ public class PriceServiceTests
     public async Task GetActualPrice_ShouldFail_WhenPriceNotFound()
     {
         repositoryMock
-            .Setup(repository => repository.GetPrice(It.IsAny<Guid>(), CancellationToken.None))
+            .Setup(repository => repository.GetPrice(It.IsAny<Guid>(), 
+                It.IsAny<DateTime>(), CancellationToken.None))
             .ReturnsAsync((Price?)null);
 
-        var result = await service.GetActualPrice(Guid.NewGuid(), CancellationToken.None);
+        var result = await service.GetActualPrice(Guid.NewGuid(), It.IsAny<DateTime>(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
     }
@@ -96,7 +98,7 @@ public class PriceServiceTests
         var productId2 = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), CancellationToken.None))
+            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), It.IsAny<DateTime>(), CancellationToken.None))
             .ReturnsAsync([new Price(productId1, 100, 10), new Price(productId2, 50, 20)]);
 
         var result = await service.CalculateAmount(
@@ -115,7 +117,7 @@ public class PriceServiceTests
         var productId2 = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), CancellationToken.None))
+            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), It.IsAny<DateTime>(), CancellationToken.None))
             .ReturnsAsync([new Price(productId1, 100, 10)]);
 
         var result = await service.CalculateAmount(
