@@ -46,7 +46,7 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [HttpGet("{pvzId:guid}/date")]
+    [HttpPost("{pvzId:guid}/date")]
     public async Task<ActionResult<DateTime>> GetDeliveryDate(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var deliveryDate = await service.GetDeliveryDate(pvzId, orderedProducts, cancellationToken);
@@ -61,7 +61,7 @@ public class StoredProductsController(IStoredProductService service) : Controlle
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [HttpGet("{pvzId:guid}/records")]
+    [HttpPost("{pvzId:guid}/records")]
     public async Task<ActionResult<List<DecreaseQuantityDto>>> GetStoredProductRecords(Guid pvzId, [FromBody] List<ProductQuantity> orderedProducts, CancellationToken cancellationToken)
     {
         var result = await service.GetOrderStoragesRecords(pvzId, orderedProducts, cancellationToken);

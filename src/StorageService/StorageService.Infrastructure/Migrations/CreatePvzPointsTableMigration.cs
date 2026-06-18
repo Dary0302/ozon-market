@@ -1,3 +1,4 @@
+using System.Data;
 using FluentMigrator;
 using StorageService.Domain;
 
@@ -10,7 +11,8 @@ public class CreatePvzPointsTableMigration : Migration
     {
         Create.Table("pvz_points")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("pvz_id").AsGuid().NotNullable().ForeignKey("pvz", "id")
+            .WithColumn("pvz_id").AsGuid().NotNullable()
+                .ForeignKey("pvz", "id").OnDelete(Rule.Cascade)
             .WithColumn("longitude").AsDouble().NotNullable()
             .WithColumn("latitude").AsDouble().NotNullable();
     }
