@@ -70,7 +70,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
         var command = new CommandDefinition(
             sql,
-            new { productId },
+            new { productId, priceDate },
             cancellationToken: cancellationToken);
 
         var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(command);
@@ -100,7 +100,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
         var command = new CommandDefinition(
             sql,
-            new { productIds },
+            new { productIds, priceDate },
             cancellationToken: cancellationToken);
 
         var daos = await connection.QueryAsync<PriceDao>(command);
