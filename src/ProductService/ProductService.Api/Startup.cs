@@ -15,12 +15,15 @@ public class Startup(IConfiguration configuration)
             .AddOpenApi("ProductService", typeof(ApplicationConfiguration))
             .AddValidation<IValidatorMarker>()
             .AddControllers();
+
+        services.AddCorsPolicy();
     }
 
     public void Configure(IApplicationBuilder app)
     {
         app
             .UseRouting()
+            .UseCorsPolicy()
             .UseOpenApi()
             .UseEndpoints(endpoints =>
             {

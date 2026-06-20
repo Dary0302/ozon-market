@@ -10,6 +10,7 @@ public class Startup(IConfiguration configuration)
     {
         services.AddControllers();
         services.AddValidation();
+        services.AddCorsPolicy();
 
         services.AddApplicationServices()
             .AddOpenApi(
@@ -23,6 +24,7 @@ public class Startup(IConfiguration configuration)
     {
         app
             .UseRouting()
+            .UseCorsPolicy()
             .UseOpenApi()
             .UseEndpoints(endpoints =>
             {

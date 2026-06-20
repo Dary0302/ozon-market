@@ -1,5 +1,5 @@
+using Core.Common.Extensions;
 using Core.Common.Extensions.Validation;
-using StorageService.Api.Extensions;
 using StorageService.Api.Validators;
 using StorageService.Application.Configurations;
 using StorageService.Infrastructure.Configurations;
@@ -13,15 +13,18 @@ public class Startup(IConfiguration configuration)
         services
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
-            .AddOpenApi()
+            .AddOpenApi("StorageService", typeof(ApplicationConfiguration))
             .AddValidation<IValidationMarker>()
             .AddControllers();
+
+        services.AddCorsPolicy();
     }
 
     public void Configure(IApplicationBuilder app)
     {
         app
             .UseRouting()
+            .UseCorsPolicy()
             .UseOpenApi()
             .UseEndpoints(endpoints =>
                 {
