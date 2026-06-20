@@ -14,9 +14,8 @@ public class Startup(IConfiguration configuration)
             .AddApplicationServices()
             .AddOpenApi("ProductService", typeof(ApplicationConfiguration))
             .AddValidation<IValidatorMarker>()
-            .AddControllers();
-
-        services.AddCorsPolicy();
+            .AddControllers()
+            .AddCorsPolicy();
     }
 
     public void Configure(IApplicationBuilder app)
