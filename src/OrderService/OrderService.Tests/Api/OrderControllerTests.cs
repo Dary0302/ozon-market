@@ -325,7 +325,7 @@ public class OrderControllerTests
         var id = Guid.NewGuid();
         serviceMock
             .Setup(s => s.Cancel(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Fail(OrderErrors.InvalidStateForCancel("Created")));
+            .ReturnsAsync(Result.Fail(OrderErrors.InvalidStateForCancel()));
 
         // Act
         var result = await controller.CancelOrder(id, CancellationToken.None);

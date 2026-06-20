@@ -11,6 +11,9 @@ public class Startup(IConfiguration configuration)
         services.AddControllers();
         services.AddValidation();
         services.AddCorsPolicy();
+        
+        services.AddExceptionHandler<ExceptionHandler>();
+        services.AddProblemDetails();
 
         services.AddApplicationServices()
             .AddOpenApi(
@@ -23,6 +26,7 @@ public class Startup(IConfiguration configuration)
     public void Configure(IApplicationBuilder app)
     {
         app
+            .UseExceptionHandler()
             .UseRouting()
             .UseCorsPolicy()
             .UseOpenApi()

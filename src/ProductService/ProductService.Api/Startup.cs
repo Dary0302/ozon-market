@@ -1,5 +1,6 @@
 using Core.Common.Extensions;
 using Core.Common.Extensions.Validation;
+using Core.Common.HttpLogic;
 using ProductService.Api.Validators;
 using ProductService.Application;
 using ProductService.Infrastructure.Configurations;
@@ -12,15 +13,18 @@ public class Startup(IConfiguration configuration)
         services
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
+            .AddCorsPolicy()
+            .AddExceptionHandler<ExceptionHandler>()
+            .AddProblemDetails()
             .AddOpenApi("ProductService", typeof(ApplicationConfiguration))
             .AddValidation<IValidatorMarker>()
-            .AddControllers()
-            .AddCorsPolicy();
+            .AddControllers();
     }
 
     public void Configure(IApplicationBuilder app)
     {
         app
+            .UseExceptionHandler()
             .UseRouting()
             .UseCorsPolicy()
             .UseOpenApi()
