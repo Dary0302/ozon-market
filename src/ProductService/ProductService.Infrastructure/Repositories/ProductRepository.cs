@@ -67,6 +67,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
                                     INNER JOIN prices price
                                         ON price.product_id = product.id
                                     WHERE 1 = 1
+                                    
                                     """);
 
         var parameters = new DynamicParameters();
@@ -86,7 +87,7 @@ public class ProductRepository(IPostgresConnectionFactory postgresConnectionFact
                            AND product.type = ANY(@types)
                            """);
 
-            parameters.Add("types", filter.Types.ToArray());
+            parameters.Add("types", filter.Types.Select(type => (int)type).ToArray());
         }
 
         if (filter.MinPrice.HasValue)
