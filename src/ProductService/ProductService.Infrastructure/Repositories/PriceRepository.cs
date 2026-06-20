@@ -1,3 +1,4 @@
+using System.Text;
 using Core.Common.DbHelpers.Interfaces;
 using Dapper;
 using ProductService.Domain;
@@ -13,30 +14,30 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = """
-                  INSERT INTO prices
-                  (
-                      id,
-                      product_id,
-                      date,
-                      cost,
-                      discount
-                  )
-                  VALUES
-                  (
-                      @Id,
-                      @ProductId,
-                      @Date,
-                      @Cost,
-                      @Discount
-                  )
-                  """;
+        const string sql = """
+                           INSERT INTO prices
+                           (
+                               id,
+                               product_id,
+                               date,
+                               cost,
+                               discount
+                           )
+                           VALUES
+                           (
+                               @Id,
+                               @ProductId,
+                               @Date,
+                               @Cost,
+                               @Discount
+                           )
+                           """;
 
         var command = new CommandDefinition(
             sql,
             new
             {
-                price.Id,
+                Id = Guid.NewGuid(),
                 price.ProductId,
                 price.Date,
                 price.Cost,
@@ -58,26 +59,41 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
                   SELECT
                       id,
                       product_id,
-                      date,
+                      "date",
                       cost,
                       discount
                   FROM prices
                   WHERE product_id = @productId
-                    AND (@priceDate IS NULL OR date <= @priceDate)
-                  ORDER BY date DESC
-                  LIMIT 1
                   """;
+
+        var parameters = new DynamicParameters();
+        parameters.Add("productId", productId);
+
+        if (priceDate.HasValue)
+        {
+            sql += """
+
+                   AND "date" <= @priceDate
+                   """;
+
+            parameters.Add("priceDate", priceDate.Value);
+        }
+
+        sql += """
+
+               ORDER BY "date" DESC
+               LIMIT 1
+               """;
 
         var command = new CommandDefinition(
             sql,
-            new { productId, priceDate },
+            parameters,
             cancellationToken: cancellationToken);
 
         var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(command);
-
         return dao?.ToDomain();
     }
-
+    
     public async Task<IEnumerable<Price>> GetPrices(
         List<Guid> productIds,
         DateTime? priceDate = null,
@@ -85,22 +101,36 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
     {
         await using var connection = postgresConnectionFactory.GetConnection();
 
-        var sql = """
-                  SELECT DISTINCT ON (product_id)
-                         id,
-                         product_id,
-                         date,
-                         cost,
-                         discount
-                  FROM prices
-                  WHERE product_id = ANY(@productIds)
-                    AND (@priceDate IS NULL OR date <= @priceDate)
-                  ORDER BY product_id, date DESC
-                  """;
+        var sql = new StringBuilder("""
+                                    SELECT DISTINCT ON (product_id)
+                                           id,
+                                           product_id,
+                                           "date",
+                                           cost,
+                                           discount
+                                    FROM prices
+                                    WHERE product_id = ANY(@productIds)
+                                    """);
+
+        var parameters = new DynamicParameters();
+        parameters.Add("productIds", productIds);
+
+        if (priceDate.HasValue)
+        {
+            sql.AppendLine("""
+                           AND "date" <= @priceDate
+                           """);
+
+            parameters.Add("priceDate", priceDate.Value);
+        }
+
+        sql.AppendLine("""
+                       ORDER BY product_id, "date" DESC
+                       """);
 
         var command = new CommandDefinition(
-            sql,
-            new { productIds, priceDate },
+            sql.ToString(),
+            parameters,
             cancellationToken: cancellationToken);
 
         var daos = await connection.QueryAsync<PriceDao>(command);
