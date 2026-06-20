@@ -14,7 +14,7 @@ public class PriceService(IPriceRepository priceRepository) : IPriceService
         var productQuantities = products.ToList();
 
         var productIds = productQuantities
-            .Select(x => x.ProductId)
+            .Select(productQuantity => productQuantity.ProductId)
             .ToList();
 
         var prices = (await priceRepository.GetPrices(productIds, null, cancellationToken)).ToList();
@@ -24,13 +24,13 @@ public class PriceService(IPriceRepository priceRepository) : IPriceService
             return Result.Fail(AppError.NotFound("Цена на один или несколько товаров не найдена"));
         }
 
-        var pricesByProductId = prices.ToDictionary(price => price!.ProductId);
+        var pricesByProductId = prices.ToDictionary(price => price.ProductId);
 
         var sum = productQuantities.Sum(product =>
         {
             var price = pricesByProductId[product.ProductId];
 
-            return GetCostWithDiscount(price!) * product.Quantity;
+            return GetCostWithDiscount(price) * product.Quantity;
         });
 
         return Result.Ok(sum);

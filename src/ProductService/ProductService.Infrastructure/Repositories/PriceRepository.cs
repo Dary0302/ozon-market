@@ -47,7 +47,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
         await connection.ExecuteAsync(command);
     }
 
-    public async Task<Price> GetPrice(
+    public async Task<Price?> GetPrice(
         Guid productId,
         DateTime? priceDate = null,
         CancellationToken cancellationToken = default)
@@ -75,7 +75,7 @@ public class PriceRepository(IPostgresConnectionFactory postgresConnectionFactor
 
         var dao = await connection.QueryFirstOrDefaultAsync<PriceDao>(command);
 
-        return dao?.ToDomain()!;
+        return dao?.ToDomain();
     }
 
     public async Task<IEnumerable<Price>> GetPrices(

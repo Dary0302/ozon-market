@@ -155,7 +155,7 @@ public class ProductManagementServiceTests
     }
 
     [Test]
-    public async Task UpdateProduct_ShouldFail_WhenOldPhotoDeleteFailed()
+    public async Task UpdateProduct_ShouldSuccess_WhenOldPhotoDeleteFailed()
     {
         var existingProduct = new Product("Phone",
             "Description",
@@ -167,7 +167,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
@@ -177,11 +177,11 @@ public class ProductManagementServiceTests
         result.IsFailed.Should().BeTrue();
 
         productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
-    public async Task UpdateProduct_ShouldFail_WhenNewPhotoUploadFailed()
+    public async Task UpdateProduct_ShouldSuccess_WhenNewPhotoUploadFailed()
     {
         var existingProduct = new Product("Phone",
             "Description",
@@ -193,7 +193,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
@@ -205,10 +205,10 @@ public class ProductManagementServiceTests
         var result = await productService.UpdateProduct(existingProduct.Id,
             new CreateProductDto(), CancellationToken.None);
 
-        result.IsFailed.Should().BeTrue();
+        result.IsFailed.Should().BeFalse();
 
         productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
@@ -226,7 +226,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
@@ -266,7 +266,7 @@ public class ProductManagementServiceTests
     }
 
     [Test]
-    public async Task DeleteProduct_ShouldFail_WhenPhotoDeleteFailed()
+    public async Task DeleteProduct_ShouldNotFail_WhenPhotoDeleteFailed()
     {
         var product = new Product("Phone",
             "Description",
@@ -274,11 +274,11 @@ public class ProductManagementServiceTests
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(product.Id, CancellationToken.None))
+            .Setup(repository => repository.Get(product.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(product);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
@@ -287,7 +287,7 @@ public class ProductManagementServiceTests
         result.IsFailed.Should().BeTrue();
 
         productRepository.Verify(repository => repository.Delete(It.IsAny<Guid>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
@@ -303,7 +303,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(product);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 

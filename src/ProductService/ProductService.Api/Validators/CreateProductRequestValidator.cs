@@ -18,8 +18,5 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductDto>
             .IsInEnum()
             .NotEqual(ProductType.Undefined)
             .WithMessage("Тип товара некорректный");
-        RuleFor(dto => dto.PhotoData.Length)
-            .GreaterThanOrEqualTo(1)
-            .WithMessage("Фото должно присутствовать");
     }
 }
