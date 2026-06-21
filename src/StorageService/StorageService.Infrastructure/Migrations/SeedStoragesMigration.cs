@@ -70,10 +70,10 @@ public class SeedStoragesMigration : Migration
         );
         
         Insert.IntoTable("pvz_points").Rows(
-            new { id = PvzPoint1, pvz_id = Pvz1, longitude = 37.6155, latitude = 55.7650 },
-            new { id = PvzPoint2, pvz_id = Pvz2, longitude = 30.3200, latitude = 59.9280 },
-            new { id = PvzPoint3, pvz_id = Pvz3, longitude = 49.1100, latitude = 55.7950 },
-            new { id = PvzPoint4, pvz_id = Pvz4, longitude = 82.9200, latitude = 55.0150 },
+            new { id = PvzPoint1, pvz_id = Pvz1, longitude = 34.6155, latitude = 58.7650 },
+            new { id = PvzPoint2, pvz_id = Pvz2, longitude = 25.3200, latitude = 47.9280 },
+            new { id = PvzPoint3, pvz_id = Pvz3, longitude = 37.1100, latitude = 57.7950 },
+            new { id = PvzPoint4, pvz_id = Pvz4, longitude = 78.9200, latitude = 78.0150 },
             new { id = PvzPoint5, pvz_id = Pvz5, longitude = 62.1003, latitude = 57.7840 }
         );
     }

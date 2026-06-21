@@ -178,14 +178,16 @@ public class StoredProductService(
     /// <code>
     /// shiftDuration = 12      // длительность смены водителя
     /// averageSpeed = 70        // средняя скорость в км/ч
+    /// dayHours = 24           // количество часов в сутках
     /// </code>
     /// </remarks>
     private static DateTime CalculateDeliveryTime(double farthestStorageDistance)
     {
         const double shiftDuration = 12;
         const double averageSpeed = 70;
+        const double dayHours = 24;
 
-        var travelTime = farthestStorageDistance / (averageSpeed * shiftDuration);
+        var travelTime = farthestStorageDistance / (averageSpeed * shiftDuration) * dayHours;
         var deliveryTime = DateTime.Now.AddHours(travelTime);
         return deliveryTime;
     }
