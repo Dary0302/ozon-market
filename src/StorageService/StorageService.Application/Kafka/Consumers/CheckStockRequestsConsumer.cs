@@ -43,16 +43,12 @@ public class CheckStockRequestConsumer
 
         var result = await service.CheckStock(products, token);
 
-        var items = result.Value.Select(item => new StockCheckResult(item.ProductId, item.Difference));
-
-        var payload = new CheckStockPayload
-        {
-            IsAvailable = result.IsSuccess,
-            Items = items
-        };
-
         var response = result.IsSuccess
-            ? KafkaResponse<CheckStockPayload>.Success(message.CorrelationId, payload)
+            ? KafkaResponse<CheckStockPayload>.Success(message.CorrelationId, new CheckStockPayload
+            {
+                IsAvailable = true,
+                Items = result.Value.Select(item => new StockCheckResult(item.ProductId, item.Difference))
+            })
             : KafkaResponse<CheckStockPayload>.Failure(message.CorrelationId, "CHECK_STOCK_ERROR", result.Errors.First().Message);
 
         await producer.ProduceAsync(KafkaTopics.CheckStockResponses, response);

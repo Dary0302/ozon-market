@@ -12,8 +12,8 @@ public class OrderErrors
         => AppError.Conflict("Заказ должен быть собран");
     public static AppError MustBeTransferredForDelivery()
         => AppError.Conflict("Заказ должен быть передан в доставку");
-    public static AppError InvalidStateForCancel(string state)
-        => AppError.Conflict($"Заказ не может быть отменен в состоянии '{state}'");
+    public static AppError InvalidStateForCancel()
+        => AppError.Conflict($"Доставленный заказ не может быть отменен");
     public static AppError InsufficientStock(IEnumerable<LackingProduct> products)
     {
         var error = new AppError(ErrorStatus.Conflict, "Недостаточно товаров на складе");

@@ -24,12 +24,13 @@ public class PriceServiceTests
     public async Task GetActualPrice_ShouldApplyDiscount()
     {
         var productId = Guid.NewGuid();
+        var date = DateTime.Now.AddDays(1);
 
         repositoryMock
-            .Setup(repository => repository.GetPrice(productId, DateTime.Now + TimeSpan.FromDays(1), CancellationToken.None))
+            .Setup(repository => repository.GetPrice(productId, date, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Price(productId, 100, 20));
 
-        var result = await service.GetActualPrice(productId, DateTime.Now + TimeSpan.FromDays(1), CancellationToken.None);
+        var result = await service.GetActualPrice(productId, date, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(80);
@@ -98,7 +99,10 @@ public class PriceServiceTests
         var productId2 = Guid.NewGuid();
 
         repositoryMock
-            .Setup(repository => repository.GetPrices(It.IsAny<List<Guid>>(), It.IsAny<DateTime>(), CancellationToken.None))
+            .Setup(repository => repository.GetPrices(
+                It.IsAny<List<Guid>>(),
+                null,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync([new Price(productId1, 100, 10), new Price(productId2, 50, 20)]);
 
         var result = await service.CalculateAmount(

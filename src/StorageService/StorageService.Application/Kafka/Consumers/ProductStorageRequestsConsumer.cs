@@ -42,16 +42,12 @@ public class ProductStorageRequestConsumer
 
         var result = await service.GetOrderStoragesRecords(message.PvzId, products, token);
 
-        var items = result.Value.Select(item => new DecreaseQuantity(item.ProductId, item.StorageId, item.Quantity));
-
-        var payload = new GetOrderStorageRecordsPayload
-        {
-            IsAvailable = result.IsSuccess, 
-            Items = items
-        };
-
         var response = result.IsSuccess
-            ? KafkaResponse<GetOrderStorageRecordsPayload>.Success(message.CorrelationId, payload)
+            ? KafkaResponse<GetOrderStorageRecordsPayload>.Success(message.CorrelationId, new GetOrderStorageRecordsPayload
+            {
+                IsAvailable = true,
+                Items = result.Value.Select(item => new DecreaseQuantity(item.ProductId, item.StorageId, item.Quantity))
+            })
             : KafkaResponse<GetOrderStorageRecordsPayload>.Failure(message.CorrelationId, "PRODUCT_STORAGE_ERROR", result.Errors.First().Message);
 
         await producer.ProduceAsync(KafkaTopics.OrderStorageRecordsResponses, response);

@@ -43,14 +43,12 @@ public class DeliveryDateRequestConsumer
         
         var result = await service.GetDeliveryDate(message.PvzId, products, token);
 
-        var payload = new GetDeliveryDatePayload {
-            IsAvailable = result.IsSuccess, 
-            Date = result.Value
-        };
-        
         var response = result.IsSuccess
-            ? KafkaResponse<GetDeliveryDatePayload>.Success(message.CorrelationId, payload)
-            : KafkaResponse<GetDeliveryDatePayload>.Failure(message.CorrelationId, "DELIVERY_DATE_ERROR", result.Errors.First().Message);
+            ? KafkaResponse<GetDeliveryDatePayload>.Success(
+                message.CorrelationId,
+                new GetDeliveryDatePayload { IsAvailable = true, Date = result.Value })
+            : KafkaResponse<GetDeliveryDatePayload>.Failure(
+                message.CorrelationId, "DELIVERY_DATE_ERROR", result.Errors.First().Message);
 
         await producer.ProduceAsync(KafkaTopics.DeliveryDateResponses, response);
     }

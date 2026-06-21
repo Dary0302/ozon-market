@@ -589,7 +589,7 @@ public class OrderManagementServiceTests
     {
         // Arrange
         var order = EntityFactory.MakeOrder(initialStatus);
-        var expectedMessage = OrderErrors.InvalidStateForCancel(order.Status.ToString()).Message;
+        var expectedMessage = OrderErrors.InvalidStateForCancel().Message;
 
         orderRepositoryMock
             .Setup(r => r.GetById(order.Id, It.IsAny<CancellationToken>()))
