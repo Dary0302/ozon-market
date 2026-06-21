@@ -184,7 +184,7 @@ public class OrderControllerTests
 
         serviceMock
             .Setup(service => service.UpdateStatus(orderId, Status.Paid, CancellationToken.None))
-            .ReturnsAsync(Result.Fail(OrderErrors.MustBeCreated()));
+            .ReturnsAsync(Result.Fail(OrderErrors.InvalidStatusForPay()));
 
         // Act
         var result = await controller.PayOrder(orderId, CancellationToken.None);

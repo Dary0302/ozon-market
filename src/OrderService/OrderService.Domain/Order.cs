@@ -43,7 +43,7 @@ public record Order : BaseEntity
         };
     }
 
-    public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.MustBeCreated);
+    public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.InvalidStatusForPay);
     
     public Result Collect() => Transition(Status.Paid, Status.InAssembly,  OrderErrors.MustBePaid);
     

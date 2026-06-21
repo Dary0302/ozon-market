@@ -4,8 +4,8 @@ namespace OrderService.Domain.Exseptions;
 
 public class OrderErrors
 {
-    public static AppError MustBeCreated()
-        => AppError.Conflict("Заказ должен быть создан");
+    public static AppError InvalidStatusForPay()
+        => AppError.Conflict("Заказ уже оплачен");
     public static AppError MustBePaid()
         => AppError.Conflict("Заказ должен быть оплачен");
     public static AppError MustBeCollected()
