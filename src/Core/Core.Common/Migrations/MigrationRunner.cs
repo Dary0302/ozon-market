@@ -16,7 +16,7 @@ public static class MigrationRunner
 
         var migrationsAssembly = typeof(TMigrationMarker).Assembly;
         
-        var serviceContext = CreateService(connectionString, migrationsAssembly);
+        var serviceContext = CreateService(connectionString, migrationsAssembly, configuration);
         using var scope = serviceContext.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
         
@@ -26,8 +26,9 @@ public static class MigrationRunner
         return host;
     }
 
-    private static IServiceProvider CreateService(string connectionString, Assembly migrationsAssembly)
+    private static IServiceProvider CreateService(string connectionString, Assembly migrationsAssembly, IConfiguration configuration)
         => new ServiceCollection()
+            .AddSingleton(configuration)
             .AddFluentMigratorCore()
             .ConfigureRunner(builder => builder
                 .AddPostgres()

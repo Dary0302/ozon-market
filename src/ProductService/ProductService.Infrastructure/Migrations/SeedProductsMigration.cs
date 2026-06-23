@@ -1,9 +1,13 @@
 using FluentMigrator;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using ProductService.Application.Dto;
+using ProductService.Application.Services;
 
 namespace ProductService.Infrastructure.Migrations;
 
 [Migration(20260423782800, "Seed products and prices")]
-public class SeedProductsMigration : Migration
+public class SeedProductsMigration(IConfiguration config) : Migration
 {
     // Phones
     private static readonly Guid Product1Id  = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -43,8 +47,31 @@ public class SeedProductsMigration : Migration
     private static readonly Guid Product19Id = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
     private static readonly Guid Product20Id = Guid.Parse("ffffffff-0000-0000-0000-000000000002");
 
+    private readonly PhotoService photoService = new(new S3StorageService(config));
+
     public override void Up()
     {
+        var iPhone17PhotoId = GetPhotoId(PicturesForMigration.IPhone17);
+        var samsungGalaxyS26PhotoId = GetPhotoId(PicturesForMigration.SamsungGalaxyS26);
+        var googlePixel10PhotoId = GetPhotoId(PicturesForMigration.GooglePixel10);
+        var iPadProM4PhotoId = GetPhotoId(PicturesForMigration.IPadProM4);
+        var samsungGalaxyTabS10PhotoId = GetPhotoId(PicturesForMigration.SamsungGalaxyTabS10);
+        var microsoftSurfacePro11PhotoId = GetPhotoId(PicturesForMigration.MicrosoftSurfacePro11);
+        var airPodsPro3PhotoId = GetPhotoId(PicturesForMigration.AirPodsPro3);
+        var sonyWh1000Xm6PhotoId = GetPhotoId(PicturesForMigration.SonyWH1000XM6);
+        var macBookProM6PhotoId = GetPhotoId(PicturesForMigration.MacBookProM6);
+        var dellXps15PhotoId = GetPhotoId(PicturesForMigration.DellXPS15);
+        var lenovoThinkPadX1CarbonPhotoId = GetPhotoId(PicturesForMigration.LenovoThinkPadX1Carbon);
+        var samsungQled65PhotoId = GetPhotoId(PicturesForMigration.SamsungQLED65);
+        var lgoled55PhotoId = GetPhotoId(PicturesForMigration.LGOLED55);
+        var appleWatchSeries11PhotoId = GetPhotoId(PicturesForMigration.AppleWatchSeries11);
+        var samsungGalaxyWatch8PhotoId = GetPhotoId(PicturesForMigration.SamsungGalaxyWatch8);
+        var playStation5PhotoId = GetPhotoId(PicturesForMigration.PlayStation5);
+        var xboxSeriesX2PhotoId = GetPhotoId(PicturesForMigration.XboxSeriesX2);
+        var sonyAlphaA7ViPhotoId = GetPhotoId(PicturesForMigration.SonyAlphaA7VI);
+        var lgUltraWide34PhotoId = GetPhotoId(PicturesForMigration.LGUltraWide34);
+        var samsungOdysseyG732PhotoId = GetPhotoId(PicturesForMigration.SamsungOdysseyG732);
+
         Insert.IntoTable("products")
             .InSchema("public")
             .Row(new { 
@@ -52,118 +79,118 @@ public class SeedProductsMigration : Migration
                 name = "iPhone 17",              
                 description = "Apple smartphone",               
                 type = 1, 
-                photo_id = (Guid?)null })
+                photo_id = iPhone17PhotoId })
             .Row(new {
                 id = Product2Id,  
                 name = "Samsung Galaxy S26",      
                 description = "Samsung smartphone",           
                 type = 1, 
-                photo_id = (Guid?)null })
+                photo_id = samsungGalaxyS26PhotoId })
             .Row(new { 
                 id = Product3Id,  
                 name = "Google Pixel 10",        
                 description = "Google smartphone",            
                 type = 1, 
-                photo_id = (Guid?)null })
+                photo_id = googlePixel10PhotoId })
             .Row(new {
                 id = Product4Id,  
                 name = "iPad Pro M4",       
                 description = "Apple tablet",             
-                type = 2, photo_id = (Guid?)null })
+                type = 2, photo_id = iPadProM4PhotoId })
             .Row(new { 
                 id = Product5Id,  
                 name = "Samsung Galaxy Tab S10",   
                 description = "Samsung tablet",     
-                type = 2, photo_id = (Guid?)null })
+                type = 2, photo_id = samsungGalaxyTabS10PhotoId })
             .Row(new { 
                 id = Product6Id, 
                 name = "Microsoft Surface Pro 11",   
                 description = "Microsoft tablet",        
                 type = 2,
-                photo_id = (Guid?)null })
+                photo_id = microsoftSurfacePro11PhotoId })
             .Row(new { 
                 id = Product7Id,  
                 name = "AirPods Pro 3",      
                 description = "Apple wireless headphones",      
-                type = 3, photo_id = (Guid?)null })
+                type = 3, photo_id = airPodsPro3PhotoId })
             .Row(new { 
                 id = Product8Id,  
                 name = "Sony WH-1000XM6",          
                 description = "Sony noise-cancelling headphones",
                 type = 3, 
-                photo_id = (Guid?)null })
+                photo_id = sonyWh1000Xm6PhotoId })
             .Row(new { 
                 id = Product9Id,  
                 name = "MacBook Pro M6",     
                 description = "Apple laptop",             
                 type = 4, 
-                photo_id = (Guid?)null })
+                photo_id = macBookProM6PhotoId })
             .Row(new { 
                 id = Product10Id, 
                 name = "Dell XPS 15",               
                 description = "Dell laptop",      
                 type = 4, 
-                photo_id = (Guid?)null })
+                photo_id = dellXps15PhotoId })
             .Row(new { 
                 id = Product11Id, 
                 name = "Lenovo ThinkPad X1 Carbon",  
                 description = "Lenovo business laptop",       
                 type = 4,
-                photo_id = (Guid?)null })
+                photo_id = lenovoThinkPadX1CarbonPhotoId })
             .Row(new { 
                 id = Product12Id, 
                 name = "Samsung QLED 65",         
                 description = "Samsung 4K QLED TV",      
                 type = 5, 
-                photo_id = (Guid?)null })
+                photo_id = samsungQled65PhotoId })
             .Row(new {
                 id = Product13Id, 
                 name = "LG OLED 55",          
                 description = "LG 4K OLED TV",           
                 type = 5, 
-                photo_id = (Guid?)null })
+                photo_id = lgoled55PhotoId })
             .Row(new { 
                 id = Product14Id, 
                 name = "Apple Watch Series 11",      
                 description = "Apple smartwatch",           
                 type = 6, 
-                photo_id = (Guid?)null })
+                photo_id = appleWatchSeries11PhotoId })
             .Row(new { 
                 id = Product15Id, 
                 name = "Samsung Galaxy Watch 8",    
                 description = "Samsung smartwatch",      
                 type = 6, 
-                photo_id = (Guid?)null })
+                photo_id = samsungGalaxyWatch8PhotoId })
             .Row(new { 
                 id = Product16Id, 
                 name = "PlayStation 5",          
                 description = "Sony gaming console",      
                 type = 7, 
-                photo_id = (Guid?)null })
+                photo_id = playStation5PhotoId })
             .Row(new { 
                 id = Product17Id, 
                 name = "Xbox Series X2",             
                 description = "Microsoft gaming console",       
                 type = 7, 
-                photo_id = (Guid?)null })
+                photo_id = xboxSeriesX2PhotoId })
             .Row(new { 
                 id = Product18Id,
                 name = "Sony Alpha A7 VI",          
                 description = "Sony mirrorless camera",  
                 type = 8, 
-                photo_id = (Guid?)null })
+                photo_id = sonyAlphaA7ViPhotoId })
             .Row(new { 
                 id = Product19Id, 
                 name = "LG UltraWide 34",         
                 description = "LG ultrawide monitor",    
                 type = 9,
-                photo_id = (Guid?)null })
+                photo_id = lgUltraWide34PhotoId })
             .Row(new { 
                 id = Product20Id, 
                 name = "Samsung Odyssey G7 32",   
                 description = "Samsung gaming monitor",        
                 type = 9, 
-                photo_id = (Guid?)null });
+                photo_id = samsungOdysseyG732PhotoId });
 
         Insert.IntoTable("prices")
             .InSchema("public")
@@ -327,6 +354,22 @@ public class SeedProductsMigration : Migration
                 cost =  649.99m, 
                 discount = 0.12m
             });
+    }
+
+    private Guid GetPhotoId(string picture)
+    {
+        var bytes = Convert.FromBase64String(picture);
+        var stream = new MemoryStream(bytes);
+        var file = new FormFile(stream,
+            0,
+            bytes.Length,
+            "file",
+            picture);
+        var photoId = photoService.AddPhotoAsync(new AddPhotoDto
+        {
+            PhotoData = file
+        }, CancellationToken.None).Result.Value;
+        return photoId;
     }
 
     public override void Down()

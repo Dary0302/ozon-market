@@ -12,7 +12,7 @@ public class PhotoController(IPhotoService service, IProductManagementService pr
     /// <summary>
     /// Получение ссылки на фото по id
     /// </summary>
-    /// <param name="productId">Id фото</param>
+    /// <param name="productId">Id продукта</param>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("link/{product-id:guid}")]
@@ -20,13 +20,13 @@ public class PhotoController(IPhotoService service, IProductManagementService pr
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
-        var photoIdResult = await productService.GetProduct(productId, cancellationToken);
-        if (photoIdResult.Value.PhotoId is null)
+        var getProductResult = await productService.GetProduct(productId, cancellationToken);
+        if (getProductResult.IsFailed || getProductResult.Value?.PhotoId is null)
         {
             return NotFound();
         }
 
-        var photoId = photoIdResult.Value.PhotoId.Value;
+        var photoId = getProductResult.Value.PhotoId.Value;
         var photoLinkResult = await service.GetPhotoLinkByIdAsync(photoId, cancellationToken);
         return photoLinkResult.ToActionResult();
     }
