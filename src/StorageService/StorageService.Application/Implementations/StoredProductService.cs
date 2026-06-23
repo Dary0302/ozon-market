@@ -104,12 +104,17 @@ public class StoredProductService(
         }
         
         var storedProducts = (await GetProductsStorages(orderedProducts, cancellationToken)).ToList();
-        
-        var orderStorages = storedProducts.Select(product => new DecreaseQuantity (
-            product.ProductId,
-            product.StorageId,
-            product.Quantity
-        )).ToList();
+
+        var orderStorages = new List<DecreaseQuantity>();
+
+        for (var i = 0; i < storedProducts.Count; i++)
+        {
+            var storedProduct = storedProducts[i];
+            var orderedProduct = orderedProducts[i];
+            var orderStorage = new DecreaseQuantity(storedProduct.ProductId, storedProduct.StorageId, orderedProduct.Quantity);
+
+            orderStorages.Add(orderStorage);
+        }
 
         return orderStorages;
     }
