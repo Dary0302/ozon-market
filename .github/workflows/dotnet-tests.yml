@@ -13,12 +13,8 @@ env:
 
 jobs:
   build-and-test-product-service:
-    name: build-and-test-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [blacksmith-4vcpu-ubuntu-2404]
+    name: product-service
+    runs-on: ubuntu-24.04
 
     defaults:
       run:
@@ -40,15 +36,11 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --configuration Release --no-build --verbosity normal
 
   build-and-test-storage-service:
-    name: build-and-test2-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [blacksmith-4vcpu-ubuntu-2404]
+    name: storage-service
+    runs-on: ubuntu-24.04
 
     defaults:
       run:
@@ -70,15 +62,11 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --configuration Release --no-build --verbosity normal
 
   build-and-test-order-service:
-    name: build-and-test2-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [blacksmith-4vcpu-ubuntu-2404]
+    name: order-service
+    runs-on: ubuntu-24.04
 
     defaults:
       run:
@@ -100,4 +88,4 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --configuration Release --no-build --verbosity normal
