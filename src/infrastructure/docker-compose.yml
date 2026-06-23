@@ -132,10 +132,6 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__DefaultConnection: Host=storage-db-postgres;Port=5432;Database=${STORAGE_POSTGRES_DB};Username=${STORAGE_POSTGRES_USER};Password=${STORAGE_POSTGRES_PASSWORD}
       Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
-      YandexS3__BucketName: ozon-market-s3
-      YandexS3__Path: products
-      YandexS3__SecretKey: YCNH3HvOsuuQrIOjJzhZco6t-JxPy6I5kUIn04q_
-      YandexS3__AccessKey: YCAJEnRUrs7oHlpWDDSxqkoGF
     depends_on:
       storage-db-postgres:
         condition: service_healthy
@@ -175,6 +171,10 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ConnectionStrings__DefaultConnection: Host=product-db-postgres;Port=5432;Database=${PRODUCT_POSTGRES_DB};Username=${PRODUCT_POSTGRES_USER};Password=${PRODUCT_POSTGRES_PASSWORD}
       Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+      YandexS3__BucketName: ozon-market-s3
+      YandexS3__Path: products
+      YandexS3__SecretKey: YCNH3HvOsuuQrIOjJzhZco6t-JxPy6I5kUIn04q_
+      YandexS3__AccessKey: YCAJEnRUrs7oHlpWDDSxqkoGF
     depends_on:
       product-db-postgres:
         condition: service_healthy
