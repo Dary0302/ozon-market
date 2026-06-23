@@ -153,7 +153,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var prices = await productService.GetPrices(request, cancellationToken);
         
         var priceMap = prices.ToDictionary(
-            product => product.ProductId, product => product.Price);
+            product => product.ProductId, product => product.Cost);
         if (!items.All(item => priceMap.ContainsKey(item.ProductId)))
             return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
         
@@ -182,7 +182,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
                 orderInfo.Order.CreatedOn,
                 orderInfo.OrderItems.Select(i => i.ProductId).Distinct());
             var prices = await productService.GetPrices(request, cancellationToken);
-            var priceMap = prices.ToDictionary(p => p.ProductId, p => p.Price);
+            var priceMap = prices.ToDictionary(price => price.ProductId, price => price.Cost);
             var missing = orderInfo.OrderItems
                 .Select(i => i.ProductId)
                 .Where(id => !priceMap.ContainsKey(id))
