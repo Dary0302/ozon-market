@@ -1,0 +1,8 @@
+
+const DEFAULT_SERVER_HOST = '62.113.98.200';
+
+export const API_BASE = {
+  ORDER: process.env.REACT_APP_ORDER_API || `http://${DEFAULT_SERVER_HOST}:5001`,
+  STORAGE: process.env.REACT_APP_STORAGE_API || `http://${DEFAULT_SERVER_HOST}:5002`,
+  PRODUCT: process.env.REACT_APP_PRODUCT_API || `http://${DEFAULT_SERVER_HOST}:5003`,
+};
