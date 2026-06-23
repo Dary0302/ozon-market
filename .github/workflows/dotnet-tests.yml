@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: src/OzonMarket
+        working-directory: src/ProductService
 
     steps:
       - name: Checkout repository
@@ -39,10 +39,10 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-#      - name: Test
-#        run: dotnet test --no-restore --verbosity normal
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
 
-  build-and-test-ozon-market-storage:
+  build-and-test-storage-service:
     name: build-and-test2-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -52,7 +52,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: src/OzonMarketStorage
+        working-directory: src/StorageService
 
     steps:
       - name: Checkout repository
@@ -69,5 +69,35 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-#      - name: Test
-#        run: dotnet test --no-restore --verbosity normal
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+
+  build-and-test-order-service:
+    name: build-and-test2-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [blacksmith-4vcpu-ubuntu-2404]
+
+    defaults:
+      run:
+        working-directory: src/OrderService
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
