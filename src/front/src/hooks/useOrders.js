@@ -8,15 +8,21 @@ const STATUS_MAP = {
   3: 'delivery',
   4: 'delivered',
   5: 'cancelled',
+  6: 'returned',
+  7: 'ready_for_pickup',
   'Created': 'created',
   'Paid': 'paid',
   'Assembling': 'assembling',
   'Delivery': 'delivery',
   'Delivered': 'delivered',
   'Cancelled': 'cancelled',
+  'Returned': 'returned',
+  'ReadyForPickup': 'ready_for_pickup',
+  'Processing': 'assembling',
+  'InDelivery': 'delivery',
 };
 
-const ACTIVE_STATUSES = new Set(['created', 'paid', 'assembling', 'delivery']);
+const ACTIVE_STATUSES = new Set(['created', 'paid', 'assembling', 'delivery', 'ready_for_pickup']);
 
 function mapBackendOrder(backendOrder) {
   const status = STATUS_MAP[backendOrder.status] ?? backendOrder.status?.toLowerCase() ?? 'created';
@@ -121,6 +127,8 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
+      // item.id здесь — реальный UUID товара, полученный от ProductService,
+      // поэтому никакого преобразования не требуется.
       const body = {
         pvzId: pvz.id,
         clientAmount: total,

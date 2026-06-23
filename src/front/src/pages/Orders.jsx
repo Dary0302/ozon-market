@@ -2,13 +2,21 @@ import React, { useState } from 'react';
 import { ORDER_STATUSES } from '../data/mockData';
 
 const STATUS_CONFIG = {
-  created:    { label: 'Заказ создан',       class: 'status-badge--created',    icon: '📝' },
-  paid:       { label: 'Оплачен',            class: 'status-badge--paid',       icon: '💳' },
-  assembling: { label: 'Собирается',         class: 'status-badge--assembling', icon: '📦' },
-  delivery:   { label: 'Передан в доставку', class: 'status-badge--delivery',   icon: '🚚' },
-  delivered:  { label: 'Доставлен',          class: 'status-badge--delivered',  icon: '✅' },
-  cancelled:  { label: 'Отменён',            class: 'status-badge--cancelled',  icon: '❌' },
+  created:          { label: 'Заказ создан',       class: 'status-badge--created',    icon: '📝' },
+  paid:             { label: 'Оплачен',            class: 'status-badge--paid',       icon: '💳' },
+  assembling:       { label: 'Собирается',         class: 'status-badge--assembling', icon: '📦' },
+  ready_for_pickup: { label: 'Готов к выдаче',     class: 'status-badge--assembling', icon: '🏷' },
+  delivery:         { label: 'Передан в доставку', class: 'status-badge--delivery',   icon: '🚚' },
+  delivered:        { label: 'Доставлен',          class: 'status-badge--delivered',  icon: '✅' },
+  cancelled:        { label: 'Отменён',            class: 'status-badge--cancelled',  icon: '❌' },
+  returned:         { label: 'Возврат',            class: 'status-badge--cancelled',  icon: '↩️' },
 };
+
+// Если бэкенд вернёт статус, которого нет в словаре выше — не ломаемся,
+// а показываем сырое значение статуса с нейтральной иконкой.
+function getStatusConfig(status) {
+  return STATUS_CONFIG[status] || { label: status || 'Неизвестно', class: 'status-badge--created', icon: 'ℹ️' };
+}
 
 // Компонент таймера для сборки и доставки
 function OrderTimer({ order }) {
@@ -56,7 +64,7 @@ function OrderTimer({ order }) {
 function OrderCard({ order, onPay, onCancel }) {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
-  const config = STATUS_CONFIG[order.status] || STATUS_CONFIG.created;
+  const config = getStatusConfig(order.status);
   const canCancel = ['assembling', 'delivery'].includes(order.status);
 
   return (

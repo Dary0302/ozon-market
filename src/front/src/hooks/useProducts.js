@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchProducts, fetchProductPrice, fetchPhotoLink } from '../api/productsApi';
 import { fetchStock } from '../api/storageApi';
+import { emojiForType } from '../utils/productVisuals';
 
-const TYPE_EMOJI = ['📦', '📱', '👟', '🍎', '🏠', '🎧', '⚡'];
-
-function emojiForType(type) {
-  return TYPE_EMOJI[type % TYPE_EMOJI.length] || '📦';
-}
-
+// Загружает товары (ProductService) + остатки (StorageService) + цены и фото,
+// и склеивает всё в единый объект, удобный для отображения в каталоге.
 export function useProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,24 +16,35 @@ export function useProducts() {
     try {
       const [rawProducts, stockMap] = await Promise.all([
         fetchProducts(filter),
-        fetchStock().catch(() => ({})),
+        fetchStock().catch(() => ({})), // если остатки не загрузились — не блокируем каталог
       ]);
 
+      // Цены и фото запрашиваем по каждому товару параллельно
       const enriched = await Promise.all(
         rawProducts.map(async (p) => {
-          const [price, photoUrl] = await Promise.all([
+          const [priceInfo, photoUrl] = await Promise.all([
             fetchProductPrice(p.id).catch(() => null),
             fetchPhotoLink(p.photoId).catch(() => null),
           ]);
+
+          const cost = priceInfo?.cost ?? 0;
+          const costWithoutDiscount = priceInfo?.costWithoutDiscount ?? cost;
+          const discountPercent = priceInfo?.discount ?? (
+            costWithoutDiscount > 0
+              ? Math.round((1 - cost / costWithoutDiscount) * 100)
+              : 0
+          );
 
           return {
             id: p.id,
             name: p.name,
             description: p.description,
-            type: p.type,
-            emoji: emojiForType(p.type ?? 0),
+            type: p.type, // строка-категория (имя enum'а на бэкенде)
+            emoji: emojiForType(p.type),
             photoUrl,
-            price: price ?? 0,
+            price: cost,
+            oldPrice: discountPercent > 0 ? costWithoutDiscount : null,
+            discountPercent,
             stock: stockMap[p.id] ?? 0,
           };
         })

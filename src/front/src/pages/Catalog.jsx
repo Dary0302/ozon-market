@@ -7,17 +7,43 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
   const [search, setSearch] = useState('');
   const [priceFrom, setPriceFrom] = useState('');
   const [priceTo, setPriceTo] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]); // категории
+  const [minDiscount, setMinDiscount] = useState(0); // ползунок скидки, 0..100
+
+  // Категории берём динамически из загруженных товаров — у бэкенда
+  // нет отдельного эндпоинта со списком категорий и их подписями,
+  // поле type — это просто строка-имя enum'а на бэкенде.
+  const availableTypes = useMemo(() => {
+    const set = new Set(products.map(p => p.type).filter(Boolean));
+    return Array.from(set).sort();
+  }, [products]);
+
+  const toggleType = (type) => {
+    setSelectedTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchSearch = p.name?.toLowerCase().includes(search.toLowerCase());
       const matchFrom = !priceFrom || p.price >= Number(priceFrom);
       const matchTo = !priceTo || p.price <= Number(priceTo);
-      return matchSearch && matchFrom && matchTo;
+      const matchType = selectedTypes.length === 0 || selectedTypes.includes(p.type);
+      const matchDiscount = minDiscount === 0 || p.discountPercent >= minDiscount;
+      return matchSearch && matchFrom && matchTo && matchType && matchDiscount;
     });
-  }, [products, search, priceFrom, priceTo]);
+  }, [products, search, priceFrom, priceTo, selectedTypes, minDiscount]);
 
-  const hasActiveFilters = search || priceFrom || priceTo;
+  const hasActiveFilters = search || priceFrom || priceTo || selectedTypes.length > 0 || minDiscount > 0;
+
+  const resetFilters = () => {
+    setSearch('');
+    setPriceFrom('');
+    setPriceTo('');
+    setSelectedTypes([]);
+    setMinDiscount(0);
+  };
 
   if (loading) {
     return (
@@ -45,6 +71,24 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
     <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
       {/* Боковая панель с фильтрами */}
       <aside className="filters-sidebar">
+        {availableTypes.length > 0 && (
+          <div className="filters-section">
+            <div className="filters-label">Категории</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {availableTypes.map(type => (
+                <label key={type} className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(type)}
+                    onChange={() => toggleType(type)}
+                  />
+                  <span>{type}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="filters-section">
           <div className="filters-label">Цена, ₽</div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -68,15 +112,30 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
           </div>
         </div>
 
+        <div className="filters-section">
+          <div className="filters-label">
+            Скидка от {minDiscount}%
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="90"
+            step="5"
+            value={minDiscount}
+            onChange={e => setMinDiscount(Number(e.target.value))}
+            className="discount-slider"
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--gray-400)' }}>
+            <span>0%</span>
+            <span>90%</span>
+          </div>
+        </div>
+
         {hasActiveFilters && (
           <button
             className="btn btn--ghost btn--sm btn--full"
             style={{ marginTop: '12px' }}
-            onClick={() => {
-              setSearch('');
-              setPriceFrom('');
-              setPriceTo('');
-            }}
+            onClick={resetFilters}
           >
             Сбросить фильтры
           </button>
@@ -118,6 +177,9 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
                 <div key={product.id} className="card product-card">
                   {/* Картинка — фото с бэкенда, либо эмодзи-заглушка */}
                   <div className="product-img-wrap">
+                    {product.discountPercent > 0 && (
+                      <span className="discount-badge">−{product.discountPercent}%</span>
+                    )}
                     {product.photoUrl ? (
                       <img
                         src={product.photoUrl}
@@ -131,11 +193,21 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
                   </div>
 
                   <div className="product-info">
+                    {product.type && (
+                      <div style={{ fontSize: '11px', color: 'var(--gray-400)', marginBottom: '4px' }}>
+                        {product.type}
+                      </div>
+                    )}
                     <div className="product-name">{product.name}</div>
 
                     {/* Цена */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                       <span className="price">{product.price.toLocaleString('ru-RU')} ₽</span>
+                      {product.oldPrice && (
+                        <span style={{ fontSize: '13px', color: 'var(--gray-400)', textDecoration: 'line-through' }}>
+                          {product.oldPrice.toLocaleString('ru-RU')} ₽
+                        </span>
+                      )}
                     </div>
 
                     {/* Наличие */}
@@ -201,7 +273,24 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
           letter-spacing: 0.8px;
         }
         .filters-section {
-          margin-bottom: 4px;
+          margin-bottom: 18px;
+        }
+        .filter-checkbox {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: var(--gray-700);
+          cursor: pointer;
+        }
+        .filter-checkbox input {
+          width: 15px;
+          height: 15px;
+          cursor: pointer;
+        }
+        .discount-slider {
+          width: 100%;
+          margin: 6px 0;
         }
 
         .products-grid {
@@ -225,6 +314,18 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
         }
         .product-emoji {
           font-size: 64px;
+        }
+        .discount-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: var(--red, #e53935);
+          color: white;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 7px;
+          border-radius: 6px;
+          z-index: 1;
         }
         .product-info {
           padding: 14px;

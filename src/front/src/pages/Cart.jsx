@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fetchPvzList, fetchDeliveryDate } from '../api/storageApi';
 import { fetchProducts, fetchProductPrice, fetchPhotoLink } from '../api/productsApi';
+import { emojiForType } from '../utils/productVisuals';
 
+// Корзина хранит { productId: qty }. Чтобы показать товары —
+// нужно подгрузить карточки этих товаров с бэкенда (имя, цена, фото).
 function useCartProducts(cart) {
   const [productsById, setProductsById] = useState({});
   const [loading, setLoading] = useState(true);
@@ -17,16 +20,18 @@ function useCartProducts(cart) {
     }
     setLoading(true);
 
+    // Берём общий список товаров (каталог обычно небольшой) и фильтруем нужные.
+    // Если каталог большой — можно заменить на point-запросы GET /api/products/{id}.
     fetchProducts({ page: 1, pageSize: 500 })
       .then(async (all) => {
         const needed = all.filter(p => ids.includes(p.id));
         const enriched = await Promise.all(
           needed.map(async (p) => {
-            const [price, photoUrl] = await Promise.all([
-              fetchProductPrice(p.id).catch(() => 0),
+            const [priceInfo, photoUrl] = await Promise.all([
+              fetchProductPrice(p.id).catch(() => null),
               fetchPhotoLink(p.photoId).catch(() => null),
             ]);
-            return { ...p, price: price ?? 0, photoUrl };
+            return { ...p, price: priceInfo?.cost ?? 0, photoUrl, emoji: emojiForType(p.type) };
           })
         );
         if (!cancelled) {

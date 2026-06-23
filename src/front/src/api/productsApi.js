@@ -1,10 +1,14 @@
 import { API_BASE } from '../config/api';
 
+// ============================================================
+// ProductService.Api — товары, цены, фото
+// ============================================================
+
 // POST /api/products — список товаров по фильтру (ProductFilter)
 export async function fetchProducts(filter = {}) {
   const body = {
     name: filter.name || null,
-    types: filter.types || null,
+    types: filter.types && filter.types.length ? filter.types : null,
     minPrice: filter.minPrice ?? null,
     maxPrice: filter.maxPrice ?? null,
     hasDiscount: filter.hasDiscount ?? null,
@@ -23,14 +27,22 @@ export async function fetchProducts(filter = {}) {
   if (!response.ok) {
     throw new Error(`Не удалось загрузить товары: ${response.status}`);
   }
+  return response.json(); // [{ id, name, description, type, photoId }]
+}
+
+// GET /api/products/{product-id} — один товар по id
+export async function fetchProduct(productId) {
+  const response = await fetch(`${API_BASE.PRODUCT}/api/products/${productId}`);
+  if (!response.ok) return null;
   return response.json();
 }
 
-// GET /api/products/prices/{product-id} — текущая цена товара (число)
+// GET /api/products/prices/{product-id} — текущая цена товара
+// Возвращает { productId, cost, discount, costWithoutDiscount, date }
 export async function fetchProductPrice(productId) {
   const response = await fetch(`${API_BASE.PRODUCT}/api/products/prices/${productId}`);
   if (!response.ok) return null;
-  return response.json(); // число
+  return response.json();
 }
 
 // POST /api/products/prices/amount — сумма цен по списку товаров (для пересчёта корзины)
@@ -47,7 +59,7 @@ export async function fetchPricesAmount(items) {
   return response.json(); // число
 }
 
-// GET /api/photos/link/{photo-id} — ссылка на скачивание фото
+// GET /api/photos/link/{product-id} — ссылка на скачивание фото товара
 export async function fetchPhotoLink(photoId) {
   if (!photoId) return null;
   try {

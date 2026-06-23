@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 
+// Корзина хранится в localStorage
+// cart — это объект вида { productId: quantity }
+// Пример: { 1: 2, 5: 1 } — товар 1 в количестве 2шт, товар 5 в количестве 1шт
+
 export function useCart() {
   const [cart, setCart] = useState(() => {
     try {
