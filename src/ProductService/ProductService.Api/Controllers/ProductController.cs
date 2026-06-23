@@ -18,7 +18,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{product-id:guid}")]
-    public async Task<ActionResult<UpdateProductDto>> Get(
+    public async Task<ActionResult<GetProductDto>> Get(
         [FromRoute(Name = "product-id")] Guid productId,
         CancellationToken cancellationToken)
     {
@@ -33,7 +33,7 @@ public class ProductController(IProductManagementService service) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpPost]
-    public async Task<ActionResult<IEnumerable<UpdateProductDto?>>> GetProducts(
+    public async Task<ActionResult<IEnumerable<GetProductDto?>>> GetProducts(
         [FromBody] ProductFilter filter,
         CancellationToken cancellationToken)
     {
