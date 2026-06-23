@@ -13,6 +13,9 @@ public class PhotoServiceTests
     private Mock<IS3StorageService> s3Mock = null!;
     private PhotoService photoService = null!;
 
+    private const string PhotoData =
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+
     [SetUp]
     public void SetUp()
     {
@@ -30,7 +33,7 @@ public class PhotoServiceTests
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(photoId));
 
-        var result = await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = [1, 2, 3] },
+        var result = await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = PhotoData },
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -45,7 +48,7 @@ public class PhotoServiceTests
                     It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
-        var result = await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = [1, 2, 3] },
+        var result = await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = PhotoData },
             CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();

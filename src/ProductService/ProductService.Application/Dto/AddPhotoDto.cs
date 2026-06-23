@@ -4,5 +4,5 @@ namespace ProductService.Application.Dto;
 
 public record AddPhotoDto
 {
-    public IFormFile PhotoData { get; init; }
+    public string PhotoData { get; init; }
 }

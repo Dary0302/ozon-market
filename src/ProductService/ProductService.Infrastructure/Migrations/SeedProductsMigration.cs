@@ -47,7 +47,7 @@ public class SeedProductsMigration(IConfiguration config) : Migration
     private static readonly Guid Product19Id = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
     private static readonly Guid Product20Id = Guid.Parse("ffffffff-0000-0000-0000-000000000002");
 
-    private readonly PhotoService photoService = new(new S3StorageService(config));
+    private readonly S3StorageService storageService = new S3StorageService(config);
 
     public override void Up()
     {
@@ -360,16 +360,7 @@ public class SeedProductsMigration(IConfiguration config) : Migration
     {
         var bytes = Convert.FromBase64String(picture);
         var stream = new MemoryStream(bytes);
-        var file = new FormFile(stream,
-            0,
-            bytes.Length,
-            "file",
-            picture);
-        var photoId = photoService.AddPhotoAsync(new AddPhotoDto
-        {
-            PhotoData = file
-        }, CancellationToken.None).Result.Value;
-        return photoId;
+        return storageService.SaveImageAsync(stream, CancellationToken.None).Result.Value;
     }
 
     public override void Down()
