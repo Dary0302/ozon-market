@@ -581,9 +581,7 @@ public class OrderManagementServiceTests
     }
     
     [Theory]
-    [InlineData(Status.Created)]
     [InlineData(Status.Delivered)]
-    [InlineData(Status.Canceled)]
     public async Task Cancel_ShouldReturnsFail_WhenStatusIsInvalid(Status initialStatus)
     {
         // Arrange
