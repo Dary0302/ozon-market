@@ -35,7 +35,7 @@ public class ProductRepositoryTests
         var product = new Product(
             "Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
         
         await repository.Add(product, CancellationToken.None);
@@ -86,7 +86,7 @@ public class ProductRepositoryTests
         var product = new Product(
             "Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         await repository.Add(product, CancellationToken.None);
@@ -94,7 +94,7 @@ public class ProductRepositoryTests
         var updatedProduct = new Product(
             "Laptop",
             "Updated description",
-            ProductType.Bed,
+            ProductType.Phone,
             Guid.NewGuid());
 
         await repository.Update(product.Id, updatedProduct, CancellationToken.None);
@@ -117,7 +117,7 @@ public class ProductRepositoryTests
         var product = new Product(
             "Phone",
             "Description",
-            ProductType.Toy,
+            ProductType.Phone,
             Guid.NewGuid());
 
         await repository.Update(id, product, CancellationToken.None);

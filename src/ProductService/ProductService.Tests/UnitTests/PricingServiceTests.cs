@@ -33,7 +33,13 @@ public class PriceServiceTests
         var result = await service.GetActualPrice(productId, date, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(80);
+        result.Value.Should().BeEquivalentTo(new ProductPrice(
+                productId, 
+                80.0m, 
+                20m, 
+                100.0, 
+                result.Value.Date),
+            options => options.Excluding(x => x.Date));
     }
 
     [Test]

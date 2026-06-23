@@ -31,7 +31,7 @@ public class ProductManagementServiceTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -63,7 +63,7 @@ public class ProductManagementServiceTests
         {
             new("Phone",
                 "Description",
-                ProductType.Table,
+                ProductType.Tablet,
                 Guid.NewGuid())
         };
 
@@ -101,7 +101,7 @@ public class ProductManagementServiceTests
 
         var dto = new CreateProductDto
         {
-            Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
+            Name = "Phone", Description = "Description", Type = ProductType.Tablet, PhotoData = [1, 2, 3]
         };
 
         var result = await productService.AddProduct(dto, CancellationToken.None);
@@ -126,7 +126,7 @@ public class ProductManagementServiceTests
 
         var dto = new CreateProductDto
         {
-            Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
+            Name = "Phone", Description = "Description", Type = ProductType.Tablet, PhotoData = [1, 2, 3]
         };
 
         var result = await productService.AddProduct(dto, CancellationToken.None);
@@ -159,7 +159,7 @@ public class ProductManagementServiceTests
     {
         var existingProduct = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -185,7 +185,7 @@ public class ProductManagementServiceTests
     {
         var existingProduct = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -216,7 +216,7 @@ public class ProductManagementServiceTests
     {
         var existingProduct = new Product("Old",
             "OldDescription",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         var newPhotoId = Guid.NewGuid();
@@ -270,7 +270,7 @@ public class ProductManagementServiceTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -295,7 +295,7 @@ public class ProductManagementServiceTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
