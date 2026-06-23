@@ -33,7 +33,7 @@ public class PriceController(IPriceService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{product-id:guid}")]
-    public async Task<ActionResult<decimal>> Get(
+    public async Task<ActionResult<ProductPrice>> Get(
         [FromRoute(Name = "product-id")] Guid productId,
         [FromQuery(Name = "price-date")] DateTime? priceDate = null,
         CancellationToken cancellationToken = default)
