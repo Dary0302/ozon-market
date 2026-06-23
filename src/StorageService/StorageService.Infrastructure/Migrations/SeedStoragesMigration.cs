@@ -29,11 +29,43 @@ public class SeedStoragesMigration : Migration
     private static readonly Guid PvzPoint4 = new("a4000000-0000-0000-0000-000000000004");
     private static readonly Guid PvzPoint5 = new("a4000000-0000-0000-0000-000000000005");
     
-    private static readonly Guid Product1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    private static readonly Guid Product2 = Guid.Parse("22222222-2222-2222-2222-222222222222");
-    private static readonly Guid Product3 = Guid.Parse("33333333-3333-3333-3333-333333333333");
-    private static readonly Guid Product4 = Guid.Parse("44444444-4444-4444-4444-444444444444");
-    private static readonly Guid Product5 = Guid.Parse("55555555-5555-5555-5555-555555555555");
+    // Phones
+    private static readonly Guid Product1Id  = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid Product2Id  = Guid.Parse("22222222-2222-2222-2222-222222222222");
+    private static readonly Guid Product3Id  = Guid.Parse("33333333-3333-3333-3333-333333333333");
+
+    // Tablets 
+    private static readonly Guid Product4Id  = Guid.Parse("44444444-4444-4444-4444-444444444444");
+    private static readonly Guid Product5Id  = Guid.Parse("55555555-5555-5555-5555-555555555555");
+    private static readonly Guid Product6Id  = Guid.Parse("66666666-6666-6666-6666-666666666666");
+
+    // Headphones 
+    private static readonly Guid Product7Id  = Guid.Parse("77777777-7777-7777-7777-777777777777");
+    private static readonly Guid Product8Id  = Guid.Parse("88888888-8888-8888-8888-888888888888");
+
+    // Laptops
+    private static readonly Guid Product9Id  = Guid.Parse("99999999-9999-9999-9999-999999999999");
+    private static readonly Guid Product10Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
+    private static readonly Guid Product11Id = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+
+    // TVs 
+    private static readonly Guid Product12Id = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000001");
+    private static readonly Guid Product13Id = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
+
+    // Smartwatches
+    private static readonly Guid Product14Id = Guid.Parse("cccccccc-0000-0000-0000-000000000001");
+    private static readonly Guid Product15Id = Guid.Parse("cccccccc-0000-0000-0000-000000000002");
+
+    // Consoles
+    private static readonly Guid Product16Id = Guid.Parse("dddddddd-0000-0000-0000-000000000001");
+    private static readonly Guid Product17Id = Guid.Parse("dddddddd-0000-0000-0000-000000000002");
+
+    // Cameras
+    private static readonly Guid Product18Id = Guid.Parse("eeeeeeee-0000-0000-0000-000000000001");
+
+    // Monitors
+    private static readonly Guid Product19Id = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
+    private static readonly Guid Product20Id = Guid.Parse("ffffffff-0000-0000-0000-000000000002");
 
     public override void Up()
     {
@@ -54,11 +86,26 @@ public class SeedStoragesMigration : Migration
         );
         
         Insert.IntoTable("stored_products").Rows(
-            new { product_id = Product1, storage_id = Storage1, quantity = 100 },
-            new { product_id = Product2, storage_id = Storage2, quantity = 50  },
-            new { product_id = Product3, storage_id = Storage3, quantity = 200 },
-            new { product_id = Product4, storage_id = Storage4, quantity = 75  },
-            new { product_id = Product5, storage_id = Storage5, quantity = 43  }
+            new { product_id = Product1Id, storage_id = Storage1, quantity = 100 },
+            new { product_id = Product2Id, storage_id = Storage2, quantity = 50  },
+            new { product_id = Product3Id, storage_id = Storage3, quantity = 200 },
+            new { product_id = Product4Id, storage_id = Storage4, quantity = 75  },
+            new { product_id = Product5Id, storage_id = Storage5, quantity = 43  },
+            new { product_id = Product6Id, storage_id = Storage1, quantity = 17 },
+            new { product_id = Product7Id, storage_id = Storage2, quantity = 33  },
+            new { product_id = Product8Id, storage_id = Storage3, quantity = 260 },
+            new { product_id = Product9Id, storage_id = Storage4, quantity = 5  },
+            new { product_id = Product10Id, storage_id = Storage5, quantity = 473  },
+            new { product_id = Product11Id, storage_id = Storage1, quantity = 106 },
+            new { product_id = Product12Id, storage_id = Storage2, quantity = 53  },
+            new { product_id = Product13Id, storage_id = Storage3, quantity = 330 },
+            new { product_id = Product14Id, storage_id = Storage4, quantity = 15  },
+            new { product_id = Product15Id, storage_id = Storage5, quantity = 84  },
+            new { product_id = Product16Id, storage_id = Storage1, quantity = 70 },
+            new { product_id = Product17Id, storage_id = Storage2, quantity = 530  },
+            new { product_id = Product18Id, storage_id = Storage3, quantity = 60 },
+            new { product_id = Product19Id, storage_id = Storage4, quantity = 41  },
+            new { product_id = Product20Id, storage_id = Storage5, quantity = 79  }
         );
         
         Insert.IntoTable("pvz").Rows(
