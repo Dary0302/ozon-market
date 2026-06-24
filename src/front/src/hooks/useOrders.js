@@ -1,31 +1,49 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE } from '../config/api';
+import { fetchProduct, fetchPhotoLink } from '../api/productsApi';
+import { emojiForType } from '../utils/productVisuals';
 
-const STATUS_MAP = {
-  0: 'created',
-  1: 'paid',
-  2: 'assembling',
-  3: 'delivery',
-  4: 'delivered',
-  5: 'cancelled',
-  6: 'returned',
-  7: 'ready_for_pickup',
-  'Created': 'created',
-  'Paid': 'paid',
-  'Assembling': 'assembling',
-  'Delivery': 'delivery',
-  'Delivered': 'delivered',
-  'Cancelled': 'cancelled',
-  'Returned': 'returned',
-  'ReadyForPickup': 'ready_for_pickup',
-  'Processing': 'assembling',
-  'InDelivery': 'delivery',
-};
+const ACTIVE_STATUSES = new Set(['Created', 'Paid', 'InAssembly', 'TransferredForDelivery']);
 
-const ACTIVE_STATUSES = new Set(['created', 'paid', 'assembling', 'delivery', 'ready_for_pickup']);
+const productInfoCache = new Map();
+
+async function getProductInfo(productId) {
+  if (productInfoCache.has(productId)) {
+    return productInfoCache.get(productId);
+  }
+  const promise = (async () => {
+    try {
+      const product = await fetchProduct(productId);
+      if (!product) {
+        return { name: `Товар ${productId.slice(0, 8)}...`, photoUrl: null, emoji: '📦' };
+      }
+      const photoUrl = await fetchPhotoLink(product.id).catch(() => null);
+      return {
+        name: product.name || `Товар ${productId.slice(0, 8)}...`,
+        photoUrl,
+        emoji: emojiForType(product.type),
+      };
+    } catch {
+      return { name: `Товар ${productId.slice(0, 8)}...`, photoUrl: null, emoji: '📦' };
+    }
+  })();
+  productInfoCache.set(productId, promise);
+  return promise;
+}
+
+// Догружает название и фото для каждой позиции заказа
+async function enrichOrderItems(order) {
+  const items = await Promise.all(
+    order.items.map(async (item) => {
+      const info = await getProductInfo(item.id);
+      return { ...item, name: info.name, photoUrl: info.photoUrl, emoji: info.emoji };
+    })
+  );
+  return { ...order, items };
+}
 
 function mapBackendOrder(backendOrder) {
-  const status = STATUS_MAP[backendOrder.status] ?? backendOrder.status?.toLowerCase() ?? 'created';
+  const status = backendOrder.status || 'Created';
   return {
     id: backendOrder.id,
     date: backendOrder.createdOn
@@ -64,7 +82,9 @@ export function useOrders() {
       }
       const data = await response.json();
       const items = data.items ?? data ?? [];
-      setOrders(items.map(mapBackendOrder));
+      const mapped = items.map(mapBackendOrder);
+      const enriched = await Promise.all(mapped.map(enrichOrderItems));
+      setOrders(enriched);
     } catch (err) {
       console.error('fetchAllOrders error:', err);
       setError(err.message);
@@ -77,7 +97,7 @@ export function useOrders() {
       const response = await fetch(`${API_BASE.ORDER}/api/orders/${orderId}/details`);
       if (!response.ok) return null;
       const data = await response.json();
-      return mapBackendOrder(data);
+      return await enrichOrderItems(mapBackendOrder(data));
     } catch (err) {
       console.error('fetchOrder error:', err);
       return null;
@@ -127,8 +147,6 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      // item.id здесь — реальный UUID товара, полученный от ProductService,
-      // поэтому никакого преобразования не требуется.
       const body = {
         pvzId: pvz.id,
         clientAmount: total,
@@ -154,7 +172,7 @@ export function useOrders() {
       const optimisticOrder = {
         id: newOrderId,
         date: new Date().toLocaleString('ru-RU'),
-        status: 'created',
+        status: 'Created',
         pvzId: pvz.id,
         pvz: pvz.name,
         total,
@@ -193,7 +211,7 @@ export function useOrders() {
         throw new Error(`Не удалось оплатить заказ: ${response.status} ${errText}`);
       }
       setOrders(prev =>
-        prev.map(o => (o.id === orderId ? { ...o, status: 'paid' } : o))
+        prev.map(o => (o.id === orderId ? { ...o, status: 'Paid' } : o))
       );
       setTimeout(fetchAllOrders, 2000);
     } catch (err) {
@@ -214,7 +232,7 @@ export function useOrders() {
         throw new Error(`Не удалось отменить заказ: ${response.status} ${errText}`);
       }
       setOrders(prev =>
-        prev.map(o => (o.id === orderId ? { ...o, status: 'cancelled' } : o))
+        prev.map(o => (o.id === orderId ? { ...o, status: 'Cancelled' } : o))
       );
       setTimeout(fetchAllOrders, 1000);
     } catch (err) {

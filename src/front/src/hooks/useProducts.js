@@ -3,8 +3,6 @@ import { fetchProducts, fetchProductPrice, fetchPhotoLink } from '../api/product
 import { fetchStock } from '../api/storageApi';
 import { emojiForType } from '../utils/productVisuals';
 
-// Загружает товары (ProductService) + остатки (StorageService) + цены и фото,
-// и склеивает всё в единый объект, удобный для отображения в каталоге.
 export function useProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,15 +14,14 @@ export function useProducts() {
     try {
       const [rawProducts, stockMap] = await Promise.all([
         fetchProducts(filter),
-        fetchStock().catch(() => ({})), // если остатки не загрузились — не блокируем каталог
+        fetchStock().catch(() => ({})),
       ]);
 
-      // Цены и фото запрашиваем по каждому товару параллельно
       const enriched = await Promise.all(
         rawProducts.map(async (p) => {
           const [priceInfo, photoUrl] = await Promise.all([
             fetchProductPrice(p.id).catch(() => null),
-            fetchPhotoLink(p.photoId).catch(() => null),
+            fetchPhotoLink(p.id).catch(() => null),
           ]);
 
           const cost = priceInfo?.cost ?? 0;
@@ -39,7 +36,7 @@ export function useProducts() {
             id: p.id,
             name: p.name,
             description: p.description,
-            type: p.type, // строка-категория (имя enum'а на бэкенде)
+            type: p.type,
             emoji: emojiForType(p.type),
             photoUrl,
             price: cost,

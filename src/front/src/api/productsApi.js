@@ -27,7 +27,7 @@ export async function fetchProducts(filter = {}) {
   if (!response.ok) {
     throw new Error(`Не удалось загрузить товары: ${response.status}`);
   }
-  return response.json(); // [{ id, name, description, type, photoId }]
+  return response.json();
 }
 
 // GET /api/products/{product-id} — один товар по id
@@ -38,7 +38,6 @@ export async function fetchProduct(productId) {
 }
 
 // GET /api/products/prices/{product-id} — текущая цена товара
-// Возвращает { productId, cost, discount, costWithoutDiscount, date }
 export async function fetchProductPrice(productId) {
   const response = await fetch(`${API_BASE.PRODUCT}/api/products/prices/${productId}`);
   if (!response.ok) return null;

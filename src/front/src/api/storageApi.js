@@ -19,8 +19,7 @@ export async function fetchStock() {
   if (!response.ok) {
     throw new Error(`Не удалось загрузить остатки: ${response.status}`);
   }
-  const data = await response.json(); // [{ productId, quantity }]
-  // Превращаем в Map для удобного поиска: productId -> quantity
+  const data = await response.json();
   const stockMap = {};
   data.forEach(item => {
     stockMap[item.productId] = item.quantity;
@@ -30,7 +29,6 @@ export async function fetchStock() {
 
 // POST /api/stored-products/{pvzId}/date — расчётная дата доставки для списка товаров
 export async function fetchDeliveryDate(pvzId, items) {
-  // items: [{ productId, quantity }]
   const response = await fetch(`${API_BASE.STORAGE}/api/stored-products/${pvzId}/date`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -39,5 +37,5 @@ export async function fetchDeliveryDate(pvzId, items) {
   if (!response.ok) {
     throw new Error(`Не удалось рассчитать дату доставки: ${response.status}`);
   }
-  return response.json(); // ISO date-time строка
+  return response.json();
 }

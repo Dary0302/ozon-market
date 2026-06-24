@@ -1,71 +1,27 @@
 import React, { useState } from 'react';
-import { ORDER_STATUSES } from '../data/mockData';
 
 const STATUS_CONFIG = {
-  created:          { label: 'Заказ создан',       class: 'status-badge--created',    icon: '📝' },
-  paid:             { label: 'Оплачен',            class: 'status-badge--paid',       icon: '💳' },
-  assembling:       { label: 'Собирается',         class: 'status-badge--assembling', icon: '📦' },
-  ready_for_pickup: { label: 'Готов к выдаче',     class: 'status-badge--assembling', icon: '🏷' },
-  delivery:         { label: 'Передан в доставку', class: 'status-badge--delivery',   icon: '🚚' },
-  delivered:        { label: 'Доставлен',          class: 'status-badge--delivered',  icon: '✅' },
-  cancelled:        { label: 'Отменён',            class: 'status-badge--cancelled',  icon: '❌' },
-  returned:         { label: 'Возврат',            class: 'status-badge--cancelled',  icon: '↩️' },
+  Created:                { label: 'Заказ создан',       class: 'status-badge--created',    icon: '📝' },
+  Paid:                   { label: 'Оплачен',            class: 'status-badge--paid',       icon: '💳' },
+  InAssembly:             { label: 'Собирается',         class: 'status-badge--assembling', icon: '📦' },
+  TransferredForDelivery: { label: 'Передан в доставку', class: 'status-badge--delivery',   icon: '🚚' },
+  Delivered:              { label: 'Доставлен',          class: 'status-badge--delivered',  icon: '✅' },
+  Canceled:              { label: 'Отменён',            class: 'status-badge--canceled',  icon: '❌' },
 };
 
-// Если бэкенд вернёт статус, которого нет в словаре выше — не ломаемся,
-// а показываем сырое значение статуса с нейтральной иконкой.
 function getStatusConfig(status) {
   return STATUS_CONFIG[status] || { label: status || 'Неизвестно', class: 'status-badge--created', icon: 'ℹ️' };
 }
 
-// Компонент таймера для сборки и доставки
-function OrderTimer({ order }) {
-  if (order.status === 'assembling' && order.assembleEnd) {
-    const remaining = Math.max(0, Math.ceil((order.assembleEnd - Date.now()) / 1000));
-    const total = 10;
-    const elapsed = total - remaining;
-    const pct = Math.min(100, (elapsed / total) * 100);
-
-    return (
-      <div className="timer-block">
-        <div className="timer-label">
-          ⏱ Сборка заказа: <strong>{remaining} сек.</strong>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-bar__fill" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (order.status === 'delivery' && order.deliveryEnd) {
-    const remaining = Math.max(0, Math.ceil((order.deliveryEnd - Date.now()) / 1000));
-    const totalSec = (order.deliveryDays || 2) * 6;
-    const elapsed = totalSec - remaining;
-    const pct = Math.min(100, (elapsed / totalSec) * 100);
-    const daysLeft = Math.ceil(remaining / 6);
-
-    return (
-      <div className="timer-block">
-        <div className="timer-label">
-          🚚 Доставка: осталось ~<strong>{daysLeft} {daysLeft === 1 ? 'день' : daysLeft < 5 ? 'дня' : 'дней'}</strong>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-bar__fill" style={{ width: `${pct}%`, background: '#2e7d32' }} />
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
+const CANCELLABLE_STATUSES = new Set(['Created', 'Paid', 'InAssembly', 'TransferredForDelivery']);
 
 // Одна карточка заказа
 function OrderCard({ order, onPay, onCancel }) {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const config = getStatusConfig(order.status);
-  const canCancel = ['assembling', 'delivery'].includes(order.status);
+  const canPay = order.status === 'Created';
+  const canCancel = CANCELLABLE_STATUSES.has(order.status);
 
   return (
     <div className="order-card">
@@ -104,9 +60,6 @@ function OrderCard({ order, onPay, onCancel }) {
       {/* Раскрытое тело карточки */}
       {isOpen && (
         <div className="order-body">
-          {/* Таймер */}
-          <OrderTimer order={order} />
-
           {/* Состав заказа */}
           <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '12px' }}>
             📋 Состав заказа
@@ -116,7 +69,16 @@ function OrderCard({ order, onPay, onCancel }) {
               <div key={item.id} className="order-item-row">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div className="order-item-img">
-                    <span style={{ fontSize: '24px' }}>{item.emoji}</span>
+                    {item.photoUrl ? (
+                      <img
+                        src={item.photoUrl}
+                        alt={item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '24px' }}>{item.emoji}</span>
+                    )}
                   </div>
                   <div>
                     <div style={{ fontWeight: 500, fontSize: '14px' }}>{item.name}</div>
@@ -159,7 +121,7 @@ function OrderCard({ order, onPay, onCancel }) {
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {order.status === 'created' && (
+              {canPay && (
                 <button className="btn btn--primary" onClick={() => onPay(order.id)}>
                   💳 Оплатить заказ
                 </button>
@@ -272,17 +234,7 @@ export default function Orders({ orders, onPay, onCancel }) {
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-        }
-        .timer-block {
-          background: var(--blue-light);
-          border-radius: 8px;
-          padding: 12px 14px;
-          margin-bottom: 16px;
-        }
-        .timer-label {
-          font-size: 13px;
-          color: var(--blue-dark);
-          margin-bottom: 6px;
+          overflow: hidden;
         }
       `}</style>
     </div>

@@ -3,8 +3,6 @@ import { fetchPvzList, fetchDeliveryDate } from '../api/storageApi';
 import { fetchProducts, fetchProductPrice, fetchPhotoLink } from '../api/productsApi';
 import { emojiForType } from '../utils/productVisuals';
 
-// Корзина хранит { productId: qty }. Чтобы показать товары —
-// нужно подгрузить карточки этих товаров с бэкенда (имя, цена, фото).
 function useCartProducts(cart) {
   const [productsById, setProductsById] = useState({});
   const [loading, setLoading] = useState(true);
@@ -20,8 +18,6 @@ function useCartProducts(cart) {
     }
     setLoading(true);
 
-    // Берём общий список товаров (каталог обычно небольшой) и фильтруем нужные.
-    // Если каталог большой — можно заменить на point-запросы GET /api/products/{id}.
     fetchProducts({ page: 1, pageSize: 500 })
       .then(async (all) => {
         const needed = all.filter(p => ids.includes(p.id));

@@ -7,12 +7,9 @@ export default function Catalog({ cart, onAddToCart, onIncreaseQty, onDecreaseQt
   const [search, setSearch] = useState('');
   const [priceFrom, setPriceFrom] = useState('');
   const [priceTo, setPriceTo] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState([]); // категории
-  const [minDiscount, setMinDiscount] = useState(0); // ползунок скидки, 0..100
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [minDiscount, setMinDiscount] = useState(0);
 
-  // Категории берём динамически из загруженных товаров — у бэкенда
-  // нет отдельного эндпоинта со списком категорий и их подписями,
-  // поле type — это просто строка-имя enum'а на бэкенде.
   const availableTypes = useMemo(() => {
     const set = new Set(products.map(p => p.type).filter(Boolean));
     return Array.from(set).sort();
