@@ -59,14 +59,14 @@ public class StorageController(IStorageService service) : ControllerBase
     /// <summary>
     /// Удалении информации о складе
     /// </summary>
-    /// <param name="pointId"></param>
+    /// <param name="id"></param>
     /// <returns></returns>
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    [HttpDelete("{pointId:guid}")]
-    public async Task<ActionResult> DeleteStorage(Guid pointId, CancellationToken cancellationToken)
+    [HttpDelete("{id:guid}")]
+    public async Task<ActionResult> DeleteStorage(Guid id, CancellationToken cancellationToken)
     {
-        var result = await service.DeleteStorage(pointId, cancellationToken);
+        var result = await service.DeleteStorage(id, cancellationToken);
         return result.ToActionResult();
     }
 }

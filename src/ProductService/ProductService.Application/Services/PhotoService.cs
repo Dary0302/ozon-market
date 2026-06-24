@@ -11,7 +11,8 @@ public class PhotoService(IS3StorageService s3StorageService) : IPhotoService
 
     public async Task<Result<Guid>> AddPhotoAsync(AddPhotoDto addPhotoDto, CancellationToken cancellationToken)
     {
-        var stream = new MemoryStream(addPhotoDto.PhotoData);
+        var bytes = Convert.FromBase64String(addPhotoDto.PhotoData);
+        var stream = new MemoryStream(bytes);
         var savePhotoResult = await s3StorageService.SaveImageAsync(stream, cancellationToken);
 
         return savePhotoResult.IsFailed

@@ -38,14 +38,20 @@ public class ProductManagementService(IProductRepository productRepository, IPho
 
     public async Task<Result<Guid>> AddProduct(CreateProductDto productDto, CancellationToken cancellationToken)
     {
-        var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
-        if (addPhotoResult.IsFailed)
+        Guid? photoId = null;
+        if (productDto.PhotoData is not null && productDto.PhotoData.Length > 0)
         {
-            return Result.Fail(AppError.UnprocessableContent());
+            var addPhotoResult =
+                await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
+            if (addPhotoResult.IsFailed)
+            {
+                return Result.Fail(AppError.UnprocessableContent());
+            }
+            
+            photoId = addPhotoResult.Value;
         }
 
-        var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
+        var product = new Product(productDto.Name, productDto.Description, productDto.Type, photoId);
         
         await productRepository.Add(product, cancellationToken);
 
@@ -60,21 +66,29 @@ public class ProductManagementService(IProductRepository productRepository, IPho
             return Result.Fail(AppError.NotFound(NotFoundExceptionMessage));
         }
         
-        var addPhotoResult =
-            await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
-        if (addPhotoResult.IsFailed)
+        Guid? photoId = null;
+        if (productDto.PhotoData is not null && productDto.PhotoData.Length > 0)
         {
-            return Result.Fail(AppError.UnprocessableContent());
+            var addPhotoResult =
+                await photoService.AddPhotoAsync(new AddPhotoDto { PhotoData = productDto.PhotoData }, cancellationToken);
+            if (addPhotoResult.IsFailed)
+            {
+                return Result.Fail(AppError.UnprocessableContent());
+            }
+            
+            photoId = addPhotoResult.Value;
         }
         
-        var product = new Product(productDto.Name, productDto.Description, productDto.Type, addPhotoResult.Value);
+        var product = new Product(productDto.Name, productDto.Description, productDto.Type, photoId);
         await productRepository.Update(id, product, cancellationToken);
 
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
-        if (deletePhotoResult.IsFailed)
+        if (existingProduct.PhotoId is not null)
         {
-            return Result.Ok()
-                .WithError("Товар успешно обновлён, старое фото для удаления не найдено");
+            var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId.Value, cancellationToken);
+            if (deletePhotoResult.IsFailed)
+            {
+                return Result.Ok().WithError("Товар успешно обновлён, старое фото для удаления не найдено");
+            }
         }
         
         return Result.Ok();
@@ -90,11 +104,13 @@ public class ProductManagementService(IProductRepository productRepository, IPho
         
         await productRepository.Delete(id, cancellationToken);
 
-        var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId, cancellationToken);
-        if (deletePhotoResult.IsFailed)
+        if (existingProduct.PhotoId is not null)
         {
-            return Result.Ok()
-                .WithError("Товар успешно удалён, но фото для удаления не найдено");
+            var deletePhotoResult = await photoService.DeletePhotoByIdAsync(existingProduct.PhotoId.Value, cancellationToken);
+            if (deletePhotoResult.IsFailed)
+            {
+                return Result.Ok().WithError("Товар успешно обновлён, старое фото для удаления не найдено");
+            }
         }
 
         return Result.Ok();

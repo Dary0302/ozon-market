@@ -153,7 +153,7 @@ public class OrderManagementService(IOrderRepository orderRepository,
         var prices = await productService.GetPrices(request, cancellationToken);
         
         var priceMap = prices.ToDictionary(
-            product => product.ProductId, product => product.Price);
+            product => product.ProductId, product => product.Cost);
         if (!items.All(item => priceMap.ContainsKey(item.ProductId)))
             return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
         
@@ -179,13 +179,17 @@ public class OrderManagementService(IOrderRepository orderRepository,
         foreach (var orderInfo in orderInfos.Items)
         {
             var request = new ProductPriceRequest(
-                orderInfo.Order.CreatedOn.Date,
+                orderInfo.Order.CreatedOn,
                 orderInfo.OrderItems.Select(i => i.ProductId).Distinct());
             var prices = await productService.GetPrices(request, cancellationToken);
-            var priceMap = prices.ToDictionary(p => p.ProductId, p => p.Price);
-
+            var priceMap = prices.ToDictionary(price => price.ProductId, price => price.Cost);
+            var missing = orderInfo.OrderItems
+                .Select(i => i.ProductId)
+                .Where(id => !priceMap.ContainsKey(id))
+                .ToList();
             if (!orderInfo.OrderItems.All(item => priceMap.ContainsKey(item.ProductId)))
-                return Result.Fail(AppError.NotFound("Цена на товар не найдена"));
+                return Result.Fail(AppError.NotFound(
+                    $"Цена не найдена для товаров: {string.Join(", ", missing)}"));
 
             result.Add(new OrderInfoWithPrice(
                 orderInfo.Order,

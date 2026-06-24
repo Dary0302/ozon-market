@@ -25,7 +25,7 @@ public class SimulationService(IOrderRepository orderRepository, IOrderManagemen
             return Result.Fail(transferResult.Errors);
         
         var deliveryDuration = order.DeliveryDate - order.CreatedOn;
-        var scaledDelaySeconds = Math.Max(0, deliveryDuration.TotalSeconds / 3600);
+        var scaledDelaySeconds = Math.Max(0, deliveryDuration.TotalSeconds / 7200);
         await Task.Delay(TimeSpan.FromSeconds(scaledDelaySeconds), cancellationToken);
         
         var completeResult = await service.UpdateStatus(orderId, Status.Delivered, cancellationToken);

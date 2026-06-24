@@ -8,7 +8,7 @@ public interface IPriceService
 {
     Task<Result<decimal>> CalculateAmount(IEnumerable<ProductQuantity> products, CancellationToken cancellationToken);
 
-    Task<Result<decimal>> GetActualPrice(Guid productId, DateTime? priceDate, CancellationToken cancellationToken);
+    Task<Result<ProductPrice>> GetActualPrice(Guid productId, DateTime? priceDate, CancellationToken cancellationToken);
     
     Task<Result<IEnumerable<ProductPrice>>> GetActualPrices(List<Guid> productIds, DateTime? priceDate, CancellationToken cancellationToken);
 

@@ -104,12 +104,17 @@ public class StoredProductService(
         }
         
         var storedProducts = (await GetProductsStorages(orderedProducts, cancellationToken)).ToList();
-        
-        var orderStorages = storedProducts.Select(product => new DecreaseQuantity (
-            product.ProductId,
-            product.StorageId,
-            product.Quantity
-        )).ToList();
+
+        var orderStorages = new List<DecreaseQuantity>();
+
+        for (var i = 0; i < storedProducts.Count; i++)
+        {
+            var storedProduct = storedProducts[i];
+            var orderedProduct = orderedProducts[i];
+            var orderStorage = new DecreaseQuantity(storedProduct.ProductId, storedProduct.StorageId, orderedProduct.Quantity);
+
+            orderStorages.Add(orderStorage);
+        }
 
         return orderStorages;
     }
@@ -178,14 +183,16 @@ public class StoredProductService(
     /// <code>
     /// shiftDuration = 12      // длительность смены водителя
     /// averageSpeed = 70        // средняя скорость в км/ч
+    /// dayHours = 24           // количество часов в сутках
     /// </code>
     /// </remarks>
     private static DateTime CalculateDeliveryTime(double farthestStorageDistance)
     {
         const double shiftDuration = 12;
         const double averageSpeed = 70;
+        const double dayHours = 24;
 
-        var travelTime = farthestStorageDistance / (averageSpeed * shiftDuration);
+        var travelTime = farthestStorageDistance / (averageSpeed * shiftDuration) * dayHours;
         var deliveryTime = DateTime.Now.AddHours(travelTime);
         return deliveryTime;
     }

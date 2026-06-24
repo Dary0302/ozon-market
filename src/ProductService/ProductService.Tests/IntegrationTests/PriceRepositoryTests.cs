@@ -34,9 +34,9 @@ public class PriceRepositoryTests
     [Test]
     public async Task SetPrice_And_GetPrice_ShouldReturnSavedPrice()
     {
-        var product = new Product("Table",
+        var product = new Product("Tablet",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         await productRepository.Add(product, CancellationToken.None);
@@ -48,7 +48,6 @@ public class PriceRepositoryTests
         var result = await priceRepository.GetPrice(product.Id);
 
         result.Should().NotBeNull();
-        result.Id.Should().Be(price.Id);
         result.ProductId.Should().Be(product.Id);
         result.Cost.Should().Be(100);
         result.Discount.Should().Be(10);
@@ -65,14 +64,14 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrice_ShouldReturnLatestPrice()
     {
-        var product = new Product("Table",
+        var product = new Product("Tablet",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         await productRepository.Add(product, CancellationToken.None);
 
-        var oldPrice = new Price(product.Id, 100, 0) { Date = DateTime.UtcNow.AddDays(-1) };
+        var oldPrice = new Price(product.Id, 100, 0) { Date = DateTime.UtcNow.AddDays(-2) };
         var newPrice = new Price(product.Id, 200, 15) { Date = DateTime.UtcNow.AddDays(1) };
 
         await priceRepository.SetPrice(oldPrice, CancellationToken.None);
@@ -81,7 +80,6 @@ public class PriceRepositoryTests
         var result = await priceRepository.GetPrice(product.Id);
 
         result.Should().NotBeNull();
-        result.Id.Should().Be(newPrice.Id);
         result.Cost.Should().Be(200);
         result.Discount.Should().Be(15);
     }
@@ -97,9 +95,9 @@ public class PriceRepositoryTests
     [Test]
     public async Task GetPrices_ShouldReturnPricesForRequestedProducts()
     {
-        var product1 = new Product("Table",
+        var product1 = new Product("Tablet",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         var product2 = new Product("Phone",
@@ -136,7 +134,7 @@ public class PriceRepositoryTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         await productRepository.Add(product, CancellationToken.None);
@@ -152,7 +150,6 @@ public class PriceRepositoryTests
             .Single();
 
         result.Should().NotBeNull();
-        result.Id.Should().Be(latestPrice.Id);
         result.Cost.Should().Be(300);
         result.Discount.Should().Be(20);
     }

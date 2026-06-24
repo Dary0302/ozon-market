@@ -1,3 +1,4 @@
+using System.Data;
 using FluentMigrator;
 using StorageService.Domain;
 
@@ -10,7 +11,8 @@ public class CreateStoragePointsTableMigration : Migration
     {
         Create.Table("storage_points")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("storage_id").AsGuid().NotNullable().ForeignKey("storages", "id")
+            .WithColumn("storage_id").AsGuid().NotNullable()
+                .ForeignKey("storages", "id").OnDelete(Rule.Cascade)
             .WithColumn("longitude").AsDouble().NotNullable()
             .WithColumn("latitude").AsDouble().NotNullable();
     }

@@ -43,7 +43,7 @@ public record Order : BaseEntity
         };
     }
 
-    public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.MustBeCreated);
+    public Result Pay() => Transition(Status.Created, Status.Paid, OrderErrors.InvalidStatusForPay);
     
     public Result Collect() => Transition(Status.Paid, Status.InAssembly,  OrderErrors.MustBePaid);
     
@@ -55,12 +55,12 @@ public record Order : BaseEntity
     
     public Result Cancel()
     {
-        if (Status == Status.InAssembly || Status == Status.TransferredForDelivery)
+        if (Status != Status.Delivered)
         {
             Status = Status.Canceled;
             return Result.Ok();
         }
-        return Result.Fail(OrderErrors.InvalidStateForCancel(Status.ToString()));
+        return Result.Fail(OrderErrors.InvalidStateForCancel());
     }
     
     private Result Transition(Status expected, Status next, Func<AppError> errorFactory)

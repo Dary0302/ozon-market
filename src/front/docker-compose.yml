@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_ORDER_API: http://62.113.98.200:5001
+        REACT_APP_STORAGE_API: http://62.113.98.200:5002
+        REACT_APP_PRODUCT_API: http://62.113.98.200:5003
+    container_name: market-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"

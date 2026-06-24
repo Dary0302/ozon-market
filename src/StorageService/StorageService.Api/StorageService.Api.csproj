@@ -14,6 +14,7 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.5.26302.115" />
     </ItemGroup>
 
     <ItemGroup>

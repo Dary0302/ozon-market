@@ -21,8 +21,7 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
                     request));
 
         if (!response.IsSuccess)
-            throw new BusinessException(response.Errors
-                .Select(error => error.Message).ToString());
+            throw new BusinessException(message: string.Join("; ", response.Errors.Select(error => error.Message)));
 
         return response
             .Payload!
@@ -40,8 +39,7 @@ public class KafkaProductService(IKafkaRpcClient rpc) : IProductService
                     productQuantities));
 
         if (!response.IsSuccess)
-            throw new BusinessException(response.Errors
-                .Select(error => error.Message).ToString());
+            throw new BusinessException(message: string.Join("; ", response.Errors.Select(error => error.Message)));
 
         return response.Payload!.Amount;
     }

@@ -4,7 +4,6 @@ using Core.Common.Kafka.Contracts.Models;
 using Core.Common.Kafka.Contracts.Services;
 using OrderService.Domain;
 using FluentAssertions;
-using FluentResults;
 using Xunit;
 using Moq;
 using OrderService.Application.Implementations;
@@ -106,7 +105,7 @@ public class OrderManagementServiceTests
         productServiceMock
             .Setup(s => s.GetPrices(It.IsAny<ProductPriceRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProductPriceRequest request, CancellationToken _) =>
-                itemsList.Select(item => new ProductPrice(item.ProductId, 100m, order.CreatedOn)).ToList());
+                itemsList.Select(item => new ProductPrice(item.ProductId, 100m, 0, 100, order.CreatedOn)).ToList());
     }
     
     private void SetupValidDefaultsForCancel(Order order)
@@ -519,7 +518,7 @@ public class OrderManagementServiceTests
         productServiceMock
             .Setup(s => s.GetPrices(It.IsAny<ProductPriceRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProductPriceRequest request, CancellationToken _) =>
-                request.ProductIds.Select(id => new ProductPrice(id, 100m, request.Date)));
+                request.ProductIds.Select(id => new ProductPrice(id, 100m, 0, 100, request.Date)));
 
         // Act
         var result = await service.GetAllInfo(pageNumber: 1, pageSize: 10, CancellationToken.None);
@@ -582,14 +581,12 @@ public class OrderManagementServiceTests
     }
     
     [Theory]
-    [InlineData(Status.Created)]
     [InlineData(Status.Delivered)]
-    [InlineData(Status.Canceled)]
     public async Task Cancel_ShouldReturnsFail_WhenStatusIsInvalid(Status initialStatus)
     {
         // Arrange
         var order = EntityFactory.MakeOrder(initialStatus);
-        var expectedMessage = OrderErrors.InvalidStateForCancel(order.Status.ToString()).Message;
+        var expectedMessage = OrderErrors.InvalidStateForCancel().Message;
 
         orderRepositoryMock
             .Setup(r => r.GetById(order.Id, It.IsAny<CancellationToken>()))

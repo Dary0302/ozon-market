@@ -21,8 +21,7 @@ public class KafkaStorageService(IKafkaRpcClient rpc, IKafkaProducer producer) :
 
         if (!response.IsSuccess)
         {
-            throw new BusinessException(response.Errors
-                .Select(error => error.Message).ToString());
+            throw new BusinessException(message: string.Join("; ", response.Errors.Select(error => error.Message)));
         }
 
         return response.Payload!.Items;
@@ -40,8 +39,7 @@ public class KafkaStorageService(IKafkaRpcClient rpc, IKafkaProducer producer) :
 
         if (!response.IsSuccess)
         {
-            throw new BusinessException(response.Errors
-                .Select(error => error.Message).ToString());
+            throw new BusinessException(message: string.Join("; ", response.Errors.Select(error => error.Message)));
         }
 
         return response.Payload!.Date;
@@ -67,8 +65,7 @@ public class KafkaStorageService(IKafkaRpcClient rpc, IKafkaProducer producer) :
 
         if (!response.IsSuccess)
         {
-            throw new BusinessException(response.Errors
-                .Select(error => error.Message).ToString());
+            throw new BusinessException(message: string.Join("; ", response.Errors.Select(error => error.Message)));
         }
 
         return response.Payload!.Items;

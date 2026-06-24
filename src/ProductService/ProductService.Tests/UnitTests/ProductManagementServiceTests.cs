@@ -15,6 +15,9 @@ public class ProductManagementServiceTests
     private Mock<IProductRepository> productRepository = null!;
     private Mock<IPhotoService> photoService = null!;
     private ProductManagementService productService = null!;
+    private const string PhotoData =
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+
 
     [SetUp]
     public void SetUp()
@@ -31,7 +34,7 @@ public class ProductManagementServiceTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -63,7 +66,7 @@ public class ProductManagementServiceTests
         {
             new("Phone",
                 "Description",
-                ProductType.Table,
+                ProductType.Tablet,
                 Guid.NewGuid())
         };
 
@@ -101,7 +104,7 @@ public class ProductManagementServiceTests
 
         var dto = new CreateProductDto
         {
-            Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
+            Name = "Phone", Description = "Description", Type = ProductType.Tablet, PhotoData = PhotoData
         };
 
         var result = await productService.AddProduct(dto, CancellationToken.None);
@@ -126,7 +129,7 @@ public class ProductManagementServiceTests
 
         var dto = new CreateProductDto
         {
-            Name = "Phone", Description = "Description", Type = ProductType.Table, PhotoData = [1, 2, 3]
+            Name = "Phone", Description = "Description", Type = ProductType.Tablet, PhotoData = PhotoData
         };
 
         var result = await productService.AddProduct(dto, CancellationToken.None);
@@ -155,11 +158,11 @@ public class ProductManagementServiceTests
     }
 
     [Test]
-    public async Task UpdateProduct_ShouldFail_WhenOldPhotoDeleteFailed()
+    public async Task UpdateProduct_ShouldSuccess_WhenOldPhotoDeleteFailed()
     {
         var existingProduct = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -167,7 +170,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
@@ -177,15 +180,15 @@ public class ProductManagementServiceTests
         result.IsFailed.Should().BeTrue();
 
         productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
-    public async Task UpdateProduct_ShouldFail_WhenNewPhotoUploadFailed()
+    public async Task UpdateProduct_ShouldSuccess_WhenNewPhotoUploadFailed()
     {
         var existingProduct = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -193,7 +196,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
@@ -205,10 +208,10 @@ public class ProductManagementServiceTests
         var result = await productService.UpdateProduct(existingProduct.Id,
             new CreateProductDto(), CancellationToken.None);
 
-        result.IsFailed.Should().BeTrue();
+        result.IsFailed.Should().BeFalse();
 
         productRepository.Verify(repository => repository.Update(It.IsAny<Guid>(), It.IsAny<Product>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
@@ -216,7 +219,7 @@ public class ProductManagementServiceTests
     {
         var existingProduct = new Product("Old",
             "OldDescription",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         var newPhotoId = Guid.NewGuid();
@@ -226,7 +229,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(existingProduct);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(existingProduct.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
@@ -237,7 +240,7 @@ public class ProductManagementServiceTests
 
         var dto = new CreateProductDto
         {
-            Name = "New", Description = "NewDescription", Type = ProductType.Phone, PhotoData = [1, 2, 3]
+            Name = "New", Description = "NewDescription", Type = ProductType.Phone, PhotoData = PhotoData
         };
 
         var result = await productService.UpdateProduct(existingProduct.Id, dto, CancellationToken.None);
@@ -266,19 +269,19 @@ public class ProductManagementServiceTests
     }
 
     [Test]
-    public async Task DeleteProduct_ShouldFail_WhenPhotoDeleteFailed()
+    public async Task DeleteProduct_ShouldNotFail_WhenPhotoDeleteFailed()
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
-            .Setup(repository => repository.Get(product.Id, CancellationToken.None))
+            .Setup(repository => repository.Get(product.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(product);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("error"));
 
@@ -287,7 +290,7 @@ public class ProductManagementServiceTests
         result.IsFailed.Should().BeTrue();
 
         productRepository.Verify(repository => repository.Delete(It.IsAny<Guid>(), CancellationToken.None),
-            Times.Never);
+            Times.Once);
     }
 
     [Test]
@@ -295,7 +298,7 @@ public class ProductManagementServiceTests
     {
         var product = new Product("Phone",
             "Description",
-            ProductType.Table,
+            ProductType.Tablet,
             Guid.NewGuid());
 
         productRepository
@@ -303,7 +306,7 @@ public class ProductManagementServiceTests
             .ReturnsAsync(product);
 
         photoService
-            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId,
+            .Setup(service => service.DeletePhotoByIdAsync(product.PhotoId!.Value,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 

@@ -1,5 +1,6 @@
+using Core.Common.Extensions;
 using Core.Common.Extensions.Validation;
-using StorageService.Api.Extensions;
+using Core.Common.HttpLogic;
 using StorageService.Api.Validators;
 using StorageService.Application.Configurations;
 using StorageService.Infrastructure.Configurations;
@@ -13,7 +14,10 @@ public class Startup(IConfiguration configuration)
         services
             .AddInfrastructureServices(configuration)
             .AddApplicationServices()
-            .AddOpenApi()
+            .AddCorsPolicy()
+            .AddExceptionHandler<ExceptionHandler>()
+            .AddProblemDetails()
+            .AddOpenApi("StorageService", typeof(ApplicationConfiguration))
             .AddValidation<IValidationMarker>()
             .AddControllers();
     }
@@ -21,7 +25,9 @@ public class Startup(IConfiguration configuration)
     public void Configure(IApplicationBuilder app)
     {
         app
+            .UseExceptionHandler()
             .UseRouting()
+            .UseCorsPolicy()
             .UseOpenApi()
             .UseEndpoints(endpoints =>
                 {
